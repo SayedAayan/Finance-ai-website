@@ -1,0 +1,123 @@
+/* CHAT INTERFACE */
+          <div className="w-full max-w-4xl mx-auto flex flex-col bg-white rounded-[32px] shadow-2xl shadow-blue-500/5 overflow-hidden border border-gray-100 min-h-[600px]">
+            <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-8 flex flex-col gap-8">
+              {messages.map((msg) => (
+                <div key={msg.id} className={`flex gap-4 w-full ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  {msg.type === 'ai' && (
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 flex items-center justify-center shrink-0 shadow-sm mt-1">
+                      <Sparkles size={18} className="text-primary" />
+                    </div>
+                  )}
+                  
+                  {msg.type === 'user' ? (
+                    <div className="flex flex-col items-end max-w-[70%]">
+                      <div className="bg-primary text-white px-5 py-4 rounded-[28px] rounded-tr-lg shadow-md text-[1.03rem] leading-relaxed break-words whitespace-pre-wrap">
+                        {msg.text}
+                      </div>
+                      {msg.file && (
+                        <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl mt-2 text-sm">
+                          {msg.file.type?.startsWith('image/') ? <ImageIcon size={14} className="text-textMuted"/> : <FileText size={14} className="text-textMuted"/>}
+                          <span className="font-semibold text-textMain truncate max-w-[160px]">{msg.file.name}</span>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex-1 max-w-[85%]">
+                      <div className="font-bold text-textMain mb-2 text-lg">FinPilot AI</div>
+                      <div className="bg-white border border-gray-200 p-5 rounded-[28px] rounded-tl-lg shadow-sm text-textMain leading-relaxed whitespace-pre-wrap break-words text-[1.03rem]">
+                        {msg.text}
+                      </div>
+                      {msg.link && (
+                        <div className="mt-4">
+                          <button onClick={() => navigate(msg.link)} className="flex items-center gap-2 px-5 py-2.5 rounded-full border-2 border-gray-100 font-semibold text-sm hover:border-primary hover:bg-blue-50 hover:text-primary transition-all">
+                            {msg.linkText} <ArrowRight size={16} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+                      {msg.file && (
+                        <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl mb-2 text-sm">
+                          {msg.file.type?.startsWith('image/') ? <ImageIcon size={14} className="text-textMuted"/> : <FileText size={14} className="text-textMuted"/>}
+                          <span className="font-semibold text-textMain">{msg.file.name}</span>
+                        </div>
+                      )}
+                      {msg.text && (
+                        <div className="bg-primary text-white px-6 py-4 rounded-[28px] rounded-tr-lg shadow-md text-[1.05rem] leading-relaxed">
+                          {msg.text}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex-1 max-w-[85%]">
+                      <div className="font-bold text-textMain mb-2 text-lg">FinPilot AI</div>
+                      <div className="text-textMain leading-relaxed whitespace-pre-wrap text-[1.05rem]">
+                        {msg.text}
+                      </div>
+                      
+                      {msg.link && (
+                        <div className="mt-4">
+                          <button onClick={() => navigate(msg.link)} className="flex items-center gap-2 px-5 py-2.5 rounded-full border-2 border-gray-100 font-semibold text-sm hover:border-primary hover:bg-blue-50 hover:text-primary transition-all">
+                            {msg.linkText} <ArrowRight size={16} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+              
+              {loading && (
+                <div className="flex gap-4 w-full justify-start">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 flex items-center justify-center shrink-0">
+                    <Sparkles size={18} className="text-primary" />
+                  </div>
+                  <div className="flex items-center h-10 px-4 bg-gray-50 rounded-2xl">
+                    <div className="flex gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{animationDelay: '0ms'}}/>
+                      <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{animationDelay: '150ms'}}/>
+                      <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{animationDelay: '300ms'}}/>
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div ref={bottomRef} className="h-0" />
+            </div>
+
+            {/* Chat Input Container */}
+            <div className="p-6 bg-white border-t border-gray-100">
+               {filePreview && (
+                  <div className="flex items-center gap-2 bg-blue-50 border border-blue-100 px-3 py-1.5 rounded-xl w-fit mb-3">
+                    <FileText size={14} className="text-primary" />
+                    <span className="text-xs font-semibold text-primary">{selectedFile?.name}</span>
+                    <button onClick={removeSelectedFile}><X size={14} className="text-primary hover:text-red-500" /></button>
+                  </div>
+                )}
+              <div className="flex items-center bg-gray-50 border border-transparent rounded-[32px] px-2 h-[64px] focus-within:bg-white focus-within:border-gray-200 focus-within:shadow-lg transition-all">
+                <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*,application/pdf" />
+                <button onClick={triggerFileUpload} className="p-3 text-textMuted hover:text-primary hover:bg-blue-50 rounded-full ml-1">
+                  <Plus size={24} />
+                </button>
+                <input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+                  placeholder="Ask FinPilot AI..."
+                  className="flex-1 bg-transparent border-none outline-none text-[1.1rem] text-textMain px-3"
+                />
+                <button 
+                  onClick={() => sendMessage()}
+                  disabled={!input.trim() && !selectedFile}
+                  className="w-[48px] h-[48px] rounded-full bg-gray-100 text-gray-500 flex items-center justify-center mr-1 hover:bg-gray-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Send size={18} className="ml-1" />
+                </button>
+              </div>
+              <div className="text-center mt-3 text-xs text-textMuted font-medium">
+                FinPilot AI is powered by Grok xAI. Always verify important financial information.
+              </div>
+            </div>
+          </div>
+        )}
