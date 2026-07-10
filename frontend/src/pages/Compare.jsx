@@ -89,10 +89,10 @@ export default function Compare() {
     { label: '1Y Return', l: left.returns ? `${left.returns['1Y']}%` : '-', r: right.returns ? `${right.returns['1Y']}%` : '-' },
     { label: '3Y Return', l: left.returns ? `${left.returns['3Y']}%` : '-', r: right.returns ? `${right.returns['3Y']}%` : '-' },
     { label: '5Y Return', l: left.returns ? `${left.returns['5Y']}%` : '-', r: right.returns ? `${right.returns['5Y']}%` : '-' },
-    { 
-      label: '1Y vs Benchmark', 
-      l: (left.returns && left.benchReturns) ? `+${(left.returns['1Y'] - left.benchReturns['1Y']).toFixed(1)}%` : '-', 
-      r: (right.returns && right.benchReturns) ? `+${(right.returns['1Y'] - right.benchReturns['1Y']).toFixed(1)}%` : '-' 
+    {
+      label: '1Y vs Benchmark',
+      l: (left.returns && left.benchReturns) ? `+${(left.returns['1Y'] - left.benchReturns['1Y']).toFixed(1)}%` : '-',
+      r: (right.returns && right.benchReturns) ? `+${(right.returns['1Y'] - right.benchReturns['1Y']).toFixed(1)}%` : '-'
     },
   ];
 
@@ -135,7 +135,7 @@ export default function Compare() {
             <div className="compare-col-header" style={{ background: 'var(--bg-subtle)', display: 'flex', alignItems: 'center', fontWeight: 700, paddingLeft: '16px', color: 'var(--text-3)', fontSize: '0.8rem', textTransform: 'uppercase' }}>
               Select Assets to Compare
             </div>
-            
+
             {/* Left Slot Select */}
             <div className="compare-col-header" style={{ borderLeft: '1px solid var(--border)', padding: '16px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
@@ -250,7 +250,7 @@ export default function Compare() {
             </p>
           ) : (
             <p>
-              Comparing <strong>{left.name} ({left.ticker})</strong> vs <strong>{right.name} ({right.ticker})</strong>. 
+              Comparing <strong>{left.name} ({left.ticker})</strong> vs <strong>{right.name} ({right.ticker})</strong>.
               {leftId === rightId ? (
                 " You have selected the same stock in both comparison slots. Try selecting a different stock to compare metrics."
               ) : (
