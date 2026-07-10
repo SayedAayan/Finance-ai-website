@@ -60,6 +60,19 @@ export default function Navbar({ onToggleAIChat }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const [marketData, setMarketData] = useState([]);
+
+  useEffect(() => {
+    let active = true;
+    fetch('/api/market-overview')
+      .then(res => res.json())
+      .then(data => {
+        if (active && data.indices) setMarketData(data.indices);
+      })
+      .catch(() => {});
+    return () => { active = false; };
+  }, []);
+
   const handleSearchChange = (e) => {
     const query = e.target.value;
     setSearchQuery(query);
@@ -114,17 +127,40 @@ export default function Navbar({ onToggleAIChat }) {
   };
 
   return (
-    <motion.nav 
-      initial={{ y: -100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="sticky top-0 z-[100] bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm"
-    >
+    <div className="sticky top-0 z-[100] flex flex-col shadow-sm">
+      {/* Ticker Bar */}
+      {marketData.length > 0 && (
+        <div className="bg-gray-900 text-white text-[12px] font-medium py-1.5 overflow-hidden flex whitespace-nowrap border-b border-gray-800">
+          <div className="flex gap-8 px-6 animate-[marquee_25s_linear_infinite]">
+            {marketData.concat(marketData).map((idx, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <span className="text-gray-400">{idx.label}</span>
+                {idx.error ? (
+                  <span className="text-gray-500">N/A</span>
+                ) : (
+                  <>
+                    <span className="font-semibold">{Number(idx.value || idx.currentPrice).toFixed(2)}</span>
+                    <span className={Number(idx.changePercent) >= 0 ? 'text-green-400' : 'text-red-400'}>
+                      {Number(idx.changePercent) >= 0 ? '+' : ''}{Number(idx.changePercent).toFixed(2)}%
+                    </span>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      <motion.nav 
+        initial={{ y: -10, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+        className="bg-white/80 backdrop-blur-md border-b border-gray-100"
+      >
       <div className="max-w-[1400px] mx-auto px-10 h-[80px] flex items-center justify-between">
         
         {/* Left: Logo */}
         <Link to="/" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform duration-300">
+          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center shadow-md shadow-blue-500/30 group-hover:scale-105 transition-transform duration-300">
             <TrendingUp size={18} color="#fff" strokeWidth={2.5} />
           </div>
           <span className="font-sans font-bold text-xl text-textMain tracking-tight">
@@ -280,5 +316,6 @@ export default function Navbar({ onToggleAIChat }) {
         </div>
       </div>
     </motion.nav>
+    </div>
   );
 }

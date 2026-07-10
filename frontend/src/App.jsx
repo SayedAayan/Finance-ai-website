@@ -9,6 +9,8 @@ import Compare from './pages/Compare';
 import Watchlist from './pages/Watchlist';
 import News from './pages/News';
 import Settings from './pages/Settings';
+import Chat from './pages/Chat';
+import Markets from './pages/Markets';
 import AIChatSidebar from './components/features/AIChatSidebar';
 
 function Layout() {
@@ -22,17 +24,19 @@ function Layout() {
       
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Home onOpenAIChat={() => setIsAIChatOpen(true)} />} />
           <Route path="/stock/:id" element={<StockProfile />} />
           <Route path="/fund/:id" element={<MutualFundProfile />} />
           <Route path="/compare" element={<Compare />} />
           <Route path="/watchlist" element={<Watchlist />} />
+          <Route path="/markets" element={<Markets />} />
           <Route path="/news" element={<News />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/chat" element={<Chat />} />
         </Routes>
       </main>
 
-      {!isHome && <Footer />}
+      {!isHome && loc.pathname !== '/chat' && <Footer />}
 
       {/* Global Context-Aware AI Chat Sidebar */}
       <AIChatSidebar isOpen={isAIChatOpen} onClose={() => setIsAIChatOpen(false)} />

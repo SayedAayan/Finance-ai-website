@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Sparkles, X, Send, Plus, Paperclip, FileText, AlertCircle, ArrowRight, Image as ImageIcon } from 'lucide-react';
 import { mockStocks, mockFunds } from '../../data/mockData';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '/api/chat';
 
@@ -149,16 +151,14 @@ export default function AIChatSidebar({ isOpen, onClose }) {
                               (attachedFileInfo ? `[Attached File: ${attachedFileInfo.name} (${attachedFileInfo.type})]\n` : '') +
                               q;
 
-      // Construct message history for API
-      const apiMessages = [];
-      
-      // We prepend the latest user prompt with context. For history, keep standard text.
-      updatedMessages.forEach((m, idx) => {
-        if (idx === updatedMessages.length - 1) {
-          apiMessages.push({ role: 'user', content: contextualQuery });
-        } else {
-          apiMessages.push({ role: m.type === 'user' ? 'user' : 'assistant', content: m.text });
+      // Construct message history for API — cap history to keep token usage bounded
+      const HISTORY_LIMIT = 6;
+      const recentMessages = updatedMessages.slice(-HISTORY_LIMIT);
+      const apiMessages = recentMessages.map((m, idx) => {
+        if (idx === recentMessages.length - 1) {
+          return { role: 'user', content: contextualQuery };
         }
+        return { role: m.type === 'user' ? 'user' : 'assistant', content: m.text };
       });
 
       let aiText = '';
@@ -364,7 +364,7 @@ export default function AIChatSidebar({ isOpen, onClose }) {
                     }}>
                       <Sparkles size={13} color="var(--violet)" />
                     </div>
-                    <div style={{
+                    <div className="prose prose-sm max-w-none" style={{
                       background: 'white',
                       border: '1px solid var(--neutral-200)',
                       padding: '12px 14px',
@@ -373,9 +373,10 @@ export default function AIChatSidebar({ isOpen, onClose }) {
                       lineHeight: 1.6,
                       color: 'var(--text-1)',
                       boxShadow: 'var(--shadow-sm)',
-                      whiteSpace: 'pre-wrap'
                     }}>
-                      {m.text}
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {m.text}
+                      </ReactMarkdown>
                       {m.source && (
                         <div style={{
                           marginTop: '10px',

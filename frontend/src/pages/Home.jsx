@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Sparkles, Send, ArrowRight, BookOpen, TrendingUp, BarChart2, Plus, ArrowUpRight, TrendingDown, Activity, Building2, Zap, Pill, Database } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Sparkles, Send, ArrowRight, BookOpen, TrendingUp, BarChart2, Plus, ArrowUpRight, TrendingDown, Activity } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { mockStocks } from '../data/mockData';
@@ -9,21 +9,30 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '/api/chat';
 
 const generateSparklineData = (start, trend) => Array.from({ length: 15 }, (_, i) => ({ value: start + (Math.random() * 20 - 10) + (trend === 'up' ? i * 5 : -i * 2) }));
 
-const getCompanyIcon = (ticker) => {
-  const iconMap = {
-    'RELIANCE': { bg: 'bg-red-50', color: 'text-red-600', icon: <Zap size={16} /> },
-    'TCS': { bg: 'bg-blue-50', color: 'text-blue-600', icon: <Database size={16} /> },
-    'HDFCBANK': { bg: 'bg-orange-50', color: 'text-orange-600', icon: <Building2 size={16} /> },
-    'APSEZ': { bg: 'bg-purple-50', color: 'text-purple-600', icon: <Activity size={16} /> },
-    'SUNPHARMA': { bg: 'bg-yellow-50', color: 'text-yellow-600', icon: <Pill size={16} /> },
-    'INFY': { bg: 'bg-cyan-50', color: 'text-cyan-600', icon: <Database size={16} /> },
-    'TATAMOTORS': { bg: 'bg-slate-50', color: 'text-slate-600', icon: <Building2 size={16} /> },
-  };
-  
-  return iconMap[ticker] || { bg: 'bg-gray-50', color: 'text-gray-600', icon: <Building2 size={16} /> };
+const COMPANY_LOGOS = {
+  'RELIANCE': { bg: 'bg-gradient-to-br from-orange-400 to-red-500', label: 'R' },
+  'TCS': { bg: 'bg-gradient-to-br from-blue-800 to-blue-950', label: 'TCS' },
+  'HDFCBANK': { bg: 'bg-gradient-to-br from-red-600 to-red-700', label: 'H' },
+  'APSEZ': { bg: 'bg-gradient-to-br from-sky-500 to-blue-700', label: 'A' },
+  'SUNPHARMA': { bg: 'bg-gradient-to-br from-amber-400 to-orange-500', label: 'SP' },
+  'INFY': { bg: 'bg-gradient-to-br from-teal-500 to-cyan-700', label: 'IN' },
+  'TATAMOTORS': { bg: 'bg-gradient-to-br from-slate-600 to-slate-800', label: 'TM' },
 };
 
-const marketIndices = [
+const CompanyLogo = ({ ticker, size = 40 }) => {
+  const { bg, label } = COMPANY_LOGOS[ticker] || { bg: 'bg-gradient-to-br from-gray-400 to-gray-600', label: ticker?.[0] || '?' };
+  const fontSize = label.length > 2 ? size * 0.24 : label.length === 2 ? size * 0.32 : size * 0.42;
+  return (
+    <div
+      className={`flex items-center justify-center rounded-full ${bg} text-white font-bold flex-shrink-0 shadow-sm`}
+      style={{ width: size, height: size, fontSize }}
+    >
+      {label}
+    </div>
+  );
+};
+
+const DEFAULT_INDICES = [
   { name: 'NIFTY 50', value: '24,854.35', change: '+216.65', percent: '+0.88%', trend: 'up', data: generateSparklineData(24000, 'up') },
   { name: 'SENSEX', value: '81,362.51', change: '+689.72', percent: '+0.85%', trend: 'up', data: generateSparklineData(80000, 'up') },
   { name: 'NIFTY BANK', value: '52,158.95', change: '+443.30', percent: '+0.86%', trend: 'up', data: generateSparklineData(51000, 'up') },
@@ -34,12 +43,51 @@ export default function Home({ onOpenAIChat }) {
   const [input, setInput] = useState('');
   const navigate = useNavigate();
   const [marketMoverTab, setMarketMoverTab] = useState('gainers');
+  const [stocks, setStocks] = useState(mockStocks);
+  const [marketIndices, setMarketIndices] = useState(DEFAULT_INDICES);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const symbols = mockStocks.map(s => `${s.ticker}.NS`).join(',');
+    fetch(`/api/quotes?symbols=${symbols}`)
+      .then(r => r.json())
+      .then(({ quotes }) => {
+        if (cancelled || !Array.isArray(quotes)) return;
+        setStocks(mockStocks.map(stock => {
+          const q = quotes.find(q => q.symbol === `${stock.ticker}.NS`);
+          if (!q || q.error || !q.currentPrice) return stock;
+          return { ...stock, price: q.currentPrice, changePercent: Number(q.changePercent) };
+        }));
+      })
+      .catch(() => {});
+
+    fetch('/api/market-overview')
+      .then(r => r.json())
+      .then(({ indices }) => {
+        if (cancelled || !Array.isArray(indices)) return;
+        setMarketIndices(indices.map(idx => {
+          if (idx.error || !idx.currentPrice) return DEFAULT_INDICES.find(d => d.name === idx.label) || DEFAULT_INDICES[0];
+          const trend = Number(idx.changePercent) >= 0 ? 'up' : 'down';
+          return {
+            name: idx.label,
+            value: Number(idx.currentPrice).toLocaleString('en-IN', { maximumFractionDigits: 2 }),
+            change: `${idx.change >= 0 ? '+' : ''}${idx.change}`,
+            percent: `${idx.changePercent >= 0 ? '+' : ''}${idx.changePercent}%`,
+            trend,
+            data: generateSparklineData(Number(idx.currentPrice), trend)
+          };
+        }));
+      })
+      .catch(() => {});
+
+    return () => { cancelled = true; };
+  }, []);
 
   const handleAsk = (textArg) => {
     const q = typeof textArg === 'string' ? textArg : input;
     if (!q.trim()) return;
-    onOpenAIChat?.();
-    window.dispatchEvent(new CustomEvent('open-ai-chat', { detail: { message: q } }));
+    navigate('/chat', { state: { initialMessage: q } });
     setInput('');
   };
 
@@ -50,8 +98,8 @@ export default function Home({ onOpenAIChat }) {
     { label: 'Compare TCS vs Reliance', icon: <Activity size={16} /> }
   ];
 
-  const sortedGainers = [...mockStocks].sort((a, b) => b.changePercent - a.changePercent).slice(0, 3);
-  const sortedLosers = [...mockStocks].sort((a, b) => a.changePercent - b.changePercent).slice(0, 3);
+  const sortedGainers = [...stocks].sort((a, b) => b.changePercent - a.changePercent).slice(0, 3);
+  const sortedLosers = [...stocks].sort((a, b) => a.changePercent - b.changePercent).slice(0, 3);
   const marketMovers = marketMoverTab === 'gainers' ? sortedGainers : sortedLosers;
 
   const containerVariants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
@@ -105,18 +153,17 @@ export default function Home({ onOpenAIChat }) {
               </motion.div>
 
               <motion.div variants={itemVariants} className="w-full max-w-[1200px] grid grid-cols-1 xl:grid-cols-3 gap-[24px] mb-12">
-                <div className="bg-white rounded-[22px] p-[24px] h-[290px] shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 flex flex-col">
+                <div className="bg-white rounded-[22px] p-[24px] h-[290px] shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 flex flex-col justify-center">
                   <div className="flex justify-between items-center mb-5">
                     <h3 className="font-bold text-textMain flex items-center gap-2"><span className="text-xl">🔥</span> Trending Stocks</h3>
                     <button className="text-primary text-xs font-bold bg-blue-50 px-3 py-1 rounded-full">View all</button>
                   </div>
                   <div className="flex flex-col gap-4">
-                    {mockStocks.slice(0, 3).map(stock => {
-                      const { bg, color, icon } = getCompanyIcon(stock.ticker);
+                    {stocks.slice(0, 3).map(stock => {
                       return (
                       <div key={stock.id} className="flex items-center justify-between p-2 rounded-2xl hover:bg-gray-50 cursor-pointer transition-colors group">
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className={`w-10 h-10 flex items-center justify-center ${bg} ${color} rounded-full flex-shrink-0`}>{icon}</div>
+                          <CompanyLogo ticker={stock.ticker} size={40} />
                           <div className="min-w-0">
                             <div className="font-semibold text-textMain truncate text-[13px]">{stock.name}</div>
                             <div className="text-[12px] text-textMuted truncate">{stock.ticker}</div>
@@ -132,7 +179,7 @@ export default function Home({ onOpenAIChat }) {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-[22px] p-[24px] h-[290px] shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 flex flex-col">
+                <div className="bg-white rounded-[22px] p-[24px] h-[290px] shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 flex flex-col justify-center">
                   <div className="flex justify-between items-center mb-5">
                     <h3 className="font-bold text-textMain flex items-center gap-2"><TrendingUp size={18} className="text-gray-400"/> Market Movers</h3>
                     <div className="flex bg-gray-100 p-1 rounded-full">
@@ -142,11 +189,10 @@ export default function Home({ onOpenAIChat }) {
                   </div>
                   <div className="flex flex-col gap-3">
                     {marketMovers.map(stock => {
-                      const { bg, color, icon } = getCompanyIcon(stock.ticker);
                       return (
                       <div key={stock.id} className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-50 cursor-pointer transition-all hover:scale-[1.02]">
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className={`w-8 h-8 rounded-full ${bg} ${color} flex items-center justify-center flex-shrink-0`}>{icon}</div>
+                          <CompanyLogo ticker={stock.ticker} size={32} />
                           <div className="min-w-0">
                             <div className="font-semibold text-textMain truncate text-[13px]">{stock.name}</div>
                             <div className="text-[12px] text-textMuted truncate">{stock.ticker}</div>
@@ -170,6 +216,17 @@ export default function Home({ onOpenAIChat }) {
                       <div className="bg-white/70 backdrop-blur-md rounded-[16px] p-4 border border-white shadow-sm mb-6"><p className="text-[13px] text-textMain leading-relaxed font-medium">Reliance Industries shows strong fundamentals with consistent revenue growth and improving profit margins. Would you like a detailed analysis?</p></div>
                     </div>
                     <button className="flex items-center gap-2 text-primary font-bold text-[13px] hover:gap-3 transition-all px-4 py-2 bg-white rounded-full shadow-sm hover:shadow-md border border-gray-50">Analyze Now <ArrowRight size={14} /></button>
+                  </div>
+                  <div className="absolute bottom-6 right-6 z-10 flex flex-col items-center">
+                    <div className="w-1.5 h-3 bg-violet-400 rounded-full mb-[-2px]"></div>
+                    <div className="w-2.5 h-2.5 rounded-full bg-violet-300 shadow-sm shadow-violet-400/50 mb-1"></div>
+                    <div className="w-16 h-14 rounded-[20px] bg-gradient-to-br from-indigo-400 via-violet-500 to-purple-600 shadow-lg shadow-violet-500/30 flex flex-col items-center justify-center gap-2 border-2 border-white/40">
+                      <div className="flex gap-2.5">
+                        <span className="w-2.5 h-2.5 rounded-full bg-white"></span>
+                        <span className="w-2.5 h-2.5 rounded-full bg-white"></span>
+                      </div>
+                      <span className="w-4 h-[3px] rounded-full bg-white/70"></span>
+                    </div>
                   </div>
                 </div>
               </motion.div>

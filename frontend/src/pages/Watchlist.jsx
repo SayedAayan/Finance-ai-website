@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, Sparkles, Bell, Star, BarChart2, ArrowRight, Trash2, Shield, Upload, Check } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 
@@ -12,6 +12,30 @@ const WATCHLIST = [
 export default function Watchlist() {
   const navigate = useNavigate();
   const [items, setItems] = useState(WATCHLIST);
+
+  useEffect(() => {
+    let cancelled = false;
+    const stockTickers = WATCHLIST.filter(item => item.type === 'stock').map(item => `${item.ticker}.NS`).join(',');
+    if (!stockTickers) return;
+    
+    fetch(`/api/quotes?symbols=${stockTickers}`)
+      .then(r => r.json())
+      .then(({ quotes }) => {
+        if (cancelled || !Array.isArray(quotes)) return;
+        setItems(prev => prev.map(item => {
+          if (item.type !== 'stock') return item;
+          const q = quotes.find(q => q.symbol === `${item.ticker}.NS`);
+          if (!q || q.error || !q.currentPrice) return item;
+          const price = `₹${q.currentPrice.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+          const change = `${q.changePercent >= 0 ? '+' : ''}${q.changePercent}%`;
+          const up = q.changePercent >= 0;
+          return { ...item, price, change, up };
+        }));
+      })
+      .catch(() => {});
+
+    return () => { cancelled = true; };
+  }, []);
 
   // Demat Upload State
   const [screenshotUploaded, setScreenshotUploaded] = useState(false);

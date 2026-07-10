@@ -3,6 +3,7 @@ import cors from 'cors';
 import fetch from 'node-fetch';
 import Parser from 'rss-parser';
 import dotenv from 'dotenv';
+import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -13,9 +14,12 @@ dotenv.config({ path: join(__dirname, '.env') });
 const app = express();
 const PORT = Number(process.env.PORT) || 3001;
 
-const GROQ_API_KEY = process.env.GROQ_API_KEY;
-const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
+const AI_PROVIDERS = [
+  { name: 'OpenRouter', url: 'https://openrouter.ai/api/v1/chat/completions', key: process.env.OPENROUTER_API_KEY, model: 'google/gemini-2.5-pro' },
+  { name: 'xAI', url: 'https://api.x.ai/v1/chat/completions', key: process.env.XAI_API_KEY, model: 'grok-beta' },
+  { name: 'DeepSeek', url: 'https://api.deepseek.com/chat/completions', key: process.env.DEEPSEEK_API_KEY, model: 'deepseek-chat' },
+  { name: 'Groq', url: 'https://api.groq.com/openai/v1/chat/completions', key: process.env.GROQ_API_KEY, model: 'meta-llama/llama-4-scout-17b-16e-instruct' }
+].filter(p => p.key);
 
 // ─── Yahoo Finance v8 chart API ───────────────────────────────────────────────
 // Uses browser User-Agent + chart endpoint — no auth/crumb needed
@@ -88,7 +92,7 @@ MANDATORY RULES:
 - ALWAYS call a tool for any price, NAV, index level, or news question. Never answer from memory.
 - If you do not know the exact ticker symbol, call search_ticker FIRST then get_stock_data.
 - For Indian stocks use NSE suffix .NS (e.g., RELIANCE.NS, TCS.NS, HDFCBANK.NS)
-- For Indian mutual funds: ALWAYS use search_ticker first
+- For Indian mutual funds: Use search_ticker first. If it fails, rely on the common funds listed below. NEVER say you can't find a fund without checking the list below.
 - For market indices, use get_market_overview()
 - Never give Buy/Sell/Hold recommendations.
 - Respond in clear, simple language with bullet points or tables.
@@ -100,6 +104,16 @@ HDFC Bank - HDFCBANK.NS
 Infosys - INFY.NS
 ICICI Bank - ICICIBANK.NS
 State Bank of India - SBIN.NS
+
+COMMON INDIAN MUTUAL FUND SYMBOLS (Use these EXACT symbols for get_stock_data):
+HDFC Flexi Cap Fund - 0P0000XW8F.BO
+Parag Parikh Flexi Cap Fund - 0P0000YWL1.BO
+Kotak Flexicap Fund - 0P00005V1U.BO
+Kotak Mahindra Liquid Fund - 0P00005V4Z.BO
+SBI Equity Hybrid Fund - 0P00005WLZ.BO
+ICICI Prudential Bluechip Fund - 0P00005WMI.BO
+Axis Bluechip Fund - 0P0000XW8J.BO
+Nippon India Small Cap Fund - 0P0000YWL2.BO
 Wipro - WIPRO.NS
 Bajaj Finance - BAJFINANCE.NS
 Kotak Mahindra Bank - KOTAKBANK.NS
@@ -224,10 +238,10 @@ async function handleToolCall(toolCall) {
 
   if (name === 'get_market_overview') {
     const indices = [
-      { symbol: '^NSEI',    label: 'Nifty 50' },
-      { symbol: '^BSESN',   label: 'Sensex (BSE)' },
+      { symbol: '^NSEI', label: 'Nifty 50' },
+      { symbol: '^BSESN', label: 'Sensex (BSE)' },
       { symbol: '^NSEBANK', label: 'Nifty Bank' },
-      { symbol: '^CNXIT',   label: 'Nifty IT' },
+      { symbol: '^CNXIT', label: 'Nifty IT' },
       { symbol: 'USDINR=X', label: 'USD/INR' }
     ];
     const settled = await Promise.allSettled(indices.map(i => yfQuote(i.symbol)));
@@ -275,31 +289,60 @@ async function handleToolCall(toolCall) {
   return JSON.stringify({ error: `Unknown tool: ${name}` });
 }
 
-// ─── Agentic loop ─────────────────────────────────────────────────────────────
-async function runAgentLoop(apiMessages) {
-  for (let i = 0; i < 8; i++) {
-    const response = await fetch(GROQ_API_URL, {
+function parseRetryDelayMs(errText) {
+  const match = errText.match(/try again in ([\d.]+)s/i);
+  return match ? Math.ceil(parseFloat(match[1]) * 1000) + 250 : 2000;
+}
+
+async function callAIWithFallback(apiMessages, providerIndex = 0, retriesLeft = 2) {
+  if (providerIndex >= AI_PROVIDERS.length) {
+    throw new Error('All AI providers failed.');
+  }
+
+  const provider = AI_PROVIDERS[providerIndex];
+
+  try {
+    const response = await fetch(provider.url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${GROQ_API_KEY}`
+        'Authorization': `Bearer ${provider.key}`
       },
       body: JSON.stringify({
-        model: MODEL,
+        model: provider.model,
         messages: apiMessages,
         temperature: 0.1,
-        max_tokens: 2048,
+        max_tokens: 1024,
         tools,
         tool_choice: 'auto'
       })
     });
 
-    if (!response.ok) {
-      const err = await response.text();
-      throw new Error(`Groq API ${response.status}: ${err}`);
+    if (response.status === 429 && retriesLeft > 0) {
+      const errText = await response.text();
+      const delay = parseRetryDelayMs(errText);
+      console.log(`  ⏳ Rate limited by ${provider.name}, retrying in ${delay}ms (${retriesLeft} left)`);
+      await new Promise(r => setTimeout(r, delay));
+      return callAIWithFallback(apiMessages, providerIndex, retriesLeft - 1);
     }
 
-    const data = await response.json();
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(`${provider.name} API ${response.status}: ${err}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error(`❌ ${provider.name} failed:`, error.message);
+    console.log(`🔄 Switching to next provider...`);
+    return callAIWithFallback(apiMessages, providerIndex + 1, 2);
+  }
+}
+
+// ─── Agentic loop ─────────────────────────────────────────────────────────────
+async function runAgentLoop(apiMessages) {
+  for (let i = 0; i < 8; i++) {
+    const data = await callAIWithFallback(apiMessages);
     const message = data.choices?.[0]?.message;
     if (!message) throw new Error('No message in Groq response');
 
@@ -329,7 +372,130 @@ app.use(cors());
 app.use(express.json({ limit: '5mb' }));
 
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', model: MODEL, apiKeyLoaded: !!GROQ_API_KEY });
+  res.json({ status: 'ok', models: AI_PROVIDERS.map(p => p.model), apiKeyLoaded: AI_PROVIDERS.length > 0 });
+});
+
+// ─── Chat Database Setup ──────────────────────────────────────────────────────
+const DB_FILE = join(__dirname, 'db.json');
+
+async function readDB() {
+  try {
+    const data = await fs.readFile(DB_FILE, 'utf8');
+    return JSON.parse(data);
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      return { chats: {} };
+    }
+    throw err;
+  }
+}
+
+async function writeDB(data) {
+  await fs.writeFile(DB_FILE, JSON.stringify(data, null, 2), 'utf8');
+}
+
+app.get('/api/chats', async (req, res) => {
+  try {
+    const db = await readDB();
+    const chats = Object.values(db.chats || {}).map(c => ({
+      id: c.id,
+      title: c.title,
+      updatedAt: c.updatedAt
+    })).sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+    res.json({ chats });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/chats/:id', async (req, res) => {
+  try {
+    const db = await readDB();
+    const chat = db.chats?.[req.params.id];
+    if (!chat) return res.status(404).json({ error: 'Chat not found' });
+    res.json({ chat });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/chats', async (req, res) => {
+  try {
+    const db = await readDB();
+    if (!db.chats) db.chats = {};
+    
+    const id = Date.now().toString();
+    const { title = 'New Chat', messages = [] } = req.body || {};
+    
+    db.chats[id] = {
+      id,
+      title,
+      messages,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    await writeDB(db);
+    res.json({ chat: db.chats[id] });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/chats/:id', async (req, res) => {
+  try {
+    const db = await readDB();
+    const chat = db.chats?.[req.params.id];
+    if (!chat) return res.status(404).json({ error: 'Chat not found' });
+    
+    const { messages, title } = req.body || {};
+    if (messages) chat.messages = messages;
+    if (title) chat.title = title;
+    chat.updatedAt = new Date().toISOString();
+    
+    await writeDB(db);
+    res.json({ chat });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/chats/:id', async (req, res) => {
+  try {
+    const db = await readDB();
+    if (db.chats && db.chats[req.params.id]) {
+      delete db.chats[req.params.id];
+      await writeDB(db);
+    }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/quotes', async (req, res) => {
+  const symbols = (req.query.symbols || '').split(',').map(s => s.trim()).filter(Boolean);
+  if (symbols.length === 0) {
+    return res.status(400).json({ error: 'symbols query param is required, e.g. ?symbols=RELIANCE.NS,TCS.NS' });
+  }
+  const settled = await Promise.allSettled(symbols.map(yfQuote));
+  const quotes = settled.map((r, i) => r.status === 'fulfilled' ? r.value : { symbol: symbols[i], error: r.reason?.message || 'fetch failed' });
+  res.json({ quotes });
+});
+
+app.get('/api/market-overview', async (req, res) => {
+  const indices = [
+    { symbol: '^NSEI', label: 'NIFTY 50' },
+    { symbol: '^BSESN', label: 'SENSEX' },
+    { symbol: '^NSEBANK', label: 'NIFTY BANK' },
+    { symbol: 'USDINR=X', label: 'USD/INR' }
+  ];
+  const settled = await Promise.allSettled(indices.map(i => yfQuote(i.symbol)));
+  const results = settled.map((r, i) => ({
+    label: indices[i].label,
+    ...(r.status === 'fulfilled' ? r.value : { error: r.reason?.message || 'fetch failed' })
+  }));
+  res.json({ indices: results });
 });
 
 app.post('/api/chat', async (req, res) => {
@@ -341,8 +507,8 @@ app.post('/api/chat', async (req, res) => {
   if (!messages || !Array.isArray(messages)) {
     return res.status(400).json({ error: 'messages array is required' });
   }
-  if (!GROQ_API_KEY) {
-    return res.status(503).json({ error: 'AI service is unavailable', detail: 'GROQ_API_KEY not configured' });
+  if (AI_PROVIDERS.length === 0) {
+    return res.status(503).json({ error: 'AI service is unavailable', detail: 'No API keys configured' });
   }
 
   const apiMessages = [{ role: 'system', content: APP_CONTEXT }, ...messages];
@@ -350,7 +516,7 @@ app.post('/api/chat', async (req, res) => {
 
   try {
     const reply = await runAgentLoop(apiMessages);
-    res.json({ reply, model: MODEL, provider: 'groq' });
+    res.json({ reply, model: 'fallback', provider: 'fallback' });
   } catch (err) {
     console.error('❌', err.message);
     res.status(500).json({ error: 'FinPilot AI error', detail: err.message });
@@ -359,8 +525,8 @@ app.post('/api/chat', async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`\n✅  FinPilot AI Backend ready at http://localhost:${PORT}`);
-  console.log(`   Model  : ${MODEL}`);
-  console.log(`   API Key: ${GROQ_API_KEY ? '✓ Loaded' : '✗ MISSING'}`);
+  console.log(`   Providers: ${AI_PROVIDERS.map(p => p.name).join(', ')}`);
+  console.log(`   API Key: ${AI_PROVIDERS.length > 0 ? '✓ Loaded' : '✗ MISSING'}`);
   console.log(`   Data   : Yahoo Finance v8 chart API`);
   console.log(`   Tools  : search_ticker | get_stock_data | get_market_overview | get_financial_news\n`);
 });
