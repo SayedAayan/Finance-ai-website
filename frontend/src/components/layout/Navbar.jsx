@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { TrendingUp, Search, Bell, Sparkles, X } from 'lucide-react';
+import { Search, Bell, Sparkles, X } from 'lucide-react';
 import { mockStocks, mockFunds } from '../../data/mockData';
 import { motion, AnimatePresence } from 'framer-motion';
+import logo from '../../assets/logo.png';
 
 export default function Navbar({ onToggleAIChat }) {
   const loc = useLocation();
@@ -131,8 +132,8 @@ export default function Navbar({ onToggleAIChat }) {
       {/* Ticker Bar */}
       {marketData.length > 0 && (
         <div className="bg-gray-900 text-white text-[12px] font-medium py-1.5 overflow-hidden flex whitespace-nowrap border-b border-gray-800">
-          <div className="flex gap-8 px-6 animate-[marquee_25s_linear_infinite]">
-            {marketData.concat(marketData).map((idx, i) => (
+          <div className="flex gap-8 animate-[marquee_70s_linear_infinite]">
+            {Array(8).fill(marketData).flat().map((idx, i) => (
               <div key={i} className="flex items-center gap-2">
                 <span className="text-gray-400">{idx.label}</span>
                 {idx.error ? (
@@ -159,13 +160,12 @@ export default function Navbar({ onToggleAIChat }) {
         <div className="max-w-[1400px] mx-auto px-10 h-[80px] flex items-center justify-between">
 
           {/* Left: Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center shadow-md shadow-blue-500/30 group-hover:scale-105 transition-transform duration-300">
-              <TrendingUp size={18} color="#fff" strokeWidth={2.5} />
-            </div>
-            <span className="font-sans font-bold text-xl text-textMain tracking-tight">
-              StockBuzz
-            </span>
+          <Link to="/" className="flex items-center group -ml-6">
+            <img
+              src={logo}
+              alt="StockBuzz — Let's Build Wealth, Together."
+              className="h-12 w-auto group-hover:scale-105 transition-transform duration-300"
+            />
           </Link>
 
           {/* Center: Navigation Links */}

@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Sparkles, Send, ArrowRight, BookOpen, TrendingUp, BarChart2, Plus, ArrowUpRight, TrendingDown, Activity } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { mockStocks } from '../data/mockData';
-import { LineChart, Line, ResponsiveContainer, YAxis } from 'recharts';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '/api/chat';
 
@@ -42,6 +41,7 @@ const DEFAULT_INDICES = [
 export default function Home({ onOpenAIChat }) {
   const [input, setInput] = useState('');
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
   const [marketMoverTab, setMarketMoverTab] = useState('gainers');
   const [stocks, setStocks] = useState(mockStocks);
   const [marketIndices, setMarketIndices] = useState(DEFAULT_INDICES);
@@ -84,6 +84,12 @@ export default function Home({ onOpenAIChat }) {
     return () => { cancelled = true; };
   }, []);
 
+  const handleFileChange = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    navigate('/chat', { state: { initialFile: file } });
+  };
+
   const handleAsk = (textArg) => {
     const q = typeof textArg === 'string' ? textArg : input;
     if (!q.trim()) return;
@@ -121,8 +127,8 @@ export default function Home({ onOpenAIChat }) {
 
               <motion.div variants={itemVariants} className="w-full max-w-[900px] mb-5 relative">
                 <div className="relative flex items-center bg-white/80 backdrop-blur-xl border border-gray-200 rounded-full shadow-sm px-[20px] h-[60px] transition-all hover:shadow-md focus-within:bg-white focus-within:shadow-md">
-                  <input type="file" className="hidden" />
-                  <button className="p-3 text-textMuted hover:text-primary transition-colors hover:bg-blue-50 rounded-full ml-1"><Plus size={24} /></button>
+                  <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*,application/pdf" className="hidden" />
+                  <button onClick={() => fileInputRef.current?.click()} className="p-3 text-textMuted hover:text-primary transition-colors hover:bg-blue-50 rounded-full ml-1"><Plus size={24} /></button>
 
                   <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAsk()} placeholder="Ask FinPilot AI about stocks, mutual funds, or finance..." className="flex-1 bg-transparent border-none outline-none text-base text-textMain px-2 h-full placeholder:text-gray-400" />
                   <button onClick={() => handleAsk()} disabled={!input.trim()} className="w-[42px] h-[42px] rounded-full bg-gray-100 text-textMuted flex items-center justify-center mr-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary hover:text-white"><Send size={16} className="ml-1" /></button>
@@ -145,11 +151,10 @@ export default function Home({ onOpenAIChat }) {
                       <span className="text-[11px] font-bold text-textMuted uppercase tracking-wider mb-1">{idx.name}</span>
                       <span className="text-[17px] font-extrabold text-textMain mb-1">{idx.value}</span>
                       <span className={`text-[11px] font-bold ${idx.trend === 'up' ? 'text-success' : 'text-danger'} flex items-center gap-1`}>{idx.change} ({idx.percent}) {idx.trend === 'up' ? <ArrowUpRight size={12}/> : <TrendingDown size={12}/>}</span>
-                      <div className="h-[32px] mt-1 w-full"><ResponsiveContainer width="100%" height="100%"><LineChart data={idx.data}><YAxis domain={[ 'dataMin', 'dataMax' ]} hide /><Line type="monotone" dataKey="value" stroke={idx.trend === 'up' ? '#16A34A' : '#DC2626'} strokeWidth={1.5} dot={false} isAnimationActive={false} /></LineChart></ResponsiveContainer></div>
                     </div>
                   ))}
                 </div>
-                <div className="w-[140px] flex justify-end pr-2"><button className="px-5 py-2.5 rounded-full border border-gray-200 text-primary text-sm font-semibold hover:bg-blue-50 transition-colors">View Markets</button></div>
+                <div className="w-[140px] flex justify-end pr-2"><button onClick={() => navigate('/markets')} className="px-5 py-2.5 rounded-full border border-gray-200 text-primary text-sm font-semibold hover:bg-blue-50 transition-colors">View Markets</button></div>
               </motion.div>
 
               <motion.div variants={itemVariants} className="w-full max-w-[1200px] grid grid-cols-1 xl:grid-cols-3 gap-[24px] mb-12">

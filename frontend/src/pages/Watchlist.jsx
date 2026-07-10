@@ -1,23 +1,29 @@
 import { useState, useEffect } from 'react';
-import { TrendingUp, TrendingDown, Sparkles, Bell, Star, BarChart2, ArrowRight, Trash2, Shield, Upload, Check } from 'lucide-react';
+import { TrendingUp, TrendingDown, Sparkles, Bell, Star, BarChart2, ArrowRight, Trash2, Shield, Upload, Check, X, Search } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
-
-const WATCHLIST = [
-  { type: 'stock', id: 'RELIANCE', name: 'Reliance Industries', ticker: 'RELIANCE', price: '₹2,950.45', change: '+1.24%', up: true, pe: 28.5, mcap: '₹19.8T', alert: '> ₹3,000' },
-  { type: 'stock', id: 'TCS', name: 'TCS', ticker: 'TCS', price: '₹3,890.10', change: '-0.39%', up: false, pe: 30.2, mcap: '₹14.2T', alert: null },
-  { type: 'fund', id: 'HDFC-FLEXI', name: 'HDFC Flexi Cap Fund', ticker: 'Direct', price: '₹1,642.50', change: '+0.26%', up: true, pe: '-', mcap: '₹45,230 Cr', alert: 'AUM drops < ₹40,000 Cr' },
-  { type: 'fund', id: 'PPFAS-FLEXI', name: 'Parag Parikh Flexi Cap', ticker: 'Direct', price: '₹74.85', change: '+0.20%', up: true, pe: '-', mcap: '₹62,100 Cr', alert: 'Manager change' },
-];
+import { mockStocks, mockFunds } from '../data/mockData';
 
 export default function Watchlist() {
   const navigate = useNavigate();
-  const [items, setItems] = useState(WATCHLIST);
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
 
+  const loadWatchlist = () => {
+    fetch('/api/watchlist')
+      .then(r => r.json())
+      .then(({ watchlist }) => setItems(watchlist || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { loadWatchlist(); }, []);
+
+  // Live quotes
   useEffect(() => {
-    let cancelled = false;
-    const stockTickers = WATCHLIST.filter(item => item.type === 'stock').map(item => `${item.ticker}.NS`).join(',');
+    const stockTickers = items.filter(item => item.type === 'stock').map(item => `${item.ticker}.NS`).join(',');
     if (!stockTickers) return;
-    
+    let cancelled = false;
+
     fetch(`/api/quotes?symbols=${stockTickers}`)
       .then(r => r.json())
       .then(({ quotes }) => {
@@ -35,7 +41,7 @@ export default function Watchlist() {
       .catch(() => {});
 
     return () => { cancelled = true; };
-  }, []);
+  }, [items.length]);
 
   // Demat Upload State
   const [screenshotUploaded, setScreenshotUploaded] = useState(false);
@@ -46,25 +52,50 @@ export default function Watchlist() {
       const file = e.target.files[0];
       setFileName(file.name);
       setScreenshotUploaded(true);
-      
-      // Auto-simulate adding a scanned item
+
       const hasWipro = items.some(item => item.id === 'WIPRO');
       if (!hasWipro) {
         setTimeout(() => {
-          setItems(prev => [
-            ...prev,
-            { type: 'stock', id: 'WIPRO', name: 'Wipro Limited', ticker: 'WIPRO', price: '₹482.30', change: '+0.85%', up: true, pe: 22.4, mcap: '₹2.5T', alert: 'Synced via Demat Statement' }
-          ]);
+          addAsset({ type: 'stock', id: 'WIPRO', name: 'Wipro Limited', ticker: 'WIPRO', pe: 22.4, mcap: '₹2.5T' });
         }, 1000);
       }
     }
   };
 
-  const remove = (id) => setItems(prev => prev.filter(i => i.id !== id));
+  const remove = (id) => {
+    setItems(prev => prev.filter(i => i.id !== id));
+    fetch(`/api/watchlist/${id}`, { method: 'DELETE' }).catch(() => {});
+  };
+
+  const addAsset = (asset) => {
+    fetch('/api/watchlist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(asset)
+    })
+      .then(r => r.json())
+      .then(({ item }) => {
+        if (item) setItems(prev => [...prev, item]);
+      })
+      .catch(() => {});
+  };
+
+  const setAlert = (id, alert) => {
+    setItems(prev => prev.map(i => i.id === id ? { ...i, alert } : i));
+    fetch(`/api/watchlist/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ alert })
+    }).catch(() => {});
+  };
+
+  // Modals
+  const [showAddAsset, setShowAddAsset] = useState(false);
+  const [showManageAlerts, setShowManageAlerts] = useState(false);
 
   return (
     <div style={{ paddingBottom: '4rem' }}>
-      
+
       <div className="hero" style={{ padding: '30px 0' }}>
         <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
@@ -72,8 +103,8 @@ export default function Watchlist() {
             <p style={{ color: 'var(--text-2)' }}>Track your favourite stocks and funds in one place.</p>
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>
-            <button className="btn btn-outline btn-sm"><Bell size={14} /> Manage Alerts</button>
-            <button className="btn btn-primary btn-sm"><Star size={14} /> Add Asset</button>
+            <button className="btn btn-outline btn-sm" onClick={() => setShowManageAlerts(true)}><Bell size={14} /> Manage Alerts</button>
+            <button className="btn btn-primary btn-sm" onClick={() => setShowAddAsset(true)}><Star size={14} /> Add Asset</button>
           </div>
         </div>
       </div>
@@ -86,7 +117,7 @@ export default function Watchlist() {
             { label: 'Assets Tracked', value: items.length },
             { label: 'Active Alerts', value: items.filter(i => i.alert).length, color: 'var(--orange)' },
             { label: 'Gainers Today', value: items.filter(i => i.up).length, color: 'var(--green)' },
-            { label: 'Losers Today', value: items.filter(i => !i.up).length, color: 'var(--red)' },
+            { label: 'Losers Today', value: items.filter(i => i.up === false).length, color: 'var(--red)' },
           ].map((s, i) => (
             <div key={i} className="card card-pad">
               <div className="stat-label">{s.label}</div>
@@ -117,20 +148,22 @@ export default function Watchlist() {
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-3)', fontWeight: 500, marginTop: '2px' }}>{item.ticker} • {item.type === 'stock' ? 'NSE' : 'Mutual Fund'}</div>
                 </div>
               </div>
-              
-              <div style={{ textAlign: 'right', fontWeight: 700, fontSize: '0.95rem' }} className="num">{item.price}</div>
-              
+
+              <div style={{ textAlign: 'right', fontWeight: 700, fontSize: '0.95rem' }} className="num">{item.price || '—'}</div>
+
               <div style={{ textAlign: 'right' }}>
-                <span className={`badge ${item.up ? 'badge-green' : 'badge-red'}`}>
-                  {item.up ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
-                  {item.change}
-                </span>
+                {item.change ? (
+                  <span className={`badge ${item.up ? 'badge-green' : 'badge-red'}`}>
+                    {item.up ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
+                    {item.change}
+                  </span>
+                ) : <span style={{ color: 'var(--text-3)', fontSize: '0.8rem' }}>—</span>}
               </div>
-              
+
               <div className="wl-hide num" style={{ textAlign: 'right', color: 'var(--text-2)', fontSize: '0.9rem' }}>
                 {item.pe !== '-' ? item.pe : item.mcap}
               </div>
-              
+
               <div className="wl-hide" style={{ textAlign: 'right' }}>
                 {item.alert ? (
                   <span className="badge badge-orange"><Bell size={10} /> Alert set</span>
@@ -138,7 +171,7 @@ export default function Watchlist() {
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-3)' }}>No alert</span>
                 )}
               </div>
-              
+
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'flex-end' }}>
                 <button className="btn btn-ghost btn-sm" style={{ padding: '6px' }}
                   onClick={(e) => { e.stopPropagation(); remove(item.id); }}>
@@ -149,7 +182,7 @@ export default function Watchlist() {
             </div>
           ))}
 
-          {items.length === 0 && (
+          {!loading && items.length === 0 && (
             <div style={{ padding: '60px 20px', textAlign: 'center' }}>
               <Star size={40} style={{ margin: '0 auto 16px', opacity: 0.15, color: 'var(--text-1)' }} />
               <p style={{ color: 'var(--text-3)' }}>Your watchlist is empty. Add stocks or funds to track them here.</p>
@@ -163,12 +196,12 @@ export default function Watchlist() {
             <Shield size={20} color="var(--blue)" />
             <h3 style={{ margin: 0, fontWeight: 700, fontSize: '1.15rem' }}>Demat Integration</h3>
           </div>
-          
+
           <p style={{ fontSize: '0.85rem', color: 'var(--text-2)', lineHeight: 1.6, margin: '0 0 16px 0' }}>
             Verify your investments and auto-generate watchlist items by uploading a screenshot of your holdings or demat account statement.
           </p>
 
-          <div style={{ 
+          <div style={{
             border: '2px dashed var(--neutral-300)',
             borderRadius: '12px',
             padding: '24px',
@@ -178,8 +211,8 @@ export default function Watchlist() {
             borderColor: screenshotUploaded ? 'var(--green)' : 'var(--neutral-300)',
             position: 'relative'
           }}>
-            <input 
-              type="file" 
+            <input
+              type="file"
               accept="image/*,application/pdf"
               onChange={handleFileUpload}
               style={{
@@ -193,7 +226,7 @@ export default function Watchlist() {
               }}
             />
             <Upload size={32} color={screenshotUploaded ? 'var(--green)' : 'var(--text-3)'} style={{ margin: '0 auto 12px' }} />
-            
+
             {screenshotUploaded ? (
               <div>
                 <div style={{ fontWeight: 700, color: 'var(--green)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
@@ -205,7 +238,7 @@ export default function Watchlist() {
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-3)', fontStyle: 'italic', marginTop: '6px' }}>
                   Syncing assets... Wipro Limited automatically imported to watchlist.
                 </div>
-                <button 
+                <button
                   onClick={(e) => { e.stopPropagation(); setScreenshotUploaded(false); setFileName(''); }}
                   className="btn btn-ghost btn-sm"
                   style={{ marginTop: '12px', color: 'var(--red)', fontSize: '0.75rem' }}
@@ -238,6 +271,128 @@ export default function Watchlist() {
           </Link>
         </div>
       </div>
+
+      {showAddAsset && (
+        <AddAssetModal
+          existingIds={items.map(i => i.id)}
+          onAdd={addAsset}
+          onClose={() => setShowAddAsset(false)}
+        />
+      )}
+
+      {showManageAlerts && (
+        <ManageAlertsModal
+          items={items}
+          onSetAlert={setAlert}
+          onClose={() => setShowManageAlerts(false)}
+        />
+      )}
     </div>
+  );
+}
+
+function ModalShell({ title, onClose, children }) {
+  return (
+    <div
+      style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.5)', backdropFilter: 'blur(2px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
+      onClick={onClose}
+    >
+      <div
+        style={{ background: 'white', borderRadius: '16px', width: '100%', maxWidth: '480px', maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px', borderBottom: '1px solid var(--border)' }}>
+          <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700 }}>{title}</h3>
+          <button onClick={onClose} className="btn btn-ghost btn-sm" style={{ padding: '6px' }}>
+            <X size={16} />
+          </button>
+        </div>
+        <div style={{ padding: '16px 20px', overflowY: 'auto' }}>
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AddAssetModal({ existingIds, onAdd, onClose }) {
+  const [query, setQuery] = useState('');
+
+  const candidates = [
+    ...mockStocks.map(s => ({ type: 'stock', id: s.id, name: s.name, ticker: s.ticker, pe: s.peRatio ?? '-', mcap: s.marketCap ? `₹${s.marketCap}` : '-' })),
+    ...mockFunds.map(f => ({ type: 'fund', id: f.id, name: f.name, ticker: 'Direct', pe: '-', mcap: f.aum ? `₹${f.aum}` : '-' })),
+  ];
+
+  const results = candidates.filter(c =>
+    !existingIds.includes(c.id) &&
+    (query.trim() === '' || c.name.toLowerCase().includes(query.toLowerCase()) || c.ticker.toLowerCase().includes(query.toLowerCase()))
+  );
+
+  return (
+    <ModalShell title="Add Asset" onClose={onClose}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--bg-subtle)', border: '1px solid var(--border)', borderRadius: '10px', padding: '8px 12px', marginBottom: '14px' }}>
+        <Search size={15} color="var(--text-3)" />
+        <input
+          autoFocus
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search stocks or mutual funds…"
+          style={{ border: 'none', outline: 'none', background: 'transparent', fontSize: '0.9rem', width: '100%' }}
+        />
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '340px', overflowY: 'auto' }}>
+        {results.length === 0 && (
+          <p style={{ color: 'var(--text-3)', fontSize: '0.85rem', textAlign: 'center', padding: '20px 0' }}>No matches found.</p>
+        )}
+        {results.map(c => (
+          <div key={c.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border)' }}>
+            <div>
+              <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{c.name}</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>{c.ticker} • {c.type === 'stock' ? 'Stock' : 'Mutual Fund'}</div>
+            </div>
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() => { onAdd(c); onClose(); }}
+            >
+              Add
+            </button>
+          </div>
+        ))}
+      </div>
+    </ModalShell>
+  );
+}
+
+function ManageAlertsModal({ items, onSetAlert, onClose }) {
+  const [drafts, setDrafts] = useState(() => Object.fromEntries(items.map(i => [i.id, i.alert || ''])));
+
+  return (
+    <ModalShell title="Manage Alerts" onClose={onClose}>
+      {items.length === 0 && (
+        <p style={{ color: 'var(--text-3)', fontSize: '0.85rem', textAlign: 'center', padding: '20px 0' }}>Add assets to your watchlist to set alerts.</p>
+      )}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {items.map(item => (
+          <div key={item.id} style={{ border: '1px solid var(--border)', borderRadius: '10px', padding: '12px' }}>
+            <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: '8px' }}>{item.name}</div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input
+                value={drafts[item.id] ?? ''}
+                onChange={(e) => setDrafts(prev => ({ ...prev, [item.id]: e.target.value }))}
+                placeholder="e.g. > ₹3,000 or AUM drops < ₹40,000 Cr"
+                style={{ flex: 1, border: '1px solid var(--border)', borderRadius: '8px', padding: '8px 10px', fontSize: '0.85rem', outline: 'none' }}
+              />
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={() => onSetAlert(item.id, drafts[item.id]?.trim() || null)}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </ModalShell>
   );
 }

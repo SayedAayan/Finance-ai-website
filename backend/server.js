@@ -76,6 +76,28 @@ async function yfQuote(symbol) {
   };
 }
 
+async function yfHistory(symbol, range, interval) {
+  const encoded = encodeURIComponent(symbol);
+  const url = `https://query2.finance.yahoo.com/v8/finance/chart/${encoded}?interval=${interval}&range=${range}&includePrePost=false`;
+  const res = await fetch(url, { headers: YF_HEADERS });
+  if (!res.ok) throw new Error(`Yahoo chart HTTP ${res.status} for ${symbol}`);
+  const json = await res.json();
+  const result = json.chart?.result?.[0];
+  if (!result) throw new Error(`No chart data for ${symbol}`);
+
+  const timestamps = result.timestamp || [];
+  const closes = result.indicators?.quote?.[0]?.close || [];
+  const points = timestamps
+    .map((t, i) => ({ time: t * 1000, price: closes[i] }))
+    .filter(p => typeof p.price === 'number');
+
+  return {
+    symbol: result.meta.symbol,
+    currency: result.meta.currency,
+    points
+  };
+}
+
 // ─── System prompt ────────────────────────────────────────────────────────────
 const APP_CONTEXT = `
 You are FinPilot AI, an expert AI-powered financial research assistant for StockBuzz — India's leading financial intelligence platform.
@@ -381,10 +403,12 @@ const DB_FILE = join(__dirname, 'db.json');
 async function readDB() {
   try {
     const data = await fs.readFile(DB_FILE, 'utf8');
-    return JSON.parse(data);
+    const db = JSON.parse(data);
+    if (!db.watchlist) db.watchlist = [];
+    return db;
   } catch (err) {
     if (err.code === 'ENOENT') {
-      return { chats: {} };
+      return { chats: {}, watchlist: [] };
     }
     throw err;
   }
@@ -468,6 +492,83 @@ app.delete('/api/chats/:id', async (req, res) => {
       await writeDB(db);
     }
     res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Watchlist ────────────────────────────────────────────────────────────────
+app.get('/api/watchlist', async (req, res) => {
+  try {
+    const db = await readDB();
+    res.json({ watchlist: db.watchlist });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/watchlist', async (req, res) => {
+  try {
+    const db = await readDB();
+    const { type, id, name, ticker, pe, mcap } = req.body || {};
+    if (!type || !id || !name || !ticker) {
+      return res.status(400).json({ error: 'type, id, name, and ticker are required' });
+    }
+    if (db.watchlist.some(item => item.id === id)) {
+      return res.status(409).json({ error: 'Item already in watchlist' });
+    }
+    const item = { type, id, name, ticker, pe: pe ?? '-', mcap: mcap ?? '-', alert: null };
+    db.watchlist.push(item);
+    await writeDB(db);
+    res.json({ item });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/watchlist/:id', async (req, res) => {
+  try {
+    const db = await readDB();
+    const item = db.watchlist.find(i => i.id === req.params.id);
+    if (!item) return res.status(404).json({ error: 'Item not found' });
+    const { alert } = req.body || {};
+    item.alert = alert || null;
+    await writeDB(db);
+    res.json({ item });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/watchlist/:id', async (req, res) => {
+  try {
+    const db = await readDB();
+    db.watchlist = db.watchlist.filter(i => i.id !== req.params.id);
+    await writeDB(db);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+const HISTORY_PRESETS = {
+  '1D': { range: '1d', interval: '5m' },
+  '1W': { range: '5d', interval: '15m' },
+  '1M': { range: '1mo', interval: '1d' },
+  '1Y': { range: '1y', interval: '1wk' },
+  '5Y': { range: '5y', interval: '1mo' },
+  'MAX': { range: 'max', interval: '3mo' }
+};
+
+app.get('/api/history', async (req, res) => {
+  const symbol = req.query.symbol;
+  const preset = HISTORY_PRESETS[req.query.range] || HISTORY_PRESETS['1Y'];
+  if (!symbol) {
+    return res.status(400).json({ error: 'symbol query param is required, e.g. ?symbol=RELIANCE.NS&range=1Y' });
+  }
+  try {
+    const data = await yfHistory(symbol, preset.range, preset.interval);
+    res.json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

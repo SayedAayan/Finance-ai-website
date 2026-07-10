@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Sparkles, Send, Plus, Paperclip, FileText, AlertCircle, ArrowRight, Image as ImageIcon, MessageSquare, Trash2, Edit } from 'lucide-react';
+import { Sparkles, Send, Plus, Paperclip, FileText, AlertCircle, ArrowRight, Image as ImageIcon, MessageSquare, Trash2, Edit, PanelLeftClose, PanelLeft } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -24,6 +24,8 @@ export default function Chat() {
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
+  const initialMessageSentRef = useRef(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
     fetchChats();
@@ -73,29 +75,51 @@ export default function Chat() {
 
   // Initialize from location state if passed from home page
   useEffect(() => {
-    if (loc.state && loc.state.initialMessage && messages.length === 0 && !activeChatId) {
+    if (!loc.state || initialMessageSentRef.current) return;
+
+    if (loc.state.initialMessage) {
+      initialMessageSentRef.current = true;
       sendContextualMessage(loc.state.initialMessage);
+      window.history.replaceState({}, document.title);
+    } else if (loc.state.initialFile) {
+      initialMessageSentRef.current = true;
+      loadFile(loc.state.initialFile);
       window.history.replaceState({}, document.title);
     }
   }, [loc.state]);
 
-  // Automatically scroll to bottom
+  const lastUserMessageRef = useRef(null);
+
+  // Scroll so the latest user message (and the start of the AI's reply) is at the top of the viewport
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  }, [messages, loading]);
+    if (messages.length === 0) return;
+    const last = messages[messages.length - 1];
+    if (last.type === 'user') {
+      lastUserMessageRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [messages.length]);
+
+  // While the AI reply streams in/loads, keep the top of that reply in view instead of jumping to the bottom
+  useEffect(() => {
+    if (loading) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+  }, [loading]);
+
+  const loadFile = (file) => {
+    setSelectedFile(file);
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (event) => setFilePreview(event.target.result);
+      reader.readAsDataURL(file);
+    } else {
+      setFilePreview('pdf-icon');
+    }
+  };
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setSelectedFile(file);
-      
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (event) => setFilePreview(event.target.result);
-        reader.readAsDataURL(file);
-      } else {
-        setFilePreview('pdf-icon');
-      }
+      loadFile(e.target.files[0]);
     }
   };
 
@@ -244,56 +268,71 @@ export default function Chat() {
   return (
     <div className="flex-1 flex bg-[#FCFCFF] max-h-[calc(100vh-80px)]">
       {/* Sidebar for Chat History */}
-      <div className="w-[280px] bg-white border-r border-gray-200 flex flex-col h-[calc(100vh-80px)] shadow-sm flex-shrink-0">
-        <div className="p-4 border-b border-gray-100">
-          <button 
-            onClick={createNewChat}
-            className="w-full flex items-center justify-center gap-2 bg-violet-50 text-violet-600 hover:bg-violet-100 px-4 py-2.5 rounded-lg font-medium transition-colors border border-violet-100"
-          >
-            <Edit size={16} /> New Chat
-          </button>
-        </div>
-        <div className="flex-1 overflow-y-auto p-3">
-          <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-2">Recent Chats</div>
-          <div className="flex flex-col gap-1">
-            {chatHistory.map(chat => (
-              <div 
-                key={chat.id} 
-                onClick={() => loadChat(chat.id)}
-                className={`group flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${activeChatId === chat.id ? 'bg-violet-50 text-violet-700' : 'hover:bg-gray-50 text-gray-700'}`}
-              >
-                <div className="flex items-center gap-3 overflow-hidden">
-                  <MessageSquare size={16} className={activeChatId === chat.id ? 'text-violet-500' : 'text-gray-400'} />
-                  <span className="truncate text-sm font-medium">{chat.title}</span>
-                </div>
-                <button 
-                  onClick={(e) => deleteChat(chat.id, e)}
-                  className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+      {sidebarOpen ? (
+        <div className="w-[280px] bg-white border-r border-gray-200 flex flex-col h-[calc(100vh-80px)] shadow-sm flex-shrink-0">
+          <div className="p-4 border-b border-gray-100 flex items-center gap-2">
+            <button
+              onClick={createNewChat}
+              className="flex-1 flex items-center justify-center gap-2 bg-violet-50 text-violet-600 hover:bg-violet-100 px-4 py-2.5 rounded-lg font-medium transition-colors border border-violet-100"
+            >
+              <Edit size={16} /> New Chat
+            </button>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="p-2.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
+              title="Hide recent chats"
+            >
+              <PanelLeftClose size={18} />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-3">
+            <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-2">Recent Chats</div>
+            <div className="flex flex-col gap-1">
+              {chatHistory.map(chat => (
+                <div
+                  key={chat.id}
+                  onClick={() => loadChat(chat.id)}
+                  className={`group flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${activeChatId === chat.id ? 'bg-violet-50 text-violet-700' : 'hover:bg-gray-50 text-gray-700'}`}
                 >
-                  <Trash2 size={14} />
-                </button>
-              </div>
-            ))}
-            {chatHistory.length === 0 && (
-              <div className="px-2 py-4 text-sm text-gray-400 text-center">No chat history yet.</div>
-            )}
+                  <div className="flex items-center gap-3 overflow-hidden">
+                    <MessageSquare size={16} className={activeChatId === chat.id ? 'text-violet-500' : 'text-gray-400'} />
+                    <span className="truncate text-sm font-medium">{chat.title}</span>
+                  </div>
+                  <button
+                    onClick={(e) => deleteChat(chat.id, e)}
+                    className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+              {chatHistory.length === 0 && (
+                <div className="px-2 py-4 text-sm text-gray-400 text-center">No chat history yet.</div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="w-[56px] bg-white border-r border-gray-200 flex flex-col items-center h-[calc(100vh-80px)] shadow-sm flex-shrink-0 py-4 gap-3">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="p-2.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            title="Show recent chats"
+          >
+            <PanelLeft size={18} />
+          </button>
+          <button
+            onClick={createNewChat}
+            className="p-2.5 text-violet-600 hover:bg-violet-50 rounded-lg transition-colors"
+            title="New Chat"
+          >
+            <Edit size={18} />
+          </button>
+        </div>
+      )}
 
       {/* Main Chat Window */}
       <div className="flex-1 flex flex-col h-[calc(100vh-80px)] relative overflow-hidden">
-        {/* Header */}
-        <div className="px-8 py-5 border-b border-gray-200 bg-white shadow-sm flex items-center gap-3 shrink-0">
-          <div className="w-10 h-10 bg-violet-100 rounded-full flex items-center justify-center">
-            <Sparkles size={20} className="text-violet-600" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">FinPilot AI</h1>
-            <p className="text-sm text-gray-500">Your intelligent financial research assistant</p>
-          </div>
-        </div>
-
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-8" ref={chatContainerRef}>
           <div className="max-w-4xl mx-auto flex flex-col gap-6">
@@ -308,8 +347,12 @@ export default function Chat() {
                 </p>
               </div>
             ) : (
-              messages.map((m) => (
-                <div key={m.id} className={`flex ${m.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+              messages.map((m, idx) => (
+                <div
+                  key={m.id}
+                  ref={m.type === 'user' && idx === messages.length - 1 ? lastUserMessageRef : null}
+                  className={`flex ${m.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
                   {m.type === 'user' ? (
                     <div className="max-w-[80%] flex flex-col items-end">
                       {m.file && (

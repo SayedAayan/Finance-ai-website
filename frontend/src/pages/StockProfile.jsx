@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { TrendingUp, TrendingDown, Info, Sparkles, AlertTriangle, ArrowRight, Home } from 'lucide-react';
 
@@ -19,6 +20,24 @@ const DATA = {
 export default function StockProfile() {
   const { id } = useParams();
   const d = DATA;
+
+  const [range, setRange] = useState('1Y');
+  const [history, setHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setHistoryLoading(true);
+    fetch(`/api/history?symbol=${d.ticker}.NS&range=${range}`)
+      .then(r => r.json())
+      .then((data) => {
+        if (cancelled) return;
+        setHistory(Array.isArray(data.points) ? data.points : []);
+      })
+      .catch(() => { if (!cancelled) setHistory([]); })
+      .finally(() => { if (!cancelled) setHistoryLoading(false); });
+    return () => { cancelled = true; };
+  }, [d.ticker, range]);
 
   return (
     <div style={{ paddingBottom: '4rem' }}>
@@ -79,22 +98,37 @@ export default function StockProfile() {
             <div className="chart-header">
               <h4 style={{ margin: 0 }}>Price Trend</h4>
               <div className="chart-tabs">
-                {['1D','1W','1M','1Y','5Y'].map((t, i) => (
-                  <button key={i} className={`btn btn-sm ${t==='1Y' ? 'btn-outline' : 'btn-ghost'}`} style={{ padding: '4px 10px' }}>{t}</button>
+                {[
+                  { key: '1D', label: '1D' },
+                  { key: '1W', label: '1W' },
+                  { key: '1M', label: '1M' },
+                  { key: '1Y', label: '1Y' },
+                  { key: '5Y', label: '5Y' },
+                  { key: 'MAX', label: 'Since Inception' },
+                ].map((t) => (
+                  <button
+                    key={t.key}
+                    onClick={() => setRange(t.key)}
+                    className={`btn btn-sm ${t.key === range ? 'btn-outline' : 'btn-ghost'}`}
+                    style={{ padding: '4px 10px' }}
+                  >
+                    {t.label}
+                  </button>
                 ))}
               </div>
             </div>
-            <div className="chart-body" style={{ height: '300px', padding: '0' }}>
-              <svg viewBox="0 0 800 300" preserveAspectRatio="none" style={{ width: '100%', height: '100%' }}>
-                <defs>
-                  <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--blue)" stopOpacity="0.2" />
-                    <stop offset="100%" stopColor="var(--blue)" stopOpacity="0" />
-                  </linearGradient>
-                </defs>
-                <path d="M0,300 L0,220 Q50,180 100,200 T200,150 T300,180 T400,100 T500,140 T600,80 T700,90 T800,40 L800,300 Z" fill="url(#chartGrad)" />
-                <path d="M0,220 Q50,180 100,200 T200,150 T300,180 T400,100 T500,140 T600,80 T700,90 T800,40" fill="none" stroke="var(--blue)" strokeWidth="3" vectorEffect="non-scaling-stroke" />
-              </svg>
+            <div className="chart-body" style={{ height: '300px', padding: '0', position: 'relative' }}>
+              {historyLoading ? (
+                <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-3)', fontSize: '0.85rem' }}>
+                  Loading chart…
+                </div>
+              ) : history.length < 2 ? (
+                <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-3)', fontSize: '0.85rem' }}>
+                  No price history available for this range.
+                </div>
+              ) : (
+                <PriceChart points={history} />
+              )}
             </div>
           </div>
 
@@ -174,6 +208,57 @@ export default function StockProfile() {
           </div>
         </div>
 
+      </div>
+    </div>
+  );
+}
+
+function PriceChart({ points }) {
+  const width = 800;
+  const height = 300;
+  // Generous padding so the stroke (rendered at non-uniform scale under
+  // preserveAspectRatio="none") never reaches the viewBox edge and gets
+  // clipped by the card's overflow:hidden.
+  const padTop = 45;
+  const padBottom = 45;
+  const padX = 16;
+  const prices = points.map(p => p.price);
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  const spread = max - min || 1;
+
+  const x = (i) => padX + (i / (points.length - 1)) * (width - padX * 2);
+  const y = (price) => padTop + (1 - (price - min) / spread) * (height - padTop - padBottom);
+
+  const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(p.price).toFixed(1)}`).join(' ');
+  const areaPath = `${linePath} L${width - padX},${height - padBottom} L${padX},${height - padBottom} Z`;
+
+  const up = points[points.length - 1].price >= points[0].price;
+  const lineColor = up ? 'var(--green)' : 'var(--red)';
+
+  const first = points[0];
+  const last = points[points.length - 1];
+  const dateFmt = (t) => new Date(t).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+
+  return (
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, position: 'relative' }}>
+        <div style={{ position: 'absolute', top: 4, right: 4, fontSize: '0.75rem', color: 'var(--text-3)' }}>₹{max.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
+        <div style={{ position: 'absolute', bottom: 20, right: 4, fontSize: '0.75rem', color: 'var(--text-3)' }}>₹{min.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
+        <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
+          <defs>
+            <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={lineColor} stopOpacity="0.2" />
+              <stop offset="100%" stopColor={lineColor} stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <path d={areaPath} fill="url(#chartGrad)" />
+          <path d={linePath} fill="none" stroke={lineColor} strokeWidth="3" vectorEffect="non-scaling-stroke" strokeLinejoin="round" strokeLinecap="round" />
+        </svg>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-3)', padding: '0 8px 8px' }}>
+        <span>{dateFmt(first.time)}</span>
+        <span>{dateFmt(last.time)}</span>
       </div>
     </div>
   );

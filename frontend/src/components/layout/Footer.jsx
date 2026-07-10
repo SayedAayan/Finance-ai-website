@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { TrendingUp, Shield } from 'lucide-react';
+import { Shield } from 'lucide-react';
+import logo from '../../assets/logo.png';
 
 export default function Footer() {
   return (
@@ -8,8 +9,7 @@ export default function Footer() {
         <div className="footer-grid">
           <div>
             <div className="footer-logo">
-              <div className="logo-mark"><TrendingUp size={15} color="#fff" strokeWidth={2.5} /></div>
-              <span className="footer-logo-text">StockBuzz</span>
+              <img src={logo} alt="StockBuzz" style={{ height: '28px', width: 'auto' }} />
             </div>
             <p className="footer-desc">AI-powered research for Indian retail investors. We explain, compare, and source every answer — never recommend.</p>
           </div>
