@@ -80,6 +80,40 @@
   --r-full: 9999px;
 }
 
+.dark {
+  --bg-page:    #0B1120;
+  --bg-card:    #1E293B;
+  --bg-subtle:  #152033;
+  --bg-hover:   #334155;
+
+  --border:     #334155;
+  --border-mid: #475569;
+
+  --text-1: #F8FAFC;
+  --text-2: #CBD5E1;
+  --text-3: #94A3B8;
+  --text-inv: #0F172A;
+
+  --blue:       #3B82F6;
+  --blue-light: rgba(59, 130, 246, 0.2);
+  --blue-mid:   #60A5FA;
+
+  --violet:       #8B5CF6;
+  --violet-light: rgba(139, 92, 246, 0.2);
+
+  --green:       #10B981;
+  --green-light: rgba(16, 185, 129, 0.2);
+  --red:         #EF4444;
+  --red-light:   rgba(239, 68, 68, 0.2);
+  --orange:      #F59E0B;
+  --orange-light:rgba(245, 158, 11, 0.2);
+
+  --shadow-xs: 0 1px 3px rgba(0,0,0,0.4);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.5);
+  --shadow-md: 0 6px 20px rgba(0,0,0,0.6);
+  --shadow-lg: 0 16px 40px rgba(0,0,0,0.7);
+}
+
 /* ---- Reset ---- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
@@ -777,3 +811,15 @@ img { max-width: 100%; display: block; }
 
 @keyframes marquee { 0% { transform: translateX(0%); } 100% { transform: translateX(-50%); } }
 
+/* Basic Markdown styling */
+.prose { font-size: 0.95rem; line-height: 1.6; color: #374151; }
+.prose p { margin-bottom: 0.75em; white-space: pre-wrap; }
+.prose ul { list-style-type: disc; padding-left: 1.5em; margin-bottom: 0.75em; }
+.prose ol { list-style-type: decimal; padding-left: 1.5em; margin-bottom: 0.75em; }
+.prose li { margin-bottom: 0.25em; }
+.prose strong { font-weight: 600; color: #111827; }
+.prose h1, .prose h2, .prose h3 { font-weight: 600; margin-top: 1em; margin-bottom: 0.5em; color: #111827; }
+.prose h1 { font-size: 1.4em; }
+.prose h2 { font-size: 1.2em; }
+.prose h3 { font-size: 1.1em; }
+.prose code { background: #F3F4F6; padding: 0.2em 0.4em; border-radius: 4px; font-family: monospace; font-size: 0.9em; }

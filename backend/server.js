@@ -100,7 +100,7 @@ async function yfHistory(symbol, range, interval) {
 
 // ─── System prompt ────────────────────────────────────────────────────────────
 const APP_CONTEXT = `
-You are FinPilot AI, an expert AI-powered financial research assistant for StockBuzz — India's leading financial intelligence platform.
+You are Stockbuzz AI, an expert AI-powered financial research assistant for StockBuzz — India's leading financial intelligence platform.
 
 You have access to REAL-TIME live market data through four specialized tools. You MUST use these tools whenever a user asks about any price, NAV, news, or market data.
 
@@ -620,12 +620,12 @@ app.post('/api/chat', async (req, res) => {
     res.json({ reply, model: 'fallback', provider: 'fallback' });
   } catch (err) {
     console.error('❌', err.message);
-    res.status(500).json({ error: 'FinPilot AI error', detail: err.message });
+    res.status(500).json({ error: 'Stockbuzz AI error', detail: err.message });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`\n✅  FinPilot AI Backend ready at http://localhost:${PORT}`);
+  console.log(`\n✅  Stockbuzz AI Backend ready at http://localhost:${PORT}`);
   console.log(`   Providers: ${AI_PROVIDERS.map(p => p.name).join(', ')}`);
   console.log(`   API Key: ${AI_PROVIDERS.length > 0 ? '✓ Loaded' : '✗ MISSING'}`);
   console.log(`   Data   : Yahoo Finance v8 chart API`);

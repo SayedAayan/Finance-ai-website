@@ -185,7 +185,7 @@ export default function AIChatSidebar({ isOpen, onClose }) {
         id: Date.now() + 1,
         type: 'ai',
         text: aiText,
-        source: 'FinPilot AI · Powered by Grok xAI'
+        source: 'Stockbuzz AI · Powered by Grok xAI'
       }]);
 
     } catch (err) {
@@ -203,7 +203,7 @@ export default function AIChatSidebar({ isOpen, onClose }) {
         id: Date.now() + 1,
         type: 'ai',
         text: fallbackText,
-        source: 'FinPilot AI Local Fallback'
+        source: 'Stockbuzz AI Local Fallback'
       }]);
     } finally {
       setLoading(false);
@@ -250,7 +250,7 @@ export default function AIChatSidebar({ isOpen, onClose }) {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Sparkles size={18} color="var(--violet)" />
-            <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-1)' }}>FinPilot AI Assistant</span>
+            <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-1)' }}>Stockbuzz AI Assistant</span>
           </div>
           <button 
             onClick={onClose}

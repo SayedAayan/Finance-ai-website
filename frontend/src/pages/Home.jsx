@@ -122,7 +122,7 @@ export default function Home({ onOpenAIChat }) {
                   <Sparkles size={22} />
                 </div>
                 <h1 className="text-[32px] md:text-[42px] font-bold text-textMain tracking-tight mb-3 leading-tight font-sans">What do you want to research?</h1>
-                <p className="text-[17px] leading-[1.5] text-gray-500 max-w-[700px] mx-auto">FinPilot AI helps you analyze stocks, mutual funds, and market trends with real-time data and smart insights.</p>
+                <p className="text-[17px] leading-[1.5] text-gray-500 max-w-[700px] mx-auto">Stockbuzz AI helps you analyze stocks, mutual funds, and market trends with real-time data and smart insights.</p>
               </motion.div>
 
               <motion.div variants={itemVariants} className="w-full max-w-[900px] mb-5 relative">
@@ -130,7 +130,7 @@ export default function Home({ onOpenAIChat }) {
                   <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*,application/pdf" className="hidden" />
                   <button onClick={() => fileInputRef.current?.click()} className="p-3 text-textMuted hover:text-primary transition-colors hover:bg-blue-50 rounded-full ml-1"><Plus size={24} /></button>
 
-                  <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAsk()} placeholder="Ask FinPilot AI about stocks, mutual funds, or finance..." className="flex-1 bg-transparent border-none outline-none text-base text-textMain px-2 h-full placeholder:text-gray-400" />
+                  <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAsk()} placeholder="Ask Stockbuzz AI about stocks, mutual funds, or finance..." className="flex-1 bg-transparent border-none outline-none text-base text-textMain px-2 h-full placeholder:text-gray-400" />
                   <button onClick={() => handleAsk()} disabled={!input.trim()} className="w-[42px] h-[42px] rounded-full bg-gray-100 text-textMuted flex items-center justify-center mr-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary hover:text-white"><Send size={16} className="ml-1" /></button>
                 </div>
               </motion.div>
@@ -217,7 +217,7 @@ export default function Home({ onOpenAIChat }) {
                   <div className="absolute top-[-30px] right-[-30px] w-48 h-48 bg-violet-400/20 rounded-full blur-[40px]"></div>
                   <div className="flex flex-col justify-between h-full relative z-10 max-w-[70%]">
                     <div>
-                      <div className="flex items-center gap-2 mb-4"><Activity size={18} className="text-violet-600"/><h3 className="font-bold text-textMain">FinPilot AI Insights</h3></div>
+                      <div className="flex items-center gap-2 mb-4"><Activity size={18} className="text-violet-600"/><h3 className="font-bold text-textMain">Stockbuzz AI Insights</h3></div>
                       <div className="bg-white/70 backdrop-blur-md rounded-[16px] p-4 border border-white shadow-sm mb-6"><p className="text-[13px] text-textMain leading-relaxed font-medium">Reliance Industries shows strong fundamentals with consistent revenue growth and improving profit margins. Would you like a detailed analysis?</p></div>
                     </div>
                     <button className="flex items-center gap-2 text-primary font-bold text-[13px] hover:gap-3 transition-all px-4 py-2 bg-white rounded-full shadow-sm hover:shadow-md border border-gray-50">Analyze Now <ArrowRight size={14} /></button>

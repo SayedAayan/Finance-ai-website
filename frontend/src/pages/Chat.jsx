@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Sparkles, Send, Plus, Paperclip, FileText, AlertCircle, ArrowRight, Image as ImageIcon, MessageSquare, Trash2, Edit, PanelLeftClose, PanelLeft } from 'lucide-react';
+import { Sparkles, Send, Plus, Paperclip, FileText, AlertCircle, ArrowRight, Image as ImageIcon, MessageSquare, Trash2, Edit, PanelLeftClose, PanelLeft, ArrowDown } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -26,6 +26,21 @@ export default function Chat() {
   const chatContainerRef = useRef(null);
   const initialMessageSentRef = useRef(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showScrollButton, setShowScrollButton] = useState(false);
+
+  const handleScroll = () => {
+    if (!chatContainerRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
+    if (scrollHeight - scrollTop - clientHeight > 100) {
+      setShowScrollButton(true);
+    } else {
+      setShowScrollButton(false);
+    }
+  };
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   useEffect(() => {
     fetchChats();
@@ -222,7 +237,7 @@ export default function Chat() {
         id: Date.now() + 1,
         type: 'ai',
         text: aiText,
-        source: 'FinPilot AI'
+        source: 'Stockbuzz AI'
       }];
       setMessages(finalMessages);
       
@@ -249,7 +264,7 @@ export default function Chat() {
         id: Date.now() + 1,
         type: 'ai',
         text: fallbackText,
-        source: 'FinPilot AI Local Fallback'
+        source: 'Stockbuzz AI Local Fallback'
       }];
       setMessages(finalMessages);
 
@@ -266,10 +281,10 @@ export default function Chat() {
   };
 
   return (
-    <div className="flex-1 flex bg-[#FCFCFF] max-h-[calc(100vh-80px)]">
+    <div className="fixed top-[102px] bottom-0 left-0 right-0 flex bg-[#FCFCFF] z-50">
       {/* Sidebar for Chat History */}
       {sidebarOpen ? (
-        <div className="w-[280px] bg-white border-r border-gray-200 flex flex-col h-[calc(100vh-80px)] shadow-sm flex-shrink-0">
+        <div className="w-[280px] bg-white border-r border-gray-200 flex flex-col h-full shadow-sm flex-shrink-0">
           <div className="p-4 border-b border-gray-100 flex items-center gap-2">
             <button
               onClick={createNewChat}
@@ -313,7 +328,7 @@ export default function Chat() {
           </div>
         </div>
       ) : (
-        <div className="w-[56px] bg-white border-r border-gray-200 flex flex-col items-center h-[calc(100vh-80px)] shadow-sm flex-shrink-0 py-4 gap-3">
+        <div className="w-[56px] bg-white border-r border-gray-200 flex flex-col items-center h-full shadow-sm flex-shrink-0 py-4 gap-3">
           <button
             onClick={() => setSidebarOpen(true)}
             className="p-2.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
@@ -332,10 +347,10 @@ export default function Chat() {
       )}
 
       {/* Main Chat Window */}
-      <div className="flex-1 flex flex-col h-[calc(100vh-80px)] relative overflow-hidden">
+      <div className="flex-1 flex flex-col h-full relative overflow-hidden">
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-8" ref={chatContainerRef}>
-          <div className="max-w-4xl mx-auto flex flex-col gap-6">
+        <div className="flex-1 overflow-y-auto p-8" ref={chatContainerRef} onScroll={handleScroll}>
+          <div className="max-w-4xl mx-auto flex flex-col gap-6 relative">
             {messages.length === 0 ? (
               <div className="text-center py-20 flex flex-col items-center">
                 <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-6">
@@ -403,6 +418,17 @@ export default function Chat() {
           </div>
         </div>
 
+        {/* Scroll to bottom button */}
+        {showScrollButton && (
+          <button
+            onClick={scrollToBottom}
+            className="absolute bottom-[100px] left-1/2 -translate-x-1/2 bg-white border border-gray-200 shadow-md rounded-full p-2 text-gray-500 hover:text-violet-600 hover:bg-gray-50 transition-all z-10"
+            title="Scroll to bottom"
+          >
+            <ArrowDown size={20} />
+          </button>
+        )}
+
         {/* Input */}
         <div className="bg-white border-t border-gray-200 px-8 py-5 shrink-0">
           <div className="max-w-4xl mx-auto">
@@ -439,7 +465,7 @@ export default function Chat() {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') sendContextualMessage();
                 }}
-                placeholder="Message FinPilot AI..."
+                placeholder="Message Stockbuzz AI..."
                 className="flex-1 bg-transparent border-none outline-none text-[15px] text-gray-800 placeholder:text-gray-400 h-full"
               />
               
@@ -452,7 +478,7 @@ export default function Chat() {
               </button>
             </div>
             <div className="text-center mt-3 text-xs text-gray-400">
-              FinPilot AI can make mistakes. Consider verifying important information.
+              Stockbuzz AI can make mistakes. Consider verifying important information.
             </div>
           </div>
         </div>

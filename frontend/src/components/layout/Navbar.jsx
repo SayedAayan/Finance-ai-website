@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Search, Bell, Sparkles, X } from 'lucide-react';
+import { Search, Bell, Sparkles, X, Moon, Sun, Settings as SettingsIcon } from 'lucide-react';
 import { mockStocks, mockFunds } from '../../data/mockData';
 import { motion, AnimatePresence } from 'framer-motion';
 import logo from '../../assets/logo.png';
@@ -18,6 +18,15 @@ export default function Navbar({ onToggleAIChat }) {
 
   // Notifications State
   const [showNotifications, setShowNotifications] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
   const [notifications, setNotifications] = useState([
     {
       id: 1,
@@ -175,7 +184,8 @@ export default function Navbar({ onToggleAIChat }) {
               { path: '/compare', label: 'Compare' },
               { path: '/watchlist', label: 'Watchlist' },
               { path: '/markets', label: 'Markets' },
-              { path: '/news', label: 'News' }
+              { path: '/news', label: 'News' },
+              { path: '/wealth', label: 'Wealth Bucket' }
             ].map((item) => (
               <Link
                 key={item.path}
@@ -302,6 +312,24 @@ export default function Navbar({ onToggleAIChat }) {
                 )}
               </AnimatePresence>
             </div>
+
+            {/* Dark Mode Toggle */}
+            <button
+              onClick={() => setIsDarkMode(!isDarkMode)}
+              className="relative p-2 rounded-full hover:bg-gray-100 transition-colors text-textMuted hover:text-textMain"
+              title="Toggle Dark Mode"
+            >
+              {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+
+            {/* Settings */}
+            <Link
+              to="/settings"
+              className="relative p-2 rounded-full hover:bg-gray-100 transition-colors text-textMuted hover:text-textMain"
+              title="Settings"
+            >
+              <SettingsIcon size={18} />
+            </Link>
 
             {/* Ask AI Button */}
             <button

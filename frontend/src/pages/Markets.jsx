@@ -133,7 +133,7 @@ export default function Markets() {
               <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
                 <Sparkles size={20} />
               </div>
-              <h2 className="text-xl font-bold">Ask FinPilot AI</h2>
+              <h2 className="text-xl font-bold">Ask Stockbuzz AI</h2>
             </div>
             <p className="text-violet-100 leading-relaxed mb-6">
               Want deeper insights? Our AI can analyze market trends, compare indices, and pull the latest financial news for you in real-time.
