@@ -190,7 +190,7 @@ export default function Home({ onOpenAIChat }) {
               <div className="bg-white dark:bg-gray-900 rounded-[22px] p-[24px] h-[290px] shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-md transition-all duration-300 flex flex-col justify-center">
                 <div className="flex justify-between items-center mb-5">
                   <h3 className="font-bold text-textMain dark:text-gray-100 flex items-center gap-2"><span className="text-xl">🔥</span> Trending Stocks</h3>
-                  <button className="text-primary dark:text-blue-400 text-xs font-bold bg-blue-50 dark:bg-blue-500/10 px-3 py-1 rounded-full">View all</button>
+                  <button onClick={() => navigate('/markets')} className="text-primary dark:text-blue-400 text-xs font-bold bg-blue-50 dark:bg-blue-500/10 px-3 py-1 rounded-full hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors">View all</button>
                 </div>
                 <div className="flex flex-col gap-4">
                   {stocks.slice(0, 3).map(stock => {
@@ -242,19 +242,18 @@ export default function Home({ onOpenAIChat }) {
                 </div>
               </div>
 
-              <div className="relative overflow-hidden rounded-[22px] p-[24px] h-[290px] shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-md transition-all duration-300 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-500/10 dark:to-indigo-500/10 text-textMain flex flex-col">
-                <div className="absolute top-[-30px] right-[-30px] w-48 h-48 bg-violet-400/20 rounded-full blur-[40px]"></div>
-                <div className="flex items-center justify-between mb-4 relative z-10">
-                  <div className="flex items-center gap-2"><Newspaper size={18} className="text-violet-600 dark:text-violet-400" /><h3 className="font-bold text-textMain dark:text-gray-100">Market Pulse</h3></div>
-                  <button onClick={() => navigate('/news')} className="text-[12px] font-bold text-primary dark:text-blue-400 hover:underline">View all</button>
+              <div className="bg-white dark:bg-gray-900 rounded-[22px] p-[24px] h-[290px] shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-md transition-all duration-300 flex flex-col">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-textMain dark:text-gray-100 flex items-center gap-2"><Newspaper size={18} className="text-gray-400 dark:text-gray-500" /> Market Pulse</h3>
+                  <button onClick={() => navigate('/news')} className="text-primary dark:text-blue-400 text-xs font-bold bg-blue-50 dark:bg-blue-500/10 px-3 py-1 rounded-full">View all</button>
                 </div>
-                <div className="relative z-10 overflow-hidden flex-1 [mask-image:linear-gradient(to_bottom,transparent,black_12px,black_calc(100%-12px),transparent)]">
+                <div className="relative overflow-hidden flex-1 [mask-image:linear-gradient(to_bottom,transparent,black_12px,black_calc(100%-12px),transparent)]">
                   <div className="flex flex-col gap-2.5 animate-[news-scroll_18s_linear_infinite] hover:[animation-play-state:paused]">
                     {[...mockNews, ...mockNews].map((article, i) => (
                       <div
                         key={`${article.id}-${i}`}
                         onClick={() => navigate('/news')}
-                        className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-md rounded-[14px] p-3 border border-white dark:border-gray-800 shadow-sm cursor-pointer hover:shadow-md transition-all group shrink-0"
+                        className="bg-gray-50 dark:bg-gray-800/60 rounded-[14px] p-3 border border-gray-100 dark:border-gray-800 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-all group shrink-0"
                       >
                         <div className="flex items-center gap-2 mb-1">
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${article.sentiment === 'positive' ? 'bg-green-100 dark:bg-green-500/10 text-success' : article.sentiment === 'negative' ? 'bg-red-100 dark:bg-red-500/10 text-danger' : 'bg-gray-100 dark:bg-gray-800 text-textMuted dark:text-gray-400'}`}>

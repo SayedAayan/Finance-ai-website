@@ -413,7 +413,7 @@
       "ticker": "RELIANCE",
       "pe": 28.5,
       "mcap": "₹19.8T",
-      "alert": "5000<40000"
+      "alert": "CROSSES_ABOVE_50DMA"
     },
     {
       "type": "stock",
@@ -422,16 +422,16 @@
       "ticker": "HDFCBANK",
       "pe": 19.8,
       "mcap": "₹12.8T",
-      "alert": null
+      "alert": "CROSSES_ABOVE_200DMA"
     },
     {
-      "type": "fund",
-      "id": "QUANT-ACTIVE",
-      "name": "Quant Active Fund",
-      "ticker": "Direct",
-      "pe": "-",
-      "mcap": "₹9,850 Cr",
-      "alert": null
+      "type": "stock",
+      "id": "APSEZ",
+      "name": "Adani Ports",
+      "ticker": "APSEZ",
+      "pe": 33.1,
+      "mcap": "₹2.6T",
+      "alert": "CROSSES_ABOVE_50DMA"
     }
   ]
 }
