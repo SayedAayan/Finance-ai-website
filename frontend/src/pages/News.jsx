@@ -47,10 +47,10 @@ const NEWS_ARTICLES = [
 export default function News() {
   const triggerAIChatWithArticle = (title) => {
     // Dispatch a custom event to notify App.jsx / AIChatSidebar to open and start a discussion about this article
-    const event = new CustomEvent('open-ai-chat', { 
-      detail: { 
+    const event = new CustomEvent('open-ai-chat', {
+      detail: {
         message: `Can you analyze the news article: "${title}" and tell me how it impacts my portfolio?`
-      } 
+      }
     });
     window.dispatchEvent(event);
   };
@@ -59,12 +59,12 @@ export default function News() {
     <div style={{ padding: '2rem 0 4rem 0', background: 'var(--bg-subtle)', minHeight: '100vh' }}>
       <div className="container">
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '2rem' }}>
-          <div style={{ 
-            background: 'linear-gradient(135deg, var(--blue), var(--violet))', 
-            padding: '10px', 
-            borderRadius: '12px', 
-            display: 'flex', 
-            alignItems: 'center', 
+          <div style={{
+            background: 'linear-gradient(135deg, var(--blue), var(--violet))',
+            padding: '10px',
+            borderRadius: '12px',
+            display: 'flex',
+            alignItems: 'center',
             justifyContent: 'center',
             color: 'white'
           }}>
@@ -78,12 +78,12 @@ export default function News() {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem' }}>
           {NEWS_ARTICLES.map((article) => (
-            <div 
-              key={article.id} 
-              className="glass-panel" 
-              style={{ 
-                padding: '1.5rem', 
-                borderRadius: '16px', 
+            <div
+              key={article.id}
+              className="glass-panel"
+              style={{
+                padding: '1.5rem',
+                borderRadius: '16px',
                 border: '1px solid var(--neutral-200)',
                 background: 'white',
                 boxShadow: 'var(--shadow-sm)',
@@ -99,7 +99,7 @@ export default function News() {
                   <span>•</span>
                   <span>{article.time}</span>
                 </div>
-                
+
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <span style={{
                     fontSize: '0.75rem',
@@ -116,7 +116,7 @@ export default function News() {
                     {article.sentiment === 'negative' && <TrendingDown size={12} />}
                     {article.sentiment.toUpperCase()}
                   </span>
-                  
+
                   <span style={{
                     fontSize: '0.75rem',
                     fontWeight: 600,
@@ -140,9 +140,9 @@ export default function News() {
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px', paddingTop: '12px', borderTop: '1px solid var(--neutral-100)' }}>
-                <span style={{ 
-                  fontSize: '0.8rem', 
-                  fontWeight: 600, 
+                <span style={{
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
                   color: 'var(--blue)',
                   background: 'rgba(59, 130, 246, 0.08)',
                   padding: '4px 10px',
@@ -151,7 +151,7 @@ export default function News() {
                   Ticker: {article.related}
                 </span>
 
-                <button 
+                <button
                   onClick={() => triggerAIChatWithArticle(article.title)}
                   className="btn btn-violet btn-sm"
                   style={{ gap: '6px', borderRadius: '8px' }}

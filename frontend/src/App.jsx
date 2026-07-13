@@ -21,7 +21,7 @@ function Layout() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative' }}>
       <Navbar onToggleAIChat={() => setIsAIChatOpen(true)} />
-      
+
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <Routes>
           <Route path="/" element={<Home onOpenAIChat={() => setIsAIChatOpen(true)} />} />

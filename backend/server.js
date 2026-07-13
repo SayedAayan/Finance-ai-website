@@ -447,10 +447,10 @@ app.post('/api/chats', async (req, res) => {
   try {
     const db = await readDB();
     if (!db.chats) db.chats = {};
-    
+
     const id = Date.now().toString();
     const { title = 'New Chat', messages = [] } = req.body || {};
-    
+
     db.chats[id] = {
       id,
       title,
@@ -458,7 +458,7 @@ app.post('/api/chats', async (req, res) => {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
-    
+
     await writeDB(db);
     res.json({ chat: db.chats[id] });
   } catch (err) {
@@ -471,12 +471,12 @@ app.put('/api/chats/:id', async (req, res) => {
     const db = await readDB();
     const chat = db.chats?.[req.params.id];
     if (!chat) return res.status(404).json({ error: 'Chat not found' });
-    
+
     const { messages, title } = req.body || {};
     if (messages) chat.messages = messages;
     if (title) chat.title = title;
     chat.updatedAt = new Date().toISOString();
-    
+
     await writeDB(db);
     res.json({ chat });
   } catch (err) {

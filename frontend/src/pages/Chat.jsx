@@ -13,7 +13,7 @@ export default function Chat() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  
+
   // Chat History State
   const [chatHistory, setChatHistory] = useState([]);
   const [activeChatId, setActiveChatId] = useState(null);
@@ -154,7 +154,7 @@ export default function Chat() {
 
     const messageId = Date.now();
     let attachedFileInfo = null;
-    
+
     if (selectedFile) {
       attachedFileInfo = {
         name: selectedFile.name,
@@ -163,13 +163,13 @@ export default function Chat() {
       };
     }
 
-    const newUserMessage = { 
-      id: messageId, 
-      type: 'user', 
-      text: q, 
-      file: attachedFileInfo 
+    const newUserMessage = {
+      id: messageId,
+      type: 'user',
+      text: q,
+      file: attachedFileInfo
     };
-    
+
     const updatedMessages = [...messages, newUserMessage];
     setMessages(updatedMessages);
     setInput('');
@@ -240,7 +240,7 @@ export default function Chat() {
         source: 'Stockbuzz AI'
       }];
       setMessages(finalMessages);
-      
+
       // Update DB with AI reply
       if (currentChatId) {
         await fetch(`${API_URL}/chats/${currentChatId}`, {
@@ -252,7 +252,7 @@ export default function Chat() {
 
     } catch (err) {
       console.error(err);
-      
+
       let fallbackText = `### Connection Error\nI'm unable to reach the backend AI providers.\n\n`;
       if (attachedFileInfo) {
         fallbackText += `I received your uploaded document: **${attachedFileInfo.name}**. Since the live API is unreachable, here is a local analysis of your Demat verification request:\n\n- **File Verified:** ${attachedFileInfo.name}\n- **Integrity Status:** High Trust\n- **Suggested Action:** Compare holdings on the Compare tool.`;
@@ -444,22 +444,22 @@ export default function Chat() {
               </div>
             )}
             <div className="relative flex items-center bg-gray-50 border border-gray-200 rounded-full px-4 h-[60px] focus-within:bg-white focus-within:ring-2 focus-within:ring-violet-500/20 focus-within:border-violet-300 transition-all shadow-sm">
-              <input 
-                type="file" 
-                ref={fileInputRef} 
+              <input
+                type="file"
+                ref={fileInputRef}
                 onChange={handleFileChange}
                 className="hidden"
                 accept="image/*,application/pdf"
               />
-              <button 
+              <button
                 onClick={triggerFileUpload}
                 className="p-2.5 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded-full transition-colors mr-2"
                 title="Add attachment"
               >
                 <Plus size={22} />
               </button>
-              
-              <input 
+
+              <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {
@@ -468,8 +468,8 @@ export default function Chat() {
                 placeholder="Message Stockbuzz AI..."
                 className="flex-1 bg-transparent border-none outline-none text-[15px] text-gray-800 placeholder:text-gray-400 h-full"
               />
-              
-              <button 
+
+              <button
                 onClick={() => sendContextualMessage()}
                 disabled={!input.trim() && !selectedFile}
                 className="w-10 h-10 rounded-full flex items-center justify-center ml-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-violet-600 text-white hover:bg-violet-700 hover:shadow-md"

@@ -363,6 +363,46 @@
       ],
       "createdAt": "2026-07-10T11:30:47.153Z",
       "updatedAt": "2026-07-10T11:30:49.714Z"
+    },
+    "1783920640898": {
+      "id": "1783920640898",
+      "title": "Tell me about Reliance",
+      "messages": [
+        {
+          "id": 1783920640848,
+          "type": "user",
+          "text": "Tell me about Reliance",
+          "file": null
+        },
+        {
+          "id": 1783920646148,
+          "type": "ai",
+          "text": "Here's the information about Reliance Industries:\n\n* **Current Price**: ₹1,298.50\n* **Change**: -₹196.70 (-13.16%)\n* **52-Week Range**: ₹1,253.20 - ₹1,611.80\n* **Volume**: 3,003,617\n\nReliance Industries Limited is a listed company on the National Stock Exchange of India (NSE) with the ticker symbol RELIANCE.NS.",
+          "source": "Stockbuzz AI"
+        }
+      ],
+      "createdAt": "2026-07-13T05:30:40.898Z",
+      "updatedAt": "2026-07-13T05:30:46.151Z"
+    },
+    "1783921198640": {
+      "id": "1783921198640",
+      "title": "i have 1 lakh rupees in mutual...",
+      "messages": [
+        {
+          "id": 1783921198622,
+          "type": "user",
+          "text": "i have 1 lakh rupees in mutual funds or stock i should invest to get a 1.5 lakh in 6 months ",
+          "file": null
+        },
+        {
+          "id": 1783921201435,
+          "type": "ai",
+          "text": "### Connection Error\nI'm unable to reach the backend AI providers.\n\nRegarding your query \"i have 1 lakh rupees in mutual funds or stock i should invest to get a 1.5 lakh in 6 months \":\n- StockBuzz live data confirms active research is available for Reliance, TCS, HDFC, and PPFAS.\n- Please consult scheme related documents or a SEBI registered advisor.",
+          "source": "Stockbuzz AI Local Fallback"
+        }
+      ],
+      "createdAt": "2026-07-13T05:39:58.640Z",
+      "updatedAt": "2026-07-13T05:40:01.465Z"
     }
   },
   "watchlist": [

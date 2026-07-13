@@ -35,7 +35,30 @@ export default function Watchlist() {
           const price = `₹${q.currentPrice.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
           const change = `${q.changePercent >= 0 ? '+' : ''}${q.changePercent}%`;
           const up = q.changePercent >= 0;
-          return { ...item, price, change, up };
+          
+          let alertTriggered = false;
+          let alertMessage = '';
+          if (item.alert) {
+            const p = q.currentPrice;
+            if (item.alert === 'CROSSES_ABOVE_50DMA' && q.dma50 && p > q.dma50 && q.previousClose <= q.dma50) {
+              alertTriggered = true; alertMessage = `Crossed above 50 DMA (₹${q.dma50.toFixed(2)})`;
+            } else if (item.alert === 'CROSSES_BELOW_50DMA' && q.dma50 && p < q.dma50 && q.previousClose >= q.dma50) {
+              alertTriggered = true; alertMessage = `Crossed below 50 DMA (₹${q.dma50.toFixed(2)})`;
+            } else if (item.alert === 'CROSSES_ABOVE_200DMA' && q.dma200 && p > q.dma200 && q.previousClose <= q.dma200) {
+              alertTriggered = true; alertMessage = `Crossed above 200 DMA (₹${q.dma200.toFixed(2)})`;
+            } else if (item.alert === 'CROSSES_BELOW_200DMA' && q.dma200 && p < q.dma200 && q.previousClose >= q.dma200) {
+              alertTriggered = true; alertMessage = `Crossed below 200 DMA (₹${q.dma200.toFixed(2)})`;
+            }
+            // For testing: trigger if it is currently above/below since previous price crosses are rare on single fetch
+            if (!alertTriggered) {
+               if (item.alert === 'CROSSES_ABOVE_50DMA' && q.dma50 && p > q.dma50) { alertTriggered = true; alertMessage = `Currently above 50 DMA (₹${q.dma50.toFixed(2)})`; }
+               if (item.alert === 'CROSSES_BELOW_50DMA' && q.dma50 && p < q.dma50) { alertTriggered = true; alertMessage = `Currently below 50 DMA (₹${q.dma50.toFixed(2)})`; }
+               if (item.alert === 'CROSSES_ABOVE_200DMA' && q.dma200 && p > q.dma200) { alertTriggered = true; alertMessage = `Currently above 200 DMA (₹${q.dma200.toFixed(2)})`; }
+               if (item.alert === 'CROSSES_BELOW_200DMA' && q.dma200 && p < q.dma200) { alertTriggered = true; alertMessage = `Currently below 200 DMA (₹${q.dma200.toFixed(2)})`; }
+            }
+          }
+
+          return { ...item, price, change, up, alertTriggered, alertMessage };
         }));
       })
       .catch(() => {});
@@ -165,7 +188,9 @@ export default function Watchlist() {
               </div>
 
               <div className="wl-hide" style={{ textAlign: 'right' }}>
-                {item.alert ? (
+                {item.alertTriggered ? (
+                  <span className="badge badge-red" title={item.alertMessage}><Bell size={10} /> {item.alertMessage}</span>
+                ) : item.alert ? (
                   <span className="badge badge-orange"><Bell size={10} /> Alert set</span>
                 ) : (
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-3)' }}>No alert</span>
@@ -367,29 +392,46 @@ function AddAssetModal({ existingIds, onAdd, onClose }) {
 function ManageAlertsModal({ items, onSetAlert, onClose }) {
   const [drafts, setDrafts] = useState(() => Object.fromEntries(items.map(i => [i.id, i.alert || ''])));
 
+  const alertOptions = [
+    { value: '', label: 'No Alert' },
+    { value: 'CROSSES_ABOVE_50DMA', label: 'Crosses above 50-DMA' },
+    { value: 'CROSSES_BELOW_50DMA', label: 'Crosses below 50-DMA' },
+    { value: 'CROSSES_ABOVE_200DMA', label: 'Crosses above 200-DMA' },
+    { value: 'CROSSES_BELOW_200DMA', label: 'Crosses below 200-DMA' }
+  ];
+
   return (
-    <ModalShell title="Manage Alerts" onClose={onClose}>
+    <ModalShell title="Manage DMA Alerts" onClose={onClose}>
       {items.length === 0 && (
         <p style={{ color: 'var(--text-3)', fontSize: '0.85rem', textAlign: 'center', padding: '20px 0' }}>Add assets to your watchlist to set alerts.</p>
       )}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {items.map(item => (
           <div key={item.id} style={{ border: '1px solid var(--border)', borderRadius: '10px', padding: '12px' }}>
-            <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: '8px' }}>{item.name}</div>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <input
-                value={drafts[item.id] ?? ''}
-                onChange={(e) => setDrafts(prev => ({ ...prev, [item.id]: e.target.value }))}
-                placeholder="e.g. > ₹3,000 or AUM drops < ₹40,000 Cr"
-                style={{ flex: 1, border: '1px solid var(--border)', borderRadius: '8px', padding: '8px 10px', fontSize: '0.85rem', outline: 'none' }}
-              />
-              <button
-                className="btn btn-primary btn-sm"
-                onClick={() => onSetAlert(item.id, drafts[item.id]?.trim() || null)}
-              >
-                Save
-              </button>
-            </div>
+            <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: '8px' }}>{item.name} {item.type === 'stock' ? '(Stock)' : ''}</div>
+            {item.type === 'stock' ? (
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <select
+                  value={drafts[item.id] ?? ''}
+                  onChange={(e) => setDrafts(prev => ({ ...prev, [item.id]: e.target.value }))}
+                  style={{ flex: 1, border: '1px solid var(--border)', borderRadius: '8px', padding: '8px 10px', fontSize: '0.85rem', outline: 'none', background: 'white' }}
+                >
+                  {alertOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+                <button
+                  className="btn btn-primary btn-sm"
+                  onClick={() => onSetAlert(item.id, drafts[item.id] || null)}
+                >
+                  Save
+                </button>
+              </div>
+            ) : (
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-3)' }}>
+                DMA alerts are currently only supported for Stocks.
+              </div>
+            )}
           </div>
         ))}
       </div>
