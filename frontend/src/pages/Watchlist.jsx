@@ -216,7 +216,7 @@ export default function Watchlist() {
         </div>
 
         {/* Demat Sync and File Upload Section */}
-        <div className="card" style={{ padding: '1.5rem', background: 'white', borderRadius: '16px', border: '1px solid var(--neutral-200)', marginBottom: '24px' }}>
+        <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-card)', borderRadius: '16px', border: '1px solid var(--border)', marginBottom: '24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1rem' }}>
             <Shield size={20} color="var(--blue)" />
             <h3 style={{ margin: 0, fontWeight: 700, fontSize: '1.15rem' }}>Demat Integration</h3>
@@ -323,7 +323,7 @@ function ModalShell({ title, onClose, children }) {
       onClick={onClose}
     >
       <div
-        style={{ background: 'white', borderRadius: '16px', width: '100%', maxWidth: '480px', maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }}
+        style={{ background: 'var(--bg-card)', borderRadius: '16px', width: '100%', maxWidth: '480px', maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }}
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px', borderBottom: '1px solid var(--border)' }}>
@@ -414,7 +414,7 @@ function ManageAlertsModal({ items, onSetAlert, onClose }) {
                 <select
                   value={drafts[item.id] ?? ''}
                   onChange={(e) => setDrafts(prev => ({ ...prev, [item.id]: e.target.value }))}
-                  style={{ flex: 1, border: '1px solid var(--border)', borderRadius: '8px', padding: '8px 10px', fontSize: '0.85rem', outline: 'none', background: 'white' }}
+                  style={{ flex: 1, border: '1px solid var(--border)', borderRadius: '8px', padding: '8px 10px', fontSize: '0.85rem', outline: 'none', background: 'var(--bg-card)', color: 'var(--text-1)' }}
                 >
                   {alertOptions.map(opt => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>

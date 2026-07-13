@@ -281,64 +281,64 @@ export default function Chat() {
   };
 
   return (
-    <div className="fixed top-[102px] bottom-0 left-0 right-0 flex bg-[#FCFCFF] z-50">
+    <div className="fixed top-[102px] bottom-0 left-0 right-0 flex bg-[#FCFCFF] dark:bg-gray-950 z-50">
       {/* Sidebar for Chat History */}
       {sidebarOpen ? (
-        <div className="w-[280px] bg-white border-r border-gray-200 flex flex-col h-full shadow-sm flex-shrink-0">
-          <div className="p-4 border-b border-gray-100 flex items-center gap-2">
+        <div className="w-[280px] bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col h-full shadow-sm flex-shrink-0">
+          <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
             <button
               onClick={createNewChat}
-              className="flex-1 flex items-center justify-center gap-2 bg-violet-50 text-violet-600 hover:bg-violet-100 px-4 py-2.5 rounded-lg font-medium transition-colors border border-violet-100"
+              className="flex-1 flex items-center justify-center gap-2 bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-500/20 px-4 py-2.5 rounded-lg font-medium transition-colors border border-violet-100 dark:border-violet-500/20"
             >
               <Edit size={16} /> New Chat
             </button>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="p-2.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
+              className="p-2.5 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors flex-shrink-0"
               title="Hide recent chats"
             >
               <PanelLeftClose size={18} />
             </button>
           </div>
           <div className="flex-1 overflow-y-auto p-3">
-            <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-2">Recent Chats</div>
+            <div className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3 px-2">Recent Chats</div>
             <div className="flex flex-col gap-1">
               {chatHistory.map(chat => (
                 <div
                   key={chat.id}
                   onClick={() => loadChat(chat.id)}
-                  className={`group flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${activeChatId === chat.id ? 'bg-violet-50 text-violet-700' : 'hover:bg-gray-50 text-gray-700'}`}
+                  className={`group flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${activeChatId === chat.id ? 'bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400' : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'}`}
                 >
                   <div className="flex items-center gap-3 overflow-hidden">
-                    <MessageSquare size={16} className={activeChatId === chat.id ? 'text-violet-500' : 'text-gray-400'} />
+                    <MessageSquare size={16} className={activeChatId === chat.id ? 'text-violet-500 dark:text-violet-400' : 'text-gray-400 dark:text-gray-500'} />
                     <span className="truncate text-sm font-medium">{chat.title}</span>
                   </div>
                   <button
                     onClick={(e) => deleteChat(chat.id, e)}
-                    className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                    className="text-gray-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
                   >
                     <Trash2 size={14} />
                   </button>
                 </div>
               ))}
               {chatHistory.length === 0 && (
-                <div className="px-2 py-4 text-sm text-gray-400 text-center">No chat history yet.</div>
+                <div className="px-2 py-4 text-sm text-gray-400 dark:text-gray-500 text-center">No chat history yet.</div>
               )}
             </div>
           </div>
         </div>
       ) : (
-        <div className="w-[56px] bg-white border-r border-gray-200 flex flex-col items-center h-full shadow-sm flex-shrink-0 py-4 gap-3">
+        <div className="w-[56px] bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col items-center h-full shadow-sm flex-shrink-0 py-4 gap-3">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="p-2.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2.5 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
             title="Show recent chats"
           >
             <PanelLeft size={18} />
           </button>
           <button
             onClick={createNewChat}
-            className="p-2.5 text-violet-600 hover:bg-violet-50 rounded-lg transition-colors"
+            className="p-2.5 text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-500/10 rounded-lg transition-colors"
             title="New Chat"
           >
             <Edit size={18} />
@@ -353,11 +353,11 @@ export default function Chat() {
           <div className="max-w-4xl mx-auto flex flex-col gap-6 relative">
             {messages.length === 0 ? (
               <div className="text-center py-20 flex flex-col items-center">
-                <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-6">
-                  <Sparkles size={32} className="text-blue-500" />
+                <div className="w-16 h-16 bg-blue-50 dark:bg-blue-500/10 rounded-full flex items-center justify-center mb-6">
+                  <Sparkles size={32} className="text-blue-500 dark:text-blue-400" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-3">How can I help you today?</h2>
-                <p className="text-gray-500 max-w-md">
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3">How can I help you today?</h2>
+                <p className="text-gray-500 dark:text-gray-400 max-w-md">
                   Ask me about stocks, mutual funds, or market trends. I have access to real-time financial data.
                 </p>
               </div>
@@ -371,7 +371,7 @@ export default function Chat() {
                   {m.type === 'user' ? (
                     <div className="max-w-[80%] flex flex-col items-end">
                       {m.file && (
-                        <div className="mb-2 px-4 py-2 bg-indigo-50 border border-indigo-100 rounded-xl flex items-center gap-2 text-sm font-semibold text-indigo-700">
+                        <div className="mb-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 rounded-xl flex items-center gap-2 text-sm font-semibold text-indigo-700 dark:text-indigo-400">
                           {m.file.type.startsWith('image/') ? <ImageIcon size={16} /> : <FileText size={16} />}
                           <span className="truncate max-w-[200px]">{m.file.name}</span>
                         </div>
@@ -384,15 +384,15 @@ export default function Chat() {
                     </div>
                   ) : (
                     <div className="flex gap-4 max-w-[85%]">
-                      <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center flex-shrink-0 mt-1">
-                        <Sparkles size={16} className="text-violet-600" />
+                      <div className="w-8 h-8 rounded-full bg-violet-100 dark:bg-violet-500/10 flex items-center justify-center flex-shrink-0 mt-1">
+                        <Sparkles size={16} className="text-violet-600 dark:text-violet-400" />
                       </div>
-                      <div className="bg-white border border-gray-200 px-6 py-4 rounded-2xl rounded-tl-sm shadow-sm prose prose-sm max-w-none text-gray-800">
+                      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 px-6 py-4 rounded-2xl rounded-tl-sm shadow-sm prose prose-sm dark:prose-invert max-w-none text-gray-800 dark:text-gray-200">
                         <ReactMarkdown remarkPlugins={[remarkGfm]}>
                           {m.text}
                         </ReactMarkdown>
                         {m.source && (
-                          <div className="mt-4 pt-3 border-t border-gray-100 flex items-center gap-1.5 text-xs text-gray-400 font-medium">
+                          <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500 font-medium">
                             <AlertCircle size={12} /> {m.source}
                           </div>
                         )}
@@ -404,10 +404,10 @@ export default function Chat() {
             )}
             {loading && (
               <div className="flex gap-4 max-w-[85%]">
-                <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center flex-shrink-0 mt-1">
-                  <Sparkles size={16} className="text-violet-600" />
+                <div className="w-8 h-8 rounded-full bg-violet-100 dark:bg-violet-500/10 flex items-center justify-center flex-shrink-0 mt-1">
+                  <Sparkles size={16} className="text-violet-600 dark:text-violet-400" />
                 </div>
-                <div className="bg-white border border-gray-200 px-5 py-4 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-1.5 h-[52px]">
+                <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 px-5 py-4 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-1.5 h-[52px]">
                   <span className="w-2 h-2 rounded-full bg-violet-500 animate-pulse"></span>
                   <span className="w-2 h-2 rounded-full bg-violet-500 animate-pulse delay-100"></span>
                   <span className="w-2 h-2 rounded-full bg-violet-500 animate-pulse delay-200"></span>
@@ -422,7 +422,7 @@ export default function Chat() {
         {showScrollButton && (
           <button
             onClick={scrollToBottom}
-            className="absolute bottom-[100px] left-1/2 -translate-x-1/2 bg-white border border-gray-200 shadow-md rounded-full p-2 text-gray-500 hover:text-violet-600 hover:bg-gray-50 transition-all z-10"
+            className="absolute bottom-[100px] left-1/2 -translate-x-1/2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-md rounded-full p-2 text-gray-500 dark:text-gray-400 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all z-10"
             title="Scroll to bottom"
           >
             <ArrowDown size={20} />
@@ -430,20 +430,20 @@ export default function Chat() {
         )}
 
         {/* Input */}
-        <div className="bg-white border-t border-gray-200 px-8 py-5 shrink-0">
+        <div className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 px-8 py-5 shrink-0">
           <div className="max-w-4xl mx-auto">
             {filePreview && (
-              <div className="mb-3 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl flex items-center justify-between max-w-sm">
-                <div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                  {filePreview === 'pdf-icon' ? <FileText size={16} className="text-blue-500" /> : <ImageIcon size={16} className="text-blue-500" />}
+              <div className="mb-3 px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl flex items-center justify-between max-w-sm">
+                <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  {filePreview === 'pdf-icon' ? <FileText size={16} className="text-blue-500 dark:text-blue-400" /> : <ImageIcon size={16} className="text-blue-500 dark:text-blue-400" />}
                   <span className="truncate max-w-[200px]">{selectedFile?.name}</span>
                 </div>
-                <button onClick={removeSelectedFile} className="text-gray-400 hover:text-red-500 p-1">
+                <button onClick={removeSelectedFile} className="text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 p-1">
                   <AlertCircle size={16} className="rotate-45" />
                 </button>
               </div>
             )}
-            <div className="relative flex items-center bg-gray-50 border border-gray-200 rounded-full px-4 h-[60px] focus-within:bg-white focus-within:ring-2 focus-within:ring-violet-500/20 focus-within:border-violet-300 transition-all shadow-sm">
+            <div className="relative flex items-center bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full px-4 h-[60px] focus-within:bg-white dark:focus-within:bg-gray-900 focus-within:ring-2 focus-within:ring-violet-500/20 focus-within:border-violet-300 dark:focus-within:border-violet-500/40 transition-all shadow-sm">
               <input
                 type="file"
                 ref={fileInputRef}
@@ -453,7 +453,7 @@ export default function Chat() {
               />
               <button
                 onClick={triggerFileUpload}
-                className="p-2.5 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded-full transition-colors mr-2"
+                className="p-2.5 text-gray-400 dark:text-gray-500 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-500/10 rounded-full transition-colors mr-2"
                 title="Add attachment"
               >
                 <Plus size={22} />
@@ -466,7 +466,7 @@ export default function Chat() {
                   if (e.key === 'Enter') sendContextualMessage();
                 }}
                 placeholder="Message Stockbuzz AI..."
-                className="flex-1 bg-transparent border-none outline-none text-[15px] text-gray-800 placeholder:text-gray-400 h-full"
+                className="flex-1 bg-transparent border-none outline-none text-[15px] text-gray-800 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 h-full"
               />
 
               <button
@@ -477,7 +477,7 @@ export default function Chat() {
                 <Send size={16} className="ml-0.5" />
               </button>
             </div>
-            <div className="text-center mt-3 text-xs text-gray-400">
+            <div className="text-center mt-3 text-xs text-gray-400 dark:text-gray-500">
               Stockbuzz AI can make mistakes. Consider verifying important information.
             </div>
           </div>

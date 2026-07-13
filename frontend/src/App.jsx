@@ -11,6 +11,7 @@ import News from './pages/News';
 import Settings from './pages/Settings';
 import Chat from './pages/Chat';
 import Markets from './pages/Markets';
+import WealthBucket from './pages/WealthBucket';
 import AIChatSidebar from './components/features/AIChatSidebar';
 
 function Layout() {
@@ -30,6 +31,7 @@ function Layout() {
           <Route path="/compare" element={<Compare />} />
           <Route path="/watchlist" element={<Watchlist />} />
           <Route path="/markets" element={<Markets />} />
+          <Route path="/wealth" element={<WealthBucket />} />
           <Route path="/news" element={<News />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/chat" element={<Chat />} />

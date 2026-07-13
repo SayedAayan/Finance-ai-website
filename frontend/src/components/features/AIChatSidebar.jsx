@@ -231,7 +231,7 @@ export default function AIChatSidebar({ isOpen, onClose }) {
         width: '420px',
         maxWidth: '100%',
         height: '100%',
-        background: 'white',
+        background: 'var(--bg-card)',
         boxShadow: '-10px 0 30px rgba(0,0,0,0.15)',
         display: 'flex',
         flexDirection: 'column',
@@ -281,7 +281,7 @@ export default function AIChatSidebar({ isOpen, onClose }) {
           gap: '6px'
         }}>
           <span style={{ fontWeight: 700, color: 'var(--violet)' }}>ACTIVE CONTEXT:</span>
-          <span style={{ fontWeight: 600, color: 'var(--text-1)', background: 'white', padding: '2px 8px', borderRadius: '4px', border: '1px solid var(--neutral-200)' }}>
+          <span style={{ fontWeight: 600, color: 'var(--text-1)', background: 'var(--bg-card)', padding: '2px 8px', borderRadius: '4px', border: '1px solid var(--neutral-200)' }}>
             {context.type} — {context.name}
           </span>
         </div>
@@ -294,7 +294,7 @@ export default function AIChatSidebar({ isOpen, onClose }) {
           display: 'flex',
           flexDirection: 'column',
           gap: '16px',
-          background: '#fcfcfd'
+          background: 'var(--bg-subtle)'
         }}>
           {messages.length === 0 ? (
             <div style={{
@@ -323,12 +323,12 @@ export default function AIChatSidebar({ isOpen, onClose }) {
                       <div style={{
                         marginBottom: '4px',
                         padding: '6px 12px',
-                        background: '#e0e7ff',
+                        background: 'var(--indigo-soft, rgba(99, 102, 241, 0.12))',
                         borderRadius: '12px',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '8px',
-                        border: '1px solid #c7d2fe',
+                        border: '1px solid var(--indigo-soft-border, rgba(99, 102, 241, 0.25))',
                         fontSize: '0.75rem',
                         fontWeight: 600
                       }}>
@@ -364,8 +364,8 @@ export default function AIChatSidebar({ isOpen, onClose }) {
                     }}>
                       <Sparkles size={13} color="var(--violet)" />
                     </div>
-                    <div className="prose prose-sm max-w-none" style={{
-                      background: 'white',
+                    <div className="prose prose-sm dark:prose-invert max-w-none" style={{
+                      background: 'var(--bg-card)',
                       border: '1px solid var(--neutral-200)',
                       padding: '12px 14px',
                       borderRadius: '2px 16px 16px 16px',
@@ -412,7 +412,7 @@ export default function AIChatSidebar({ isOpen, onClose }) {
                 <Sparkles size={13} color="var(--violet)" />
               </div>
               <div style={{
-                background: 'white',
+                background: 'var(--bg-card)',
                 border: '1px solid var(--neutral-200)',
                 padding: '12px 16px',
                 borderRadius: '2px 16px 16px 16px',
@@ -436,7 +436,7 @@ export default function AIChatSidebar({ isOpen, onClose }) {
         <div style={{
           padding: '16px 20px',
           borderTop: '1px solid var(--neutral-200)',
-          background: 'white'
+          background: 'var(--bg-card)'
         }}>
           {/* File attachment preview */}
           {filePreview && (

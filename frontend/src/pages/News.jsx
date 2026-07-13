@@ -1,48 +1,6 @@
 import React from 'react';
 import { Newspaper, MessageSquare, Sparkles, TrendingUp, TrendingDown } from 'lucide-react';
-
-const NEWS_ARTICLES = [
-  {
-    id: 1,
-    title: 'Reliance Industries Invests ₹75,000 Crore in New Energy Giga Factories',
-    summary: 'Reliance Industries is expanding its green energy portfolio with four giga factories for solar panels, energy storage, electrolysers, and fuel cells in Gujarat.',
-    source: 'Financial Express',
-    time: '2 hours ago',
-    sentiment: 'positive',
-    impact: 'High',
-    related: 'RELIANCE'
-  },
-  {
-    id: 2,
-    title: 'IT Sector Braces for Soft Q1 Earnings Amid Global Spending Slowdown',
-    summary: 'Leading IT services firms including TCS are expected to report modest growth as enterprise clients in the US and Europe optimize their discretionary spending budgets.',
-    source: 'Economic Times',
-    time: '4 hours ago',
-    sentiment: 'neutral',
-    impact: 'Medium',
-    related: 'TCS'
-  },
-  {
-    id: 3,
-    title: 'HDFC Mutual Fund Launches New Multi-Asset Allocation Scheme',
-    summary: 'The fund house announces a new open-ended scheme investing in equity, debt, and gold, aimed at providing asset diversification for retail investors.',
-    source: 'Moneycontrol',
-    time: '1 day ago',
-    sentiment: 'positive',
-    impact: 'Low',
-    related: 'HDFC-FLEXI'
-  },
-  {
-    id: 4,
-    title: 'SEBI Proposes Tighter Rules for Mutual Fund Expense Ratios',
-    summary: 'The regulator aims to increase transparency by proposing unified expense ratios that include all transaction costs and brokerages, potentially lowering investor costs.',
-    source: 'Mint',
-    time: '2 days ago',
-    sentiment: 'negative',
-    impact: 'High',
-    related: 'PPFAS-FLEXI'
-  }
-];
+import { mockNews as NEWS_ARTICLES } from '../data/mockData';
 
 export default function News() {
   const triggerAIChatWithArticle = (title) => {
@@ -85,7 +43,7 @@ export default function News() {
                 padding: '1.5rem',
                 borderRadius: '16px',
                 border: '1px solid var(--neutral-200)',
-                background: 'white',
+                background: 'var(--bg-card)',
                 boxShadow: 'var(--shadow-sm)',
                 transition: 'transform 0.2s, box-shadow 0.2s',
                 display: 'flex',

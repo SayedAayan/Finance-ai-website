@@ -39,7 +39,7 @@ export default function Settings() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           
           {/* Subscription Section */}
-          <div className="glass-panel" style={{ padding: '1.5rem', background: 'white', borderRadius: '16px', border: '1px solid var(--neutral-200)' }}>
+          <div className="glass-panel" style={{ padding: '1.5rem', background: 'var(--bg-card)', borderRadius: '16px', border: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <CreditCard className="text-primary-600" size={20} color="var(--violet)" />
@@ -111,7 +111,7 @@ export default function Settings() {
 
 
           {/* Notifications Preferences */}
-          <div className="glass-panel" style={{ padding: '1.5rem', background: 'white', borderRadius: '16px', border: '1px solid var(--neutral-200)' }}>
+          <div className="glass-panel" style={{ padding: '1.5rem', background: 'var(--bg-card)', borderRadius: '16px', border: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.25rem' }}>
               <Bell className="text-primary-600" size={20} color="var(--violet)" />
               <h3 style={{ margin: 0, fontWeight: 700, fontSize: '1.15rem' }}>Notification Preferences</h3>

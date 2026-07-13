@@ -29,7 +29,7 @@ export default function AIExplainerPanel({ entityName, entityType, metrics }) {
           </p>
         )}
         
-        <div style={{ marginTop: '1rem', padding: '1rem', background: 'white', borderRadius: 'var(--radius-sm)', border: '1px solid var(--neutral-200)' }}>
+        <div style={{ marginTop: '1rem', padding: '1rem', background: 'var(--bg-card)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
           <h4 className="font-bold flex items-center gap-2 mb-2 text-danger">
             <AlertTriangle size={16} /> Risk Summary
           </h4>
