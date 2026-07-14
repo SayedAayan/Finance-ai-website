@@ -403,6 +403,26 @@
       ],
       "createdAt": "2026-07-13T05:39:58.640Z",
       "updatedAt": "2026-07-13T05:40:01.465Z"
+    },
+    "1783942056038": {
+      "id": "1783942056038",
+      "title": "Compare TCS vs Reliance",
+      "messages": [
+        {
+          "id": 1783942055983,
+          "type": "user",
+          "text": "Compare TCS vs Reliance",
+          "file": null
+        },
+        {
+          "id": 1783942063334,
+          "type": "ai",
+          "text": "Here's a comparison of TCS and Reliance Industries:\n\n**Company Overview**\n\n* **TCS (Tata Consultancy Services)**: A leading IT services company, part of the Tata Group.\n* **Reliance Industries**: A diversified conglomerate with interests in petrochemicals, refining, retail, and digital services.\n\n**Stock Performance**\n\n* **TCS**:\n\t+ Current Price: ₹2181.5\n\t+ 52-week High: ₹3350\n\t+ 52-week Low: ₹1976.8\n\t+ Change: ₹112.50 (5.44% increase)\n* **Reliance Industries**:\n\t+ Current Price: ₹1296.9\n\t+ 52-week High: ₹1611.8\n\t+ 52-week Low: ₹1253.2\n\t+ Change: -₹10.90 (-0.83% decrease)\n\n**Market Presence**\n\n* **TCS**: A global IT services company with a strong presence in over 50 countries.\n* **Reliance Industries**: A diversified conglomerate with a significant presence in India and a growing global footprint.\n\n**Business Segments**\n\n* **TCS**: IT services, including consulting, application development, and infrastructure management.\n* **Reliance Industries**: Petrochemicals, refining, retail, digital services (Jio), and more.\n\nPlease note that this comparison is based on publicly available data and may not reflect the current market situation. For more up-to-date information, I recommend checking financial websites or news sources.",
+          "source": "Stockbuzz AI"
+        }
+      ],
+      "createdAt": "2026-07-13T11:27:36.038Z",
+      "updatedAt": "2026-07-13T11:27:43.356Z"
     }
   },
   "watchlist": [

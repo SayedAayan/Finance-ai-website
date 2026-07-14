@@ -12,6 +12,7 @@ import Settings from './pages/Settings';
 import Chat from './pages/Chat';
 import Markets from './pages/Markets';
 import WealthBucket from './pages/WealthBucket';
+import AmcDatabase from './pages/AmcDatabase';
 import AIChatSidebar from './components/features/AIChatSidebar';
 
 function Layout() {
@@ -36,6 +37,7 @@ function Layout() {
           <Route path="/watchlist" element={<Watchlist />} />
           <Route path="/markets" element={<Markets />} />
           <Route path="/wealth" element={<WealthBucket />} />
+          <Route path="/amcs" element={<AmcDatabase />} />
           <Route path="/news" element={<News />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/chat" element={<Chat />} />

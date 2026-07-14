@@ -98,6 +98,127 @@ async function yfHistory(symbol, range, interval) {
   };
 }
 
+// ─── AMFI NAV/AMC database (live, cached daily) ──────────────────────────────
+const AMFI_URL = 'https://www.amfiindia.com/spages/NAVAll.txt';
+let amfiCache = { fetchedAt: 0, amcs: [], schemes: [] };
+const AMFI_CACHE_MS = 6 * 60 * 60 * 1000; // 6h — AMFI publishes once daily
+
+function parseAmfiNav(text) {
+  const lines = text.split('\n');
+  const amcMap = new Map(); // name -> { name, schemeCount, categories:Set }
+  const schemes = [];
+  let currentCategory = '';
+  let currentAmc = '';
+
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) continue;
+
+    if (line.startsWith('Open Ended') || line.startsWith('Close Ended') || line.startsWith('Interval')) {
+      currentCategory = line.replace(/^Open Ended Schemes\(|^Close Ended Schemes\(|^Interval Income Fund\(|\)$/g, '').trim();
+      continue;
+    }
+
+    if (line.includes(';')) {
+      const cols = line.split(';');
+      if (cols.length < 6 || cols[0] === 'Scheme Code') continue;
+      const [schemeCode, , , schemeName, nav, date] = cols;
+      const navNum = parseFloat(nav);
+      if (!currentAmc || !schemeName || Number.isNaN(navNum)) continue;
+
+      schemes.push({
+        schemeCode,
+        amc: currentAmc,
+        category: currentCategory,
+        name: schemeName.trim(),
+        nav: navNum,
+        date
+      });
+
+      if (!amcMap.has(currentAmc)) amcMap.set(currentAmc, { name: currentAmc, schemeCount: 0, categories: new Set() });
+      const entry = amcMap.get(currentAmc);
+      entry.schemeCount += 1;
+      if (currentCategory) entry.categories.add(currentCategory);
+      continue;
+    }
+
+    // Bare line with no semicolon = AMC name header
+    if (/mutual fund$/i.test(line)) {
+      currentAmc = line;
+    }
+  }
+
+  const amcs = Array.from(amcMap.values())
+    .map(a => ({ name: a.name, schemeCount: a.schemeCount, categories: Array.from(a.categories).slice(0, 6) }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  return { amcs, schemes };
+}
+
+async function getAmfiData() {
+  const isStale = Date.now() - amfiCache.fetchedAt > AMFI_CACHE_MS;
+  if (!isStale && amfiCache.amcs.length > 0) return amfiCache;
+
+  const res = await fetch(AMFI_URL, { redirect: 'follow' });
+  if (!res.ok) throw new Error(`AMFI fetch failed: HTTP ${res.status}`);
+  const text = await res.text();
+  const { amcs, schemes } = parseAmfiNav(text);
+  amfiCache = { fetchedAt: Date.now(), amcs, schemes };
+  console.log(`  📊 AMFI data refreshed: ${amcs.length} AMCs, ${schemes.length} schemes`);
+  return amfiCache;
+}
+
+// ─── Nifty 500-style curated company seed (sector-categorized) ──────────────
+import { NIFTY_COMPANIES } from './data/companies.js';
+
+// ─── Financial news (Google News RSS, cached) ────────────────────────────────
+let newsCache = { fetchedAt: 0, articles: [] };
+const NEWS_CACHE_MS = 15 * 60 * 1000; // 15 min
+
+async function getTopNews() {
+  const isStale = Date.now() - newsCache.fetchedAt > NEWS_CACHE_MS;
+  if (!isStale && newsCache.articles.length > 0) return newsCache;
+
+  const queries = [
+    'Indian stock market Nifty Sensex',
+    'mutual fund India AMFI NAV',
+    'NSE BSE India company results',
+    'RBI SEBI markets India'
+  ];
+
+  const settled = await Promise.allSettled(
+    queries.map(q => rssParser.parseURL(
+      `https://news.google.com/rss/search?q=${encodeURIComponent(q + ' finance')}&hl=en-IN&gl=IN&ceid=IN:en`
+    ))
+  );
+
+  const seen = new Set();
+  const articles = [];
+  for (const result of settled) {
+    if (result.status !== 'fulfilled') continue;
+    for (const item of result.value.items) {
+      const key = (item.title || '').trim().toLowerCase();
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      const sourceMatch = item.title?.match(/ - ([^-]+)$/);
+      articles.push({
+        title: item.title?.replace(/ - [^-]+$/, '').trim(),
+        source: sourceMatch ? sourceMatch[1].trim() : (item.creator || 'Google News'),
+        link: item.link,
+        publishedAt: item.pubDate,
+        publishedMs: item.pubDate ? new Date(item.pubDate).getTime() : 0
+      });
+    }
+  }
+
+  articles.sort((a, b) => b.publishedMs - a.publishedMs);
+  const top10 = articles.slice(0, 10);
+
+  newsCache = { fetchedAt: Date.now(), articles: top10 };
+  console.log(`  📰 News refreshed: ${top10.length} articles`);
+  return newsCache;
+}
+
 // ─── System prompt ────────────────────────────────────────────────────────────
 const APP_CONTEXT = `
 You are Stockbuzz AI, an expert AI-powered financial research assistant for StockBuzz — India's leading financial intelligence platform.
@@ -599,6 +720,71 @@ app.get('/api/market-overview', async (req, res) => {
   res.json({ indices: results });
 });
 
+// ─── AMC & Scheme database (live from AMFI) ──────────────────────────────────
+app.get('/api/amcs', async (req, res) => {
+  try {
+    const { amcs, fetchedAt } = await getAmfiData();
+    res.json({ amcs, count: amcs.length, fetchedAt: new Date(fetchedAt).toISOString() });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/schemes', async (req, res) => {
+  try {
+    const { schemes, fetchedAt } = await getAmfiData();
+    const { amc, q, limit = '50' } = req.query;
+    let filtered = schemes;
+    if (amc) filtered = filtered.filter(s => s.amc.toLowerCase() === String(amc).toLowerCase());
+    if (q) {
+      const needle = String(q).toLowerCase();
+      filtered = filtered.filter(s => s.name.toLowerCase().includes(needle));
+    }
+    const capped = filtered.slice(0, Math.min(parseInt(limit, 10) || 50, 500));
+    res.json({ schemes: capped, total: filtered.length, fetchedAt: new Date(fetchedAt).toISOString() });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Company database (curated roster + live Yahoo prices) ──────────────────
+app.get('/api/companies', async (req, res) => {
+  try {
+    const { sector, q, live } = req.query;
+    let list = NIFTY_COMPANIES;
+    if (sector) list = list.filter(c => c.sector.toLowerCase() === String(sector).toLowerCase());
+    if (q) {
+      const needle = String(q).toLowerCase();
+      list = list.filter(c => c.name.toLowerCase().includes(needle) || c.ticker.toLowerCase().includes(needle));
+    }
+
+    if (live === 'true') {
+      const settled = await Promise.allSettled(list.map(c => yfQuote(c.ticker)));
+      const enriched = list.map((c, i) => {
+        const r = settled[i];
+        return r.status === 'fulfilled'
+          ? { ...c, price: r.value.currentPrice, changePercent: r.value.changePercent, currency: r.value.currency }
+          : { ...c, price: null, changePercent: null, error: 'quote unavailable' };
+      });
+      return res.json({ companies: enriched, count: enriched.length, sectors: [...new Set(NIFTY_COMPANIES.map(c => c.sector))].sort() });
+    }
+
+    res.json({ companies: list, count: list.length, sectors: [...new Set(NIFTY_COMPANIES.map(c => c.sector))].sort() });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Live financial news ─────────────────────────────────────────────────────
+app.get('/api/news', async (req, res) => {
+  try {
+    const { articles, fetchedAt } = await getTopNews();
+    res.json({ articles, count: articles.length, fetchedAt: new Date(fetchedAt).toISOString() });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post('/api/chat', async (req, res) => {
   const body = req.body || {};
   const rawMessages = body.messages ?? body.conversation ?? null;
@@ -628,6 +814,7 @@ app.listen(PORT, () => {
   console.log(`\n✅  Stockbuzz AI Backend ready at http://localhost:${PORT}`);
   console.log(`   Providers: ${AI_PROVIDERS.map(p => p.name).join(', ')}`);
   console.log(`   API Key: ${AI_PROVIDERS.length > 0 ? '✓ Loaded' : '✗ MISSING'}`);
-  console.log(`   Data   : Yahoo Finance v8 chart API`);
-  console.log(`   Tools  : search_ticker | get_stock_data | get_market_overview | get_financial_news\n`);
+  console.log(`   Data   : Yahoo Finance v8 chart API, AMFI NAV feed, Google News RSS`);
+  console.log(`   Tools  : search_ticker | get_stock_data | get_market_overview | get_financial_news`);
+  console.log(`   Routes : /api/amcs | /api/schemes | /api/companies | /api/news\n`);
 });

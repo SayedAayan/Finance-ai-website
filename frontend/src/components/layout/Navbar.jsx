@@ -9,7 +9,8 @@ import { useTheme } from '../../context/ThemeContext';
 const OTHER_LINKS = [
   { path: '/markets', label: 'Markets' },
   { path: '/wealth', label: 'Wealth Bucket' },
-  { path: '/news', label: 'News' }
+  { path: '/news', label: 'News' },
+  { path: '/amcs', label: 'AMC & Companies' }
 ];
 
 export default function Navbar({ onToggleAIChat }) {
