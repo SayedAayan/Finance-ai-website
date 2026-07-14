@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Search, Bell, Sparkles, X, Moon, Sun, Settings as SettingsIcon, ChevronDown } from 'lucide-react';
-import { mockStocks, mockFunds } from '../../data/mockData';
+import { Search, Bell, X, Moon, Sun, Settings as SettingsIcon, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import logo from '../../assets/logo.png';
 import { useTheme } from '../../context/ThemeContext';
@@ -111,41 +110,58 @@ export default function Navbar({ onToggleAIChat }) {
     return () => { active = false; };
   }, []);
 
+  const searchDebounceRef = useRef(null);
+
   const handleSearchChange = (e) => {
     const query = e.target.value;
     setSearchQuery(query);
-    if (!query.trim()) {
+
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+
+    if (query.trim().length < 2) {
       setFilteredResults([]);
       setShowSuggestions(false);
       return;
     }
 
-    const matchedStocks = mockStocks.filter(s =>
-      s.name.toLowerCase().includes(query.toLowerCase()) ||
-      s.ticker.toLowerCase().includes(query.toLowerCase())
-    ).map(s => ({
-      id: s.id,
-      name: s.name,
-      symbol: s.ticker,
-      type: 'Stock',
-      link: `/stock/${s.id}`,
-      subtitle: `₹${s.price.toLocaleString()} (${s.changePercent >= 0 ? '+' : ''}${s.changePercent}%)`
-    }));
+    searchDebounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&limit=6`);
+        const data = await res.json();
 
-    const matchedFunds = mockFunds.filter(f =>
-      f.name.toLowerCase().includes(query.toLowerCase()) ||
-      f.category.toLowerCase().includes(query.toLowerCase())
-    ).map(f => ({
-      id: f.id,
-      name: f.name,
-      symbol: f.category,
-      type: 'Mutual Fund',
-      link: `/fund/${f.id}`,
-      subtitle: `NAV: ₹${f.nav.toLocaleString()} (${f.navChangePercent >= 0 ? '+' : ''}${f.navChangePercent}%)`
-    }));
+        const stockResults = (data.stocks || []).map(s => ({
+          id: s.id,
+          name: s.name,
+          symbol: s.symbol,
+          type: 'Stock',
+          link: `/stock/${encodeURIComponent(s.ticker)}`,
+          subtitle: s.exchange
+        }));
 
-    setFilteredResults([...matchedStocks, ...matchedFunds]);
-    setShowSuggestions(true);
+        const fundResults = (data.funds || []).map(f => ({
+          id: f.id,
+          name: f.name,
+          symbol: f.plan,
+          type: 'Mutual Fund',
+          link: `/fund/${f.schemeCode}`,
+          subtitle: `NAV: ₹${f.nav?.toLocaleString?.() ?? f.nav} · ${f.amc}`
+        }));
+
+        const amcResults = (data.amcs || []).map(a => ({
+          id: a.id,
+          name: a.name,
+          symbol: `${a.schemeCount} schemes`,
+          type: 'AMC',
+          link: `/amcs?amc=${encodeURIComponent(a.name)}`,
+          subtitle: (a.categories || []).slice(0, 2).join(', ')
+        }));
+
+        setFilteredResults([...stockResults, ...fundResults, ...amcResults]);
+        setShowSuggestions(true);
+      } catch {
+        setFilteredResults([]);
+      }
+    }, 250);
   };
 
   const handleSelectResult = (link) => {
@@ -435,9 +451,8 @@ export default function Navbar({ onToggleAIChat }) {
             {/* Ask AI Button */}
             <button
               onClick={onToggleAIChat}
-              className="flex items-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white px-6 h-[44px] rounded-full font-semibold text-sm shadow-md hover:shadow-lg transition-all duration-300"
+              className="flex items-center gap-2 whitespace-nowrap bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white px-5 h-[44px] rounded-full font-semibold text-sm shadow-md hover:shadow-lg transition-all duration-300"
             >
-              <Sparkles size={16} />
               Ask AI
             </button>
 

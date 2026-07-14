@@ -814,7 +814,22 @@ img { max-width: 100%; display: block; }
   .ai-sidebar {
     width: 100% !important;
   }
+  .news-more-grid {
+    grid-template-columns: 1fr !important;
+  }
 }
+
+@media (max-width: 700px) {
+  .news-featured {
+    flex-direction: column !important;
+    height: auto !important;
+  }
+  .news-featured > div:first-child {
+    width: 100% !important;
+    height: 180px !important;
+  }
+}
+
 }
 
 

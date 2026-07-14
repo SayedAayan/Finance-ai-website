@@ -1,26 +1,26 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { TrendingUp, TrendingDown, Info, Sparkles, AlertTriangle, ArrowRight, Home } from 'lucide-react';
-
-const DATA = {
-  price: '₹2,950.45', change: '+36.20 (+1.24%)', up: true,
-  name: 'Reliance Industries Ltd', ticker: 'RELIANCE', sector: 'Conglomerate',
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+const DEFAULT_DATA = {
+  price: '...', change: '...', up: true,
+  name: 'Loading...', ticker: '...', sector: 'Company',
   metrics: [
-    { label: 'Market Cap', val: '₹19.8T', isPrimary: true },
-    { label: 'P/E Ratio', val: '28.5', hint: 'Price to Earnings', isPrimary: true },
-    { label: 'P/B Ratio', val: '2.7', hint: 'Price to Book' },
-    { label: 'Div Yield', val: '0.35%' },
-    { label: 'ROE', val: '9.8%', hint: 'Return on Equity' },
-    { label: 'Debt/Eq', val: '0.42' },
-    { label: '52W High', val: '₹3,024.90' },
-    { label: '52W Low', val: '₹2,220.30' },
+    { label: 'Market Cap', val: '-', isPrimary: true },
+    { label: 'P/E Ratio', val: '-', hint: 'Price to Earnings', isPrimary: true },
+    { label: 'P/B Ratio', val: '-', hint: 'Price to Book' },
+    { label: 'Div Yield', val: '-' },
+    { label: 'ROE', val: '-', hint: 'Return on Equity' },
+    { label: 'Debt/Eq', val: '-' },
+    { label: '52W High', val: '-' },
+    { label: '52W Low', val: '-' },
   ]
 };
 
 export default function StockProfile() {
   const { id } = useParams();
-  const d = DATA;
-
+  const [quote, setQuote] = useState(null);
+  
   const [range, setRange] = useState('1Y');
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(true);
@@ -28,16 +28,55 @@ export default function StockProfile() {
   useEffect(() => {
     let cancelled = false;
     setHistoryLoading(true);
-    fetch(`/api/history?symbol=${d.ticker}.NS&range=${range}`)
+
+    // Fetch live quote
+    fetch(`/api/quotes?symbols=${id}`)
+      .then(r => r.json())
+      .then(data => {
+        if (!cancelled && data.quotes && data.quotes[0] && !data.quotes[0].error) {
+          setQuote(data.quotes[0]);
+        }
+      })
+      .catch(console.error);
+
+    // Fetch history
+    fetch(`/api/history?symbol=${id}&range=${range}`)
       .then(r => r.json())
       .then((data) => {
         if (cancelled) return;
-        setHistory(Array.isArray(data.points) ? data.points : []);
+        setHistory((Array.isArray(data.points) ? data.points : []).map(p => ({
+          time: new Date(p.time).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }),
+          price: p.price
+        })));
       })
       .catch(() => { if (!cancelled) setHistory([]); })
       .finally(() => { if (!cancelled) setHistoryLoading(false); });
     return () => { cancelled = true; };
-  }, [d.ticker, range]);
+  }, [id, range]);
+
+  const formatPrice = (p) => p != null ? `₹${p.toLocaleString('en-IN', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}` : '-';
+  const formatChange = (c, cp) => {
+    if (c == null || cp == null) return '-';
+    const sign = c >= 0 ? '+' : '';
+    return `${sign}${c.toFixed(2)} (${sign}${cp}%)`;
+  };
+
+  const d = {
+    ...DEFAULT_DATA,
+    ticker: id,
+    name: quote ? quote.name : id,
+    price: quote ? formatPrice(quote.currentPrice) : '...',
+    change: quote ? formatChange(quote.change, quote.changePercent) : '...',
+    up: quote ? quote.change >= 0 : true,
+  };
+  if (quote) {
+    d.metrics[6].val = formatPrice(quote.fiftyTwoWeekHigh);
+    d.metrics[7].val = formatPrice(quote.fiftyTwoWeekLow);
+    if (quote.volume) {
+      d.metrics[0].label = 'Volume';
+      d.metrics[0].val = quote.volume.toLocaleString('en-IN');
+    }
+  }
 
   return (
     <div style={{ paddingBottom: '4rem' }}>
@@ -188,11 +227,10 @@ export default function StockProfile() {
               <span className="badge badge-violet" style={{ marginLeft: 'auto', fontSize: '0.65rem' }}>Research</span>
             </div>
             <p>
-              <strong className="text-1">Reliance Industries</strong> is currently trading at a P/E of {d.metrics[1].val}, which is slightly above its 5-year historical average of 25. 
-              The company's Debt-to-Equity ratio remains healthy at {d.metrics[5].val}, indicating manageable leverage.
+              <strong className="text-1">{d.name}</strong> is currently trading at {d.price}. The price has moved by {d.change} recently.
             </p>
             <p style={{ marginTop: '12px' }}>
-              Recent Q1 earnings showed strong growth in the retail and telecom (Jio) segments, offsetting weakness in O2C (Oil-to-Chemicals) margins.
+              The 52-week high is {d.metrics[6].val} and 52-week low is {d.metrics[7].val}. {quote && quote.volume ? `The recent volume is ${quote.volume.toLocaleString('en-IN')}.` : ''}
             </p>
             <div className="ai-disclaimer">
               <AlertTriangle size={14} color="var(--text-3)" />
@@ -203,7 +241,7 @@ export default function StockProfile() {
           <div className="card card-pad">
             <h4 style={{ marginBottom: '16px' }}>About the Company</h4>
             <p style={{ fontSize: '0.85rem' }}>
-              Reliance Industries Limited is an Indian multinational conglomerate headquartered in Mumbai. It has diverse businesses including energy, petrochemicals, natural gas, retail, telecommunications, mass media, and textiles. Reliance is the most profitable company in India and the largest publicly traded company in India by market capitalisation.
+              {d.name} is a publicly traded company listed on the stock exchange. It is currently trading under the ticker symbol {d.ticker}. Please consult detailed financial reports for comprehensive information about the company's operations, subsidiaries, and market performance.
             </p>
           </div>
         </div>
@@ -214,52 +252,26 @@ export default function StockProfile() {
 }
 
 function PriceChart({ points }) {
-  const width = 800;
-  const height = 300;
-  // Generous padding so the stroke (rendered at non-uniform scale under
-  // preserveAspectRatio="none") never reaches the viewBox edge and gets
-  // clipped by the card's overflow:hidden.
-  const padTop = 45;
-  const padBottom = 45;
-  const padX = 16;
-  const prices = points.map(p => p.price);
-  const min = Math.min(...prices);
-  const max = Math.max(...prices);
-  const spread = max - min || 1;
+  if (!points || points.length === 0) return null;
 
-  const x = (i) => padX + (i / (points.length - 1)) * (width - padX * 2);
-  const y = (price) => padTop + (1 - (price - min) / spread) * (height - padTop - padBottom);
-
-  const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(p.price).toFixed(1)}`).join(' ');
-  const areaPath = `${linePath} L${width - padX},${height - padBottom} L${padX},${height - padBottom} Z`;
-
-  const up = points[points.length - 1].price >= points[0].price;
-  const lineColor = up ? 'var(--green)' : 'var(--red)';
-
-  const first = points[0];
-  const last = points[points.length - 1];
-  const dateFmt = (t) => new Date(t).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+  const isUp = points[points.length - 1].price >= points[0].price;
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: 1, position: 'relative' }}>
-        <div style={{ position: 'absolute', top: 4, right: 4, fontSize: '0.75rem', color: 'var(--text-3)' }}>₹{max.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
-        <div style={{ position: 'absolute', bottom: 20, right: 4, fontSize: '0.75rem', color: 'var(--text-3)' }}>₹{min.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
-        <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
+    <div style={{ height: '100%', width: '100%' }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={points} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
           <defs>
-            <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={lineColor} stopOpacity="0.2" />
-              <stop offset="100%" stopColor={lineColor} stopOpacity="0" />
+            <linearGradient id="stockGraphFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={isUp ? '#16a34a' : '#dc2626'} stopOpacity={0.3} />
+              <stop offset="95%" stopColor={isUp ? '#16a34a' : '#dc2626'} stopOpacity={0} />
             </linearGradient>
           </defs>
-          <path d={areaPath} fill="url(#chartGrad)" />
-          <path d={linePath} fill="none" stroke={lineColor} strokeWidth="3" vectorEffect="non-scaling-stroke" strokeLinejoin="round" strokeLinecap="round" />
-        </svg>
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-3)', padding: '0 8px 8px' }}>
-        <span>{dateFmt(first.time)}</span>
-        <span>{dateFmt(last.time)}</span>
-      </div>
+          <XAxis dataKey="time" tick={{ fontSize: 11 }} minTickGap={40} axisLine={false} tickLine={false} />
+          <YAxis domain={['auto', 'auto']} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={60} />
+          <Tooltip contentStyle={{ borderRadius: 12, fontSize: 12, border: '1px solid #e5e7eb' }} />
+          <Area type="monotone" dataKey="price" stroke={isUp ? '#16a34a' : '#dc2626'} strokeWidth={2} fill="url(#stockGraphFill)" />
+        </AreaChart>
+      </ResponsiveContainer>
     </div>
   );
 }

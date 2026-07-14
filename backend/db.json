@@ -423,35 +423,79 @@
       ],
       "createdAt": "2026-07-13T11:27:36.038Z",
       "updatedAt": "2026-07-13T11:27:43.356Z"
+    },
+    "1784007227644": {
+      "id": "1784007227644",
+      "title": "HDFC Flexi Cap Fund",
+      "messages": [
+        {
+          "id": 1784007227632,
+          "type": "user",
+          "text": "HDFC Flexi Cap Fund",
+          "file": null
+        },
+        {
+          "id": 1784007233133,
+          "type": "ai",
+          "text": "The current price of HDFC Flexi Cap Fund is ₹231.57, with a change of -₹0.40 (-0.17%). The 52-week high and low are ₹231.97 and ₹198.62, respectively.",
+          "source": "Stockbuzz AI"
+        },
+        {
+          "id": 1784007257765,
+          "type": "user",
+          "text": "what is Mutual Funds",
+          "file": null
+        },
+        {
+          "id": 1784007260496,
+          "type": "ai",
+          "text": "Mutual funds are a type of investment vehicle that pools money from many investors to invest in a diversified portfolio of stocks, bonds, or other securities. Here's a brief overview:\n\n**Key characteristics:**\n\n1. **Diversification**: Mutual funds invest in a variety of assets, reducing risk and increasing potential returns.\n2. **Professional management**: Experienced fund managers make investment decisions on behalf of the fund.\n3. **Economies of scale**: Mutual funds can invest in a wide range of securities, reducing costs for individual investors.\n4. **Liquidity**: Mutual fund shares can be easily bought and sold.\n\n**Types of mutual funds:**\n\n1. **Equity funds**: Invest in stocks, aiming for long-term growth.\n2. **Debt funds**: Invest in bonds, aiming for regular income.\n3. **Hybrid funds**: Invest in a mix of stocks and bonds.\n4. **Index funds**: Track a specific market index, like the S&P 500.\n5. **Sector funds**: Focus on a specific industry or sector.\n\n**Benefits:**\n\n1. **Diversification**: Reduces risk by spreading investments across various assets.\n2. **Convenience**: One-stop solution for investing in multiple securities.\n3. **Professional management**: Experienced fund managers make investment decisions.\n4. **Affordability**: Low minimum investment requirements.\n\n**Common mutual fund metrics:**\n\n1. **Net Asset Value (NAV)**: The fund's current value per share.\n2. **Expense ratio**: The fund's annual fees as a percentage of assets.\n3. **Returns**: Historical performance, usually expressed as a percentage.\n\nSome popular mutual funds in India include:\n\n* HDFC Flexi Cap Fund\n* ICICI Prudential Bluechip Fund\n* SBI Equity Hybrid Fund\n* Axis Bluechip Fund\n\nKeep in mind that mutual funds carry risks, and past performance is not a guarantee of future results. It's essential to evaluate your investment goals, risk tolerance, and time horizon before investing in mutual funds.",
+          "source": "Stockbuzz AI"
+        }
+      ],
+      "createdAt": "2026-07-14T05:33:47.644Z",
+      "updatedAt": "2026-07-14T05:34:20.501Z"
+    },
+    "1784010456247": {
+      "id": "1784010456247",
+      "title": "Tell me about Reliance",
+      "messages": [
+        {
+          "id": 1784010456095,
+          "type": "user",
+          "text": "Tell me about Reliance",
+          "file": null
+        },
+        {
+          "id": 1784010462073,
+          "type": "ai",
+          "text": "Reliance Industries Limited (RELIANCE.NS) is currently trading at ₹1300.9, with a change of ₹4.00 (0.31%).\n\nHere are the key details:\n\n* **Current Price**: ₹1300.9\n* **Previous Close**: ₹1296.9\n* **Day High**: ₹1308\n* **Day Low**: ₹1290\n* **Volume**: 4932926\n* **52-Week High**: ₹1611.8\n* **52-Week Low**: ₹1253.2\n\nLet me know if you need any further information!",
+          "source": "Stockbuzz AI"
+        }
+      ],
+      "createdAt": "2026-07-14T06:27:36.247Z",
+      "updatedAt": "2026-07-14T06:27:42.081Z"
+    },
+    "1784022581649": {
+      "id": "1784022581649",
+      "title": "Compare TCS vs Reliance",
+      "messages": [
+        {
+          "id": 1784022581633,
+          "type": "user",
+          "text": "Compare TCS vs Reliance",
+          "file": null
+        },
+        {
+          "id": 1784022586098,
+          "type": "ai",
+          "text": "TCS vs Reliance:\n\n* **Current Price**: \n  * TCS: ₹2,202.50\n  * Reliance: ₹1,290.40\n* **Change**: \n  * TCS: ₹21.00 (0.96% increase)\n  * Reliance: ₹-6.50 (0.50% decrease)\n* **52-week Range**: \n  * TCS: ₹1,976.80 - ₹3,350\n  * Reliance: ₹1,253.20 - ₹1,611.80\n* **Volume**: \n  * TCS: 9,041,063\n  * Reliance: 12,226,093\n\nTCS has shown a positive trend with a 0.96% increase in its stock price, while Reliance has experienced a slight decline of 0.50%. TCS's 52-week range is higher, indicating a stronger performance over the past year. However, Reliance's volume is significantly higher, suggesting increased trading activity.",
+          "source": "Stockbuzz AI"
+        }
+      ],
+      "createdAt": "2026-07-14T09:49:41.649Z",
+      "updatedAt": "2026-07-14T09:49:46.108Z"
     }
   },
-  "watchlist": [
-    {
-      "type": "stock",
-      "id": "RELIANCE",
-      "name": "Reliance Industries",
-      "ticker": "RELIANCE",
-      "pe": 28.5,
-      "mcap": "₹19.8T",
-      "alert": "CROSSES_ABOVE_50DMA"
-    },
-    {
-      "type": "stock",
-      "id": "HDFCBANK",
-      "name": "HDFC Bank",
-      "ticker": "HDFCBANK",
-      "pe": 19.8,
-      "mcap": "₹12.8T",
-      "alert": "CROSSES_ABOVE_200DMA"
-    },
-    {
-      "type": "stock",
-      "id": "APSEZ",
-      "name": "Adani Ports",
-      "ticker": "APSEZ",
-      "pe": 33.1,
-      "mcap": "₹2.6T",
-      "alert": "CROSSES_ABOVE_50DMA"
-    }
-  ]
+  "watchlist": []
 }

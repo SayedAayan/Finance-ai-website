@@ -6,6 +6,8 @@ import dotenv from 'dotenv';
 import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { JSDOM } from 'jsdom';
+import { Readability } from '@mozilla/readability';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -30,14 +32,6 @@ const YF_HEADERS = {
   'Referer': 'https://finance.yahoo.com/',
   'Cache-Control': 'no-cache'
 };
-
-async function yfSearch(query) {
-  const url = `https://query2.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(query)}&quotesCount=10&newsCount=0&enableFuzzyQuery=true`;
-  const res = await fetch(url, { headers: YF_HEADERS });
-  if (!res.ok) throw new Error(`Yahoo search HTTP ${res.status}`);
-  const json = await res.json();
-  return json.finance?.result?.[0]?.quotes || [];
-}
 
 async function yfQuoteRaw(symbol) {
   // v8 chart endpoint — works without cookie/crumb
@@ -191,78 +185,13 @@ async function yfHistory(symbol, range, interval) {
   };
 }
 
-// ─── AMFI NAV/AMC database (live, cached daily) ──────────────────────────────
-const AMFI_URL = 'https://www.amfiindia.com/spages/NAVAll.txt';
-let amfiCache = { fetchedAt: 0, amcs: [], schemes: [] };
-const AMFI_CACHE_MS = 6 * 60 * 60 * 1000; // 6h — AMFI publishes once daily
-
-function parseAmfiNav(text) {
-  const lines = text.split('\n');
-  const amcMap = new Map(); // name -> { name, schemeCount, categories:Set }
-  const schemes = [];
-  let currentCategory = '';
-  let currentAmc = '';
-
-  for (const raw of lines) {
-    const line = raw.trim();
-    if (!line) continue;
-
-    if (line.startsWith('Open Ended') || line.startsWith('Close Ended') || line.startsWith('Interval')) {
-      currentCategory = line.replace(/^Open Ended Schemes\(|^Close Ended Schemes\(|^Interval Income Fund\(|\)$/g, '').trim();
-      continue;
-    }
-
-    if (line.includes(';')) {
-      const cols = line.split(';');
-      if (cols.length < 6 || cols[0] === 'Scheme Code') continue;
-      const [schemeCode, , , schemeName, nav, date] = cols;
-      const navNum = parseFloat(nav);
-      if (!currentAmc || !schemeName || Number.isNaN(navNum)) continue;
-
-      schemes.push({
-        schemeCode,
-        amc: currentAmc,
-        category: currentCategory,
-        name: schemeName.trim(),
-        nav: navNum,
-        date
-      });
-
-      if (!amcMap.has(currentAmc)) amcMap.set(currentAmc, { name: currentAmc, schemeCount: 0, categories: new Set() });
-      const entry = amcMap.get(currentAmc);
-      entry.schemeCount += 1;
-      if (currentCategory) entry.categories.add(currentCategory);
-      continue;
-    }
-
-    // Bare line with no semicolon = AMC name header
-    if (/mutual fund$/i.test(line)) {
-      currentAmc = line;
-    }
-  }
-
-  const amcs = Array.from(amcMap.values())
-    .map(a => ({ name: a.name, schemeCount: a.schemeCount, categories: Array.from(a.categories).slice(0, 6) }))
-    .sort((a, b) => a.name.localeCompare(b.name));
-
-  return { amcs, schemes };
-}
+// ─── Company & mutual fund search database (NSE + BSE + US + AMFI) ─────────
+import { ensureIndexReady, scheduleIndexRefresh, search as searchDatabase, getCompanyById, getSchemeById } from './data/searchIndex.js';
 
 async function getAmfiData() {
-  const isStale = Date.now() - amfiCache.fetchedAt > AMFI_CACHE_MS;
-  if (!isStale && amfiCache.amcs.length > 0) return amfiCache;
-
-  const res = await fetch(AMFI_URL, { redirect: 'follow' });
-  if (!res.ok) throw new Error(`AMFI fetch failed: HTTP ${res.status}`);
-  const text = await res.text();
-  const { amcs, schemes } = parseAmfiNav(text);
-  amfiCache = { fetchedAt: Date.now(), amcs, schemes };
-  console.log(`  📊 AMFI data refreshed: ${amcs.length} AMCs, ${schemes.length} schemes`);
-  return amfiCache;
+  const { amcs, schemes, fetchedAt } = await ensureIndexReady();
+  return { amcs, schemes, fetchedAt };
 }
-
-// ─── Nifty 500-style curated company seed (sector-categorized) ──────────────
-import { NIFTY_COMPANIES } from './data/companies.js';
 
 // ─── Financial news (NewsAPI.org primary, Google News RSS fallback) ─────────
 const NEWSAPI_KEY = process.env.NEWSAPI_KEY;
@@ -374,6 +303,7 @@ MANDATORY RULES:
 - For market indices, use get_market_overview()
 - Never give Buy/Sell/Hold recommendations.
 - Respond in clear, simple language with bullet points or tables.
+- When asked to analyze a specific news article, structure your answer in two clear parts: "What happened" (a plain-language summary of the news) and "Market impact" (which sectors, companies, or indices could be affected, and why — pull live prices with get_stock_data if relevant to ground the impact).
 
 COMMON INDIAN STOCK SYMBOLS (NSE):
 Reliance Industries - RELIANCE.NS
@@ -483,13 +413,11 @@ async function handleToolCall(toolCall) {
 
   if (name === 'search_ticker') {
     try {
-      const quotes = await yfSearch(args.query);
-      const results = quotes.slice(0, 8).map(q => ({
-        symbol: q.symbol,
-        name: q.longname || q.shortname || q.symbol,
-        type: q.quoteType,
-        exchange: q.exchange
-      }));
+      const { stocks, funds } = await searchDatabase(args.query, { limit: 8 });
+      const results = [
+        ...stocks.map(c => ({ symbol: c.ticker, name: c.name, type: 'EQUITY', exchange: c.exchange })),
+        ...funds.map(f => ({ symbol: f.isin || f.schemeCode, name: f.name, type: 'MUTUALFUND', exchange: 'AMFI' }))
+      ];
       return JSON.stringify({
         query: args.query,
         results,
@@ -884,7 +812,7 @@ app.get('/api/amcs', async (req, res) => {
   }
 });
 
-app.get('/api/schemes', async (req, res) => {
+async function handleSchemesRequest(req, res) {
   try {
     const { schemes, fetchedAt } = await getAmfiData();
     const { amc, q, limit = '50' } = req.query;
@@ -899,31 +827,72 @@ app.get('/api/schemes', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-});
+}
+app.get('/api/schemes', handleSchemesRequest);
+app.get('/api/funds', handleSchemesRequest);
 
-// ─── Company database (curated roster + live Yahoo prices) ──────────────────
-app.get('/api/companies', async (req, res) => {
+// ─── Company database (NSE + BSE + US, live from official exchange feeds) ───
+async function handleCompaniesRequest(req, res) {
   try {
-    const { sector, q, live } = req.query;
-    let list = NIFTY_COMPANIES;
-    if (sector) list = list.filter(c => c.sector.toLowerCase() === String(sector).toLowerCase());
+    const { exchange, q, live, limit = '50', page = '1' } = req.query;
+    const { companies } = await ensureIndexReady();
+    let list = companies;
+    if (exchange) list = list.filter(c => c.exchange.toLowerCase() === String(exchange).toLowerCase());
     if (q) {
       const needle = String(q).toLowerCase();
-      list = list.filter(c => c.name.toLowerCase().includes(needle) || c.ticker.toLowerCase().includes(needle));
+      list = list.filter(c => c.name.toLowerCase().includes(needle) || c.symbol.toLowerCase().includes(needle));
     }
 
+    const pageSize = Math.min(parseInt(limit, 10) || 50, 200);
+    const pageNum = Math.max(parseInt(page, 10) || 1, 1);
+    const start = (pageNum - 1) * pageSize;
+    const paged = list.slice(start, start + pageSize);
+
     if (live === 'true') {
-      const settled = await Promise.allSettled(list.map(c => yfQuote(c.ticker)));
-      const enriched = list.map((c, i) => {
+      const settled = await Promise.allSettled(paged.map(c => yfQuote(c.ticker)));
+      const enriched = paged.map((c, i) => {
         const r = settled[i];
         return r.status === 'fulfilled'
           ? { ...c, price: r.value.currentPrice, changePercent: r.value.changePercent, currency: r.value.currency }
           : { ...c, price: null, changePercent: null, error: 'quote unavailable' };
       });
-      return res.json({ companies: enriched, count: enriched.length, sectors: [...new Set(NIFTY_COMPANIES.map(c => c.sector))].sort() });
+      return res.json({ companies: enriched, count: enriched.length, total: list.length, page: pageNum, pageSize, exchanges: [...new Set(companies.map(c => c.exchange))].sort() });
     }
 
-    res.json({ companies: list, count: list.length, sectors: [...new Set(NIFTY_COMPANIES.map(c => c.sector))].sort() });
+    res.json({ companies: paged, count: paged.length, total: list.length, page: pageNum, pageSize, exchanges: [...new Set(companies.map(c => c.exchange))].sort() });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+app.get('/api/companies', handleCompaniesRequest);
+app.get('/api/stocks', handleCompaniesRequest);
+
+app.get('/api/company/:id', async (req, res) => {
+  try {
+    const company = await getCompanyById(req.params.id);
+    if (!company) return res.status(404).json({ error: 'Company not found' });
+    res.json({ company });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/mutual-fund/:id', async (req, res) => {
+  try {
+    const scheme = await getSchemeById(req.params.id);
+    if (!scheme) return res.status(404).json({ error: 'Scheme not found' });
+    res.json({ scheme });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Unified search: stocks (NSE/BSE/US) + mutual funds + AMCs ──────────────
+app.get('/api/search', async (req, res) => {
+  try {
+    const { q, limit = '8' } = req.query;
+    const results = await searchDatabase(q, { limit: Math.min(parseInt(limit, 10) || 8, 25) });
+    res.json(results);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -1003,6 +972,22 @@ app.get('/api/news', async (req, res) => {
   }
 });
 
+app.get('/api/read-article', async (req, res) => {
+  const url = req.query.url;
+  if (!url) return res.status(400).json({ error: 'url is required' });
+  try {
+    const response = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36' } });
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    const html = await response.text();
+    const doc = new JSDOM(html, { url });
+    const reader = new Readability(doc.window.document);
+    const article = reader.parse();
+    res.json({ article });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post('/api/chat', async (req, res) => {
   const body = req.body || {};
   const rawMessages = body.messages ?? body.conversation ?? null;
@@ -1032,7 +1017,8 @@ app.listen(PORT, () => {
   console.log(`\n✅  Stockbuzz AI Backend ready at http://localhost:${PORT}`);
   console.log(`   Providers: ${AI_PROVIDERS.map(p => p.name).join(', ')}`);
   console.log(`   API Key: ${AI_PROVIDERS.length > 0 ? '✓ Loaded' : '✗ MISSING'}`);
-  console.log(`   Data   : Yahoo Finance v8 chart API, AMFI NAV feed, Google News RSS`);
+  console.log(`   Data   : Yahoo Finance v8 chart API, NSE/BSE/NASDAQ/NYSE listings, AMFI NAV feed, Google News RSS`);
   console.log(`   Tools  : search_ticker | get_stock_data | get_market_overview | get_financial_news`);
-  console.log(`   Routes : /api/amcs | /api/schemes | /api/companies | /api/news\n`);
+  console.log(`   Routes : /api/search | /api/company/:id | /api/mutual-fund/:id | /api/amcs | /api/schemes | /api/companies | /api/news\n`);
+  scheduleIndexRefresh();
 });

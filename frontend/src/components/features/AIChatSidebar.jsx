@@ -31,6 +31,11 @@ export default function AIChatSidebar({ isOpen, onClose }) {
     }
   }, [messages, loading]);
 
+  // Clear chat history on page change
+  useEffect(() => {
+    setMessages([]);
+  }, [loc.pathname]);
+
   // Listen to custom event from News or other pages to open and ask a question
   useEffect(() => {
     const handleOpenAndQuery = (e) => {

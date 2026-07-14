@@ -24,6 +24,12 @@ function Layout() {
     window.scrollTo(0, 0);
   }, [loc.pathname]);
 
+  useEffect(() => {
+    const handleOpenAIChat = () => setIsAIChatOpen(true);
+    window.addEventListener('open-ai-chat', handleOpenAIChat);
+    return () => window.removeEventListener('open-ai-chat', handleOpenAIChat);
+  }, []);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative' }}>
       <Navbar onToggleAIChat={() => setIsAIChatOpen(true)} />

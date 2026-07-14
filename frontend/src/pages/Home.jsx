@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from "react";
 import { Sparkles, Send, ArrowRight, BookOpen, TrendingUp, BarChart2, Plus, ArrowUpRight, TrendingDown, Activity, Newspaper, Landmark } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -77,6 +77,7 @@ export default function Home({ onOpenAIChat }) {
   const [stocks, setStocks] = useState(mockStocks);
   const [marketIndices, setMarketIndices] = useState(DEFAULT_INDICES);
   const { formatPrice } = useCurrency();
+  const [featuredNews, setFeaturedNews] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -116,6 +117,27 @@ export default function Home({ onOpenAIChat }) {
     return () => { cancelled = true; };
   }, []);
 
+  // Fetch featured news (article with image, pinned for the day)
+  useEffect(() => {
+    fetch('/api/news')
+      .then(r => r.json())
+      .then(data => {
+        const articles = data.articles || [];
+        const today = new Date().toDateString();
+        let cached = {};
+        try { cached = JSON.parse(localStorage.getItem('sb_featured_news') || '{}'); } catch {}
+        let pick = null;
+        if (cached.date === today && articles.find(a => a.link === cached.link)) {
+          pick = articles.find(a => a.link === cached.link);
+        } else {
+          pick = articles.find(a => a.image) || articles[0];
+          if (pick) { try { localStorage.setItem('sb_featured_news', JSON.stringify({ date: today, link: pick.link })); } catch {} }
+        }
+        setFeaturedNews(pick || null);
+      })
+      .catch(() => {});
+  }, []);
+
   const handleFileChange = (e) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
@@ -150,8 +172,8 @@ export default function Home({ onOpenAIChat }) {
 
           <motion.div variants={containerVariants} initial="hidden" animate="show" className="w-full flex flex-col items-center">
             <motion.div variants={itemVariants} className="text-center max-w-[900px] mb-6 w-full flex flex-col items-center">
-              <div className="inline-flex items-center justify-center w-[44px] h-[44px] rounded-[14px] bg-white dark:bg-gray-900 shadow-md shadow-blue-500/10 mb-4 border border-gray-100 dark:border-gray-800 text-blue-600 dark:text-blue-400">
-                <Sparkles size={22} />
+              <div className="inline-flex items-center justify-center w-[44px] h-[44px] rounded-[14px] bg-white dark:bg-gray-900 shadow-md shadow-blue-500/10 mb-4 border border-gray-100 dark:border-gray-800">
+                <img src="/favicon.png" alt="Stockbuzz" className="w-[26px] h-[26px] object-contain" />
               </div>
               <h1 className="text-[32px] md:text-[42px] font-bold text-textMain dark:text-gray-100 tracking-tight mb-3 leading-tight font-sans">What do you want to research?</h1>
               <p className="text-[17px] leading-[1.5] text-gray-500 dark:text-gray-400 max-w-[700px] mx-auto">Stockbuzz AI helps you analyze stocks, mutual funds, and market trends with real-time data and smart insights.</p>
@@ -245,6 +267,7 @@ export default function Home({ onOpenAIChat }) {
                 </div>
               </div>
 
+              {/* Market Pulse – auto-scrolling news widget */}
               <div className="bg-white dark:bg-gray-900 rounded-[22px] p-[24px] h-[290px] shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-md transition-all duration-300 flex flex-col">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-bold text-textMain dark:text-gray-100 flex items-center gap-2"><Newspaper size={18} className="text-gray-400 dark:text-gray-500" /> Market Pulse</h3>
@@ -276,6 +299,45 @@ export default function Home({ onOpenAIChat }) {
               </div>
             </motion.div>
 
+            {/* Featured News Banner – below the widgets */}
+            {featuredNews && (
+              <motion.div variants={itemVariants} className="w-full max-w-[1200px] mb-6">
+                <div
+                  className="bg-white dark:bg-gray-900 rounded-[22px] shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden cursor-pointer hover:shadow-md transition-all duration-300"
+                  style={{ display: 'grid', gridTemplateColumns: '1fr 2fr' }}
+                  onClick={() => navigate('/news')}
+                >
+                  {featuredNews.image && (
+                    <div style={{ height: '200px', overflow: 'hidden' }}>
+                      <img
+                        src={featuredNews.image}
+                        alt={featuredNews.title}
+                        onError={e => { e.target.parentElement.style.display = 'none'; }}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block', transition: 'transform 0.4s' }}
+                        onMouseEnter={e => { e.target.style.transform = 'scale(1.04)'; }}
+                        onMouseLeave={e => { e.target.style.transform = 'scale(1)'; }}
+                      />
+                    </div>
+                  )}
+                  <div style={{ padding: '24px 28px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: 'white', fontSize: '0.6rem', fontWeight: 800, padding: '3px 10px', borderRadius: '20px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>TODAY'S TOP STORY</span>
+                      <span className="text-[11px] text-textMuted dark:text-gray-400 font-semibold">{featuredNews.source}</span>
+                    </div>
+                    <h3 className="font-extrabold text-textMain dark:text-gray-100 text-[18px] leading-snug" style={{ margin: 0 }}>{featuredNews.title}</h3>
+                    {featuredNews.description && (
+                      <p className="text-[13px] text-textMuted dark:text-gray-400" style={{ margin: 0, lineHeight: '1.6', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{featuredNews.description}</p>
+                    )}
+                    <button
+                      onClick={e => { e.stopPropagation(); navigate('/news'); }}
+                      className="text-primary dark:text-blue-400 text-[13px] font-bold text-left mt-1 hover:underline"
+                      style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', width: 'fit-content' }}
+                    >Read full story →</button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
             <motion.div variants={itemVariants} className="w-full max-w-[1200px] mb-12">
               <MarketGraphPanel />
             </motion.div>
@@ -305,7 +367,7 @@ export default function Home({ onOpenAIChat }) {
             </motion.div>
 
             <motion.div variants={itemVariants} className="w-full max-w-[1200px] grid grid-cols-1 md:grid-cols-3 gap-[24px] mb-12">
-              <div onClick={() => navigate('/amc-database')} className="bg-white dark:bg-gray-900 rounded-[22px] p-[24px] shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-md transition-all cursor-pointer flex flex-col gap-3">
+              <div onClick={() => navigate('/amcs')} className="bg-white dark:bg-gray-900 rounded-[22px] p-[24px] shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-md transition-all cursor-pointer flex flex-col gap-3">
                 <div className="w-11 h-11 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400"><Landmark size={20} /></div>
                 <h3 className="font-bold text-textMain dark:text-gray-100">AMC & Mutual Fund Database</h3>
                 <p className="text-[13px] text-textMuted dark:text-gray-400">Explore live NAVs and fund houses sourced directly from AMFI.</p>
