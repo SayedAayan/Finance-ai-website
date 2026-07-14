@@ -111,13 +111,12 @@ export default function News() {
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.25rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.25rem' }}>
           {articles.map((article, i) => (
             <div
               key={`${article.link}-${i}`}
               className="glass-panel"
               style={{
-                padding: '1.5rem',
                 borderRadius: '16px',
                 border: '1px solid var(--neutral-200)',
                 background: 'var(--bg-card)',
@@ -125,34 +124,52 @@ export default function News() {
                 transition: 'transform 0.2s, box-shadow 0.2s',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '12px'
+                overflow: 'hidden'
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', color: 'var(--text-3)' }}>
-                  <span style={{ fontWeight: 600, color: 'var(--text-2)' }}>{article.source}</span>
-                  <span>•</span>
-                  <span>{timeAgo(article.publishedAt)}</span>
+              {article.image && (
+                <div style={{ width: '100%', height: '160px', overflow: 'hidden', background: 'var(--bg-subtle)' }}>
+                  <img
+                    src={article.image}
+                    alt=""
+                    onError={(e) => { e.target.parentElement.style.display = 'none'; }}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
                 </div>
-                <span style={{
-                  fontSize: '0.72rem',
-                  fontWeight: 700,
-                  padding: '2px 9px',
-                  borderRadius: '20px',
-                  background: 'var(--bg-subtle)',
-                  color: 'var(--text-3)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.03em'
-                }}>
-                  #{i + 1}
-                </span>
-              </div>
+              )}
 
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, margin: 0, color: 'var(--text-1)', lineHeight: '1.4' }}>
-                {article.title}
-              </h3>
+              <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', color: 'var(--text-3)' }}>
+                    <span style={{ fontWeight: 600, color: 'var(--text-2)' }}>{article.source}</span>
+                    <span>•</span>
+                    <span>{timeAgo(article.publishedAt)}</span>
+                  </div>
+                  <span style={{
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    padding: '2px 9px',
+                    borderRadius: '20px',
+                    background: 'var(--bg-subtle)',
+                    color: 'var(--text-3)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.03em'
+                  }}>
+                    #{i + 1}
+                  </span>
+                </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px', paddingTop: '12px', borderTop: '1px solid var(--neutral-100)', flexWrap: 'wrap', gap: '10px' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0, color: 'var(--text-1)', lineHeight: '1.4' }}>
+                  {article.title}
+                </h3>
+
+                {article.description && (
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-3)', margin: 0, lineHeight: '1.5', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    {article.description}
+                  </p>
+                )}
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--neutral-100)', flexWrap: 'wrap', gap: '10px' }}>
                 <a
                   href={article.link}
                   target="_blank"
@@ -176,6 +193,7 @@ export default function News() {
                 >
                   <Sparkles size={13} /> Ask AI Impact
                 </button>
+              </div>
               </div>
             </div>
           ))}

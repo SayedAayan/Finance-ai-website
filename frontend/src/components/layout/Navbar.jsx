@@ -5,6 +5,7 @@ import { mockStocks, mockFunds } from '../../data/mockData';
 import { motion, AnimatePresence } from 'framer-motion';
 import logo from '../../assets/logo.png';
 import { useTheme } from '../../context/ThemeContext';
+import { useCurrency } from '../../context/CurrencyContext';
 
 const OTHER_LINKS = [
   { path: '/markets', label: 'Markets' },
@@ -30,6 +31,19 @@ export default function Navbar({ onToggleAIChat }) {
   const [showOthers, setShowOthers] = useState(false);
   const othersRef = useRef(null);
   const { isDarkMode, toggleTheme } = useTheme();
+  const { currency, setCurrency, currencies } = useCurrency();
+  const [showCurrency, setShowCurrency] = useState(false);
+  const currencyRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutsideCurrency(event) {
+      if (currencyRef.current && !currencyRef.current.contains(event.target)) {
+        setShowCurrency(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutsideCurrency);
+    return () => document.removeEventListener('mousedown', handleClickOutsideCurrency);
+  }, []);
 
   useEffect(() => {
     function handleClickOutsideOthers(event) {
@@ -358,6 +372,43 @@ export default function Navbar({ onToggleAIChat }) {
                         </div>
                       )}
                     </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Currency Selector */}
+            <div className="relative" ref={currencyRef}>
+              <button
+                onClick={() => setShowCurrency(!showCurrency)}
+                className="flex items-center gap-1 px-3 py-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-textMuted dark:text-gray-400 hover:text-textMain dark:hover:text-gray-100 text-sm font-semibold"
+                title="Change currency"
+              >
+                {currencies[currency].symbol} {currency}
+                <ChevronDown size={13} className={`transition-transform duration-200 ${showCurrency ? 'rotate-180' : ''}`} />
+              </button>
+              <AnimatePresence>
+                {showCurrency && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute top-[calc(100%+8px)] right-0 w-[200px] z-50 bg-white/98 dark:bg-gray-900/98 backdrop-blur-xl border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl p-1.5"
+                  >
+                    {Object.entries(currencies).map(([code, info]) => (
+                      <button
+                        key={code}
+                        onClick={() => { setCurrency(code); setShowCurrency(false); }}
+                        className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-[0.88rem] font-medium transition-colors text-left ${currency === code
+                            ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                            : 'text-textMuted dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-textMain dark:hover:text-gray-100'
+                          }`}
+                      >
+                        <span>{info.symbol} {code}</span>
+                        <span className="text-[0.72rem] opacity-70">{info.label}</span>
+                      </button>
+                    ))}
                   </motion.div>
                 )}
               </AnimatePresence>

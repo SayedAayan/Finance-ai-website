@@ -1,2 +1,5 @@
 node_modules
 node-v*-win-x64/
+.env
+backend/.env
+frontend/.env

@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Sparkles, Send, ArrowRight, BookOpen, TrendingUp, BarChart2, Plus, ArrowUpRight, TrendingDown, Activity, Newspaper } from 'lucide-react';
+import { Sparkles, Send, ArrowRight, BookOpen, TrendingUp, BarChart2, Plus, ArrowUpRight, TrendingDown, Activity, Newspaper, Landmark } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { mockStocks, mockNews } from '../data/mockData';
+import MarketGraphPanel from '../components/features/MarketGraphPanel';
+import { useCurrency } from '../context/CurrencyContext';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '/api/chat';
 
@@ -74,6 +76,7 @@ export default function Home({ onOpenAIChat }) {
   const [marketMoverTab, setMarketMoverTab] = useState('gainers');
   const [stocks, setStocks] = useState(mockStocks);
   const [marketIndices, setMarketIndices] = useState(DEFAULT_INDICES);
+  const { formatPrice } = useCurrency();
 
   useEffect(() => {
     let cancelled = false;
@@ -204,7 +207,7 @@ export default function Home({ onOpenAIChat }) {
                           </div>
                         </div>
                         <div className="text-right flex-shrink-0 ml-2">
-                          <div className="font-bold text-textMain text-[13px]">₹{stock.price.toFixed(2)}</div>
+                          <div className="font-bold text-textMain text-[13px]">{formatPrice(stock.price)}</div>
                           <div className={`text-[12px] font-semibold ${stock.changePercent >= 0 ? 'text-success' : 'text-danger'}`}>{stock.changePercent >= 0 ? '+' : ''}{stock.changePercent}%</div>
                         </div>
                       </div>
@@ -233,7 +236,7 @@ export default function Home({ onOpenAIChat }) {
                           </div>
                         </div>
                         <div className="text-right flex-shrink-0 ml-2">
-                          <div className="font-semibold text-textMain text-[13px]">₹{stock.price.toFixed(2)}</div>
+                          <div className="font-semibold text-textMain text-[13px]">{formatPrice(stock.price)}</div>
                           <div className={`text-[12px] font-semibold ${stock.changePercent >= 0 ? 'text-success' : 'text-danger'}`}>{stock.changePercent >= 0 ? '+' : ''}{stock.changePercent}%</div>
                         </div>
                       </div>
@@ -270,6 +273,52 @@ export default function Home({ onOpenAIChat }) {
                     ))}
                   </div>
                 </div>
+              </div>
+            </motion.div>
+
+            <motion.div variants={itemVariants} className="w-full max-w-[1200px] mb-12">
+              <MarketGraphPanel />
+            </motion.div>
+
+            <motion.div variants={itemVariants} className="w-full max-w-[1200px] bg-white dark:bg-gray-900 rounded-[22px] p-[24px] shadow-sm border border-gray-100 dark:border-gray-800 mb-12">
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="font-bold text-textMain dark:text-gray-100 flex items-center gap-2"><BarChart2 size={18} className="text-gray-400 dark:text-gray-500" /> All Stocks</h3>
+                <button onClick={() => navigate('/markets')} className="text-primary dark:text-blue-400 text-xs font-bold bg-blue-50 dark:bg-blue-500/10 px-3 py-1 rounded-full hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors">View all</button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {stocks.map(stock => (
+                  <div key={stock.id} onClick={() => navigate(`/stock/${stock.ticker}`)} className="flex items-center justify-between p-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <CompanyLogo ticker={stock.ticker} size={36} />
+                      <div className="min-w-0">
+                        <div className="font-semibold text-textMain dark:text-gray-100 truncate text-[13px]">{stock.name}</div>
+                        <div className="text-[12px] text-textMuted truncate">{stock.ticker} · P/E {stock.peRatio}</div>
+                      </div>
+                    </div>
+                    <div className="text-right flex-shrink-0 ml-2">
+                      <div className="font-bold text-textMain dark:text-gray-100 text-[13px]">{formatPrice(stock.price)}</div>
+                      <div className={`text-[12px] font-semibold ${stock.changePercent >= 0 ? 'text-success' : 'text-danger'}`}>{stock.changePercent >= 0 ? '+' : ''}{stock.changePercent}%</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+
+            <motion.div variants={itemVariants} className="w-full max-w-[1200px] grid grid-cols-1 md:grid-cols-3 gap-[24px] mb-12">
+              <div onClick={() => navigate('/amc-database')} className="bg-white dark:bg-gray-900 rounded-[22px] p-[24px] shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-md transition-all cursor-pointer flex flex-col gap-3">
+                <div className="w-11 h-11 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400"><Landmark size={20} /></div>
+                <h3 className="font-bold text-textMain dark:text-gray-100">AMC & Mutual Fund Database</h3>
+                <p className="text-[13px] text-textMuted dark:text-gray-400">Explore live NAVs and fund houses sourced directly from AMFI.</p>
+              </div>
+              <div onClick={() => navigate('/watchlist')} className="bg-white dark:bg-gray-900 rounded-[22px] p-[24px] shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-md transition-all cursor-pointer flex flex-col gap-3">
+                <div className="w-11 h-11 rounded-xl bg-violet-50 dark:bg-violet-500/10 flex items-center justify-center text-violet-600 dark:text-violet-400"><Activity size={20} /></div>
+                <h3 className="font-bold text-textMain dark:text-gray-100">Your Watchlist</h3>
+                <p className="text-[13px] text-textMuted dark:text-gray-400">Track your favorite stocks and funds with live price alerts.</p>
+              </div>
+              <div onClick={() => navigate('/compare')} className="bg-white dark:bg-gray-900 rounded-[22px] p-[24px] shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-md transition-all cursor-pointer flex flex-col gap-3">
+                <div className="w-11 h-11 rounded-xl bg-green-50 dark:bg-green-500/10 flex items-center justify-center text-green-600 dark:text-green-400"><TrendingUp size={20} /></div>
+                <h3 className="font-bold text-textMain dark:text-gray-100">Compare Stocks & Funds</h3>
+                <p className="text-[13px] text-textMuted dark:text-gray-400">Side-by-side comparison of fundamentals and performance.</p>
               </div>
             </motion.div>
 

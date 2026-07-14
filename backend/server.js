@@ -39,7 +39,7 @@ async function yfSearch(query) {
   return json.finance?.result?.[0]?.quotes || [];
 }
 
-async function yfQuote(symbol) {
+async function yfQuoteRaw(symbol) {
   // v8 chart endpoint — works without cookie/crumb
   const encoded = encodeURIComponent(symbol);
   const url = `https://query2.finance.yahoo.com/v8/finance/chart/${encoded}?interval=1d&range=1d&includePrePost=false`;
@@ -72,8 +72,101 @@ async function yfQuote(symbol) {
     volume: meta.regularMarketVolume,
     fiftyTwoWeekHigh: meta.fiftyTwoWeekHigh,
     fiftyTwoWeekLow: meta.fiftyTwoWeekLow,
-    timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) + ' IST'
+    timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) + ' IST',
+    source: 'yahoo'
   };
+}
+
+// ─── Finnhub fallback (US/global tickers; limited Indian coverage) ──────────
+const FINNHUB_KEY = process.env.FINNHUB_API_KEY;
+
+async function finnhubQuote(symbol) {
+  if (!FINNHUB_KEY) throw new Error('Finnhub key not configured');
+  // Finnhub doesn't understand .NS/.BO suffixes — strip for a best-effort lookup
+  const bareSymbol = symbol.replace(/\.(NS|BO)$/i, '');
+  const url = `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(bareSymbol)}&token=${FINNHUB_KEY}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Finnhub HTTP ${res.status} for ${symbol}`);
+  const q = await res.json();
+  if (!q || typeof q.c !== 'number' || q.c === 0) throw new Error(`No Finnhub data for ${symbol}`);
+
+  const change = q.d;
+  const changePct = q.dp;
+  return {
+    symbol,
+    name: symbol,
+    currency: 'USD',
+    exchange: null,
+    quoteType: null,
+    marketState: null,
+    currentPrice: q.c,
+    previousClose: q.pc,
+    open: q.o,
+    dayHigh: q.h,
+    dayLow: q.l,
+    change: change?.toFixed ? change.toFixed(2) : change,
+    changePercent: changePct?.toFixed ? changePct.toFixed(2) : changePct,
+    volume: null,
+    fiftyTwoWeekHigh: null,
+    fiftyTwoWeekLow: null,
+    timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) + ' IST',
+    source: 'finnhub'
+  };
+}
+
+// ─── Alpha Vantage fallback (last resort — strict 25 req/day free tier) ─────
+const ALPHAVANTAGE_KEY = process.env.ALPHAVANTAGE_API_KEY;
+
+async function alphaVantageQuote(symbol) {
+  if (!ALPHAVANTAGE_KEY) throw new Error('Alpha Vantage key not configured');
+  const bareSymbol = symbol.replace(/\.(NS|BO)$/i, '');
+  const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${encodeURIComponent(bareSymbol)}&apikey=${ALPHAVANTAGE_KEY}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Alpha Vantage HTTP ${res.status} for ${symbol}`);
+  const json = await res.json();
+  const q = json['Global Quote'];
+  const price = q && parseFloat(q['05. price']);
+  if (!price) throw new Error(`No Alpha Vantage data for ${symbol}`);
+
+  const prevClose = parseFloat(q['08. previous close']);
+  const change = parseFloat(q['09. change']);
+  const changePct = parseFloat((q['10. change percent'] || '0%').replace('%', ''));
+
+  return {
+    symbol,
+    name: symbol,
+    currency: 'USD',
+    exchange: null,
+    quoteType: null,
+    marketState: null,
+    currentPrice: price,
+    previousClose: prevClose,
+    open: parseFloat(q['02. open']),
+    dayHigh: parseFloat(q['03. high']),
+    dayLow: parseFloat(q['04. low']),
+    change: change.toFixed(2),
+    changePercent: changePct.toFixed(2),
+    volume: parseInt(q['06. volume'], 10) || null,
+    fiftyTwoWeekHigh: null,
+    fiftyTwoWeekLow: null,
+    timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) + ' IST',
+    source: 'alphavantage'
+  };
+}
+
+// ─── Unified quote with automatic fallback across providers ────────────────
+async function yfQuote(symbol) {
+  const providers = [yfQuoteRaw, finnhubQuote, alphaVantageQuote];
+  let lastErr;
+  for (const provider of providers) {
+    try {
+      return await provider(symbol);
+    } catch (err) {
+      lastErr = err;
+      console.log(`  ⚠ quote provider ${provider.name} failed for ${symbol}: ${err.message}`);
+    }
+  }
+  throw lastErr;
 }
 
 async function yfHistory(symbol, range, interval) {
@@ -171,14 +264,40 @@ async function getAmfiData() {
 // ─── Nifty 500-style curated company seed (sector-categorized) ──────────────
 import { NIFTY_COMPANIES } from './data/companies.js';
 
-// ─── Financial news (Google News RSS, cached) ────────────────────────────────
+// ─── Financial news (NewsAPI.org primary, Google News RSS fallback) ─────────
+const NEWSAPI_KEY = process.env.NEWSAPI_KEY;
 let newsCache = { fetchedAt: 0, articles: [] };
 const NEWS_CACHE_MS = 15 * 60 * 1000; // 15 min
 
-async function getTopNews() {
-  const isStale = Date.now() - newsCache.fetchedAt > NEWS_CACHE_MS;
-  if (!isStale && newsCache.articles.length > 0) return newsCache;
+async function getNewsFromNewsApi() {
+  if (!NEWSAPI_KEY) throw new Error('NewsAPI key not configured');
+  const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent('(Nifty OR Sensex OR "Indian stock market" OR "mutual fund" OR NSE OR BSE OR RBI OR SEBI) AND (India OR finance)')}&language=en&sortBy=publishedAt&pageSize=20&apiKey=${NEWSAPI_KEY}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`NewsAPI HTTP ${res.status}`);
+  const json = await res.json();
+  if (json.status !== 'ok') throw new Error(`NewsAPI error: ${json.message || 'unknown'}`);
 
+  const seen = new Set();
+  const articles = [];
+  for (const item of json.articles || []) {
+    const key = (item.title || '').trim().toLowerCase();
+    if (!key || seen.has(key) || key === '[removed]') continue;
+    seen.add(key);
+    articles.push({
+      title: item.title,
+      description: item.description || '',
+      source: item.source?.name || 'News',
+      link: item.url,
+      image: item.urlToImage || null,
+      publishedAt: item.publishedAt,
+      publishedMs: item.publishedAt ? new Date(item.publishedAt).getTime() : 0
+    });
+  }
+  articles.sort((a, b) => b.publishedMs - a.publishedMs);
+  return articles.slice(0, 12);
+}
+
+async function getNewsFromGoogleRss() {
   const queries = [
     'Indian stock market Nifty Sensex',
     'mutual fund India AMFI NAV',
@@ -203,8 +322,10 @@ async function getTopNews() {
       const sourceMatch = item.title?.match(/ - ([^-]+)$/);
       articles.push({
         title: item.title?.replace(/ - [^-]+$/, '').trim(),
+        description: '',
         source: sourceMatch ? sourceMatch[1].trim() : (item.creator || 'Google News'),
         link: item.link,
+        image: null,
         publishedAt: item.pubDate,
         publishedMs: item.pubDate ? new Date(item.pubDate).getTime() : 0
       });
@@ -212,10 +333,24 @@ async function getTopNews() {
   }
 
   articles.sort((a, b) => b.publishedMs - a.publishedMs);
-  const top10 = articles.slice(0, 10);
+  return articles.slice(0, 10);
+}
 
-  newsCache = { fetchedAt: Date.now(), articles: top10 };
-  console.log(`  📰 News refreshed: ${top10.length} articles`);
+async function getTopNews() {
+  const isStale = Date.now() - newsCache.fetchedAt > NEWS_CACHE_MS;
+  if (!isStale && newsCache.articles.length > 0) return newsCache;
+
+  let articles;
+  try {
+    articles = await getNewsFromNewsApi();
+    console.log(`  📰 News refreshed via NewsAPI: ${articles.length} articles`);
+  } catch (err) {
+    console.log(`  ⚠ NewsAPI failed (${err.message}), falling back to Google News RSS`);
+    articles = await getNewsFromGoogleRss();
+    console.log(`  📰 News refreshed via Google RSS: ${articles.length} articles`);
+  }
+
+  newsCache = { fetchedAt: Date.now(), articles };
   return newsCache;
 }
 
@@ -414,18 +549,37 @@ async function handleToolCall(toolCall) {
   if (name === 'get_financial_news') {
     const query = (args.query || 'India stock market BSE NSE Nifty').trim();
     try {
-      const feed = await rssParser.parseURL(
-        `https://news.google.com/rss/search?q=${encodeURIComponent(query + ' finance')}&hl=en-IN&gl=IN&ceid=IN:en`
-      );
-      const news = feed.items.slice(0, 8).map(item => ({
-        title: item.title,
-        source: item.creator || 'News',
-        published: item.pubDate,
-        link: item.link
-      }));
-      return JSON.stringify({ query, news, fetchedAt: new Date().toISOString() });
+      if (NEWSAPI_KEY) {
+        const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(query + ' finance')}&language=en&sortBy=publishedAt&pageSize=8&apiKey=${NEWSAPI_KEY}`;
+        const res = await fetch(url);
+        const json = await res.json();
+        if (res.ok && json.status === 'ok') {
+          const news = json.articles.slice(0, 8).map(item => ({
+            title: item.title,
+            source: item.source?.name || 'News',
+            published: item.publishedAt,
+            link: item.url,
+            image: item.urlToImage || null
+          }));
+          return JSON.stringify({ query, news, fetchedAt: new Date().toISOString() });
+        }
+      }
+      throw new Error('NewsAPI unavailable, using RSS fallback');
     } catch (err) {
-      return JSON.stringify({ error: `News fetch failed: ${err.message}` });
+      try {
+        const feed = await rssParser.parseURL(
+          `https://news.google.com/rss/search?q=${encodeURIComponent(query + ' finance')}&hl=en-IN&gl=IN&ceid=IN:en`
+        );
+        const news = feed.items.slice(0, 8).map(item => ({
+          title: item.title,
+          source: item.creator || 'News',
+          published: item.pubDate,
+          link: item.link
+        }));
+        return JSON.stringify({ query, news, fetchedAt: new Date().toISOString() });
+      } catch (rssErr) {
+        return JSON.stringify({ error: `News fetch failed: ${rssErr.message}` });
+      }
     }
   }
 
@@ -770,6 +924,70 @@ app.get('/api/companies', async (req, res) => {
     }
 
     res.json({ companies: list, count: list.length, sectors: [...new Set(NIFTY_COMPANIES.map(c => c.sector))].sort() });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Currency FX rates (Yahoo FX pairs primary, Alpha Vantage fallback) ─────
+const SUPPORTED_CURRENCIES = ['INR', 'USD', 'AED', 'GBP', 'EUR', 'SAR', 'KWD'];
+let fxCache = { fetchedAt: 0, rates: {} };
+const FX_CACHE_MS = 30 * 60 * 1000; // 30 min
+
+async function getFxRates() {
+  const isStale = Date.now() - fxCache.fetchedAt > FX_CACHE_MS;
+  if (!isStale && Object.keys(fxCache.rates).length > 0) return fxCache;
+
+  // Rates are expressed as 1 INR -> target currency
+  const rates = { INR: 1 };
+  const targets = SUPPORTED_CURRENCIES.filter(c => c !== 'INR');
+
+  const settled = await Promise.allSettled(
+    targets.map(c => yfQuoteRaw(`INR${c}=X`))
+  );
+  settled.forEach((r, i) => {
+    if (r.status === 'fulfilled' && r.value.currentPrice) {
+      rates[targets[i]] = r.value.currentPrice;
+    }
+  });
+
+  // Cross-compute via USD for currencies Yahoo has no direct INR pair for (e.g. SAR, KWD)
+  let missing = targets.filter(c => !rates[c]);
+  if (missing.length > 0) {
+    try {
+      const usdInr = await yfQuoteRaw('USDINR=X');
+      const crossSettled = await Promise.allSettled(missing.map(c => yfQuoteRaw(`USD${c}=X`)));
+      crossSettled.forEach((r, i) => {
+        if (r.status === 'fulfilled' && r.value.currentPrice && usdInr.currentPrice) {
+          rates[missing[i]] = r.value.currentPrice / usdInr.currentPrice;
+        }
+      });
+    } catch { /* leave missing */ }
+  }
+
+  // Alpha Vantage fallback for any currency still unresolved
+  missing = targets.filter(c => !rates[c]);
+  if (missing.length > 0 && ALPHAVANTAGE_KEY) {
+    for (const c of missing) {
+      try {
+        const url = `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=INR&to_currency=${c}&apikey=${ALPHAVANTAGE_KEY}`;
+        const res = await fetch(url);
+        const json = await res.json();
+        const rate = parseFloat(json['Realtime Currency Exchange Rate']?.['5. Exchange Rate']);
+        if (rate) rates[c] = rate;
+      } catch { /* leave missing */ }
+    }
+  }
+
+  fxCache = { fetchedAt: Date.now(), rates };
+  console.log(`  💱 FX rates refreshed: ${Object.keys(rates).join(', ')}`);
+  return fxCache;
+}
+
+app.get('/api/fx-rates', async (req, res) => {
+  try {
+    const { rates, fetchedAt } = await getFxRates();
+    res.json({ base: 'INR', rates, fetchedAt: new Date(fetchedAt).toISOString() });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

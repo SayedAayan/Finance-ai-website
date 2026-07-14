@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Sparkles, Send, Plus, Paperclip, FileText, AlertCircle, ArrowRight, Image as ImageIcon, MessageSquare, Trash2, Edit, PanelLeftClose, PanelLeft, ArrowDown } from 'lucide-react';
+import { Sparkles, Send, Plus, Paperclip, FileText, AlertCircle, ArrowRight, Image as ImageIcon, MessageSquare, Trash2, Edit, PanelLeftClose, PanelLeft, ArrowDown, Mic, Volume2, Square } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -27,6 +27,65 @@ export default function Chat() {
   const initialMessageSentRef = useRef(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showScrollButton, setShowScrollButton] = useState(false);
+
+  // Voice input/output state
+  const [isListening, setIsListening] = useState(false);
+  const [speakingId, setSpeakingId] = useState(null);
+  const recognitionRef = useRef(null);
+  const speechSupported = typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
+  const ttsSupported = typeof window !== 'undefined' && 'speechSynthesis' in window;
+
+  const toggleListening = () => {
+    if (!speechSupported) return;
+
+    if (isListening) {
+      recognitionRef.current?.stop();
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-IN';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => setIsListening(true);
+    recognition.onend = () => setIsListening(false);
+    recognition.onerror = () => setIsListening(false);
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setInput(prev => (prev ? prev + ' ' : '') + transcript);
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+  };
+
+  const toggleSpeak = (message) => {
+    if (!ttsSupported) return;
+
+    if (speakingId === message.id) {
+      window.speechSynthesis.cancel();
+      setSpeakingId(null);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const plainText = message.text.replace(/[#*`_>\-]/g, '').replace(/\n+/g, '. ');
+    const utterance = new SpeechSynthesisUtterance(plainText);
+    utterance.lang = 'en-IN';
+    utterance.onend = () => setSpeakingId(null);
+    utterance.onerror = () => setSpeakingId(null);
+    setSpeakingId(message.id);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  useEffect(() => {
+    return () => {
+      recognitionRef.current?.stop();
+      if (ttsSupported) window.speechSynthesis.cancel();
+    };
+  }, []);
 
   const handleScroll = () => {
     if (!chatContainerRef.current) return;
@@ -391,11 +450,23 @@ export default function Chat() {
                         <ReactMarkdown remarkPlugins={[remarkGfm]}>
                           {m.text}
                         </ReactMarkdown>
-                        {m.source && (
-                          <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500 font-medium">
-                            <AlertCircle size={12} /> {m.source}
-                          </div>
-                        )}
+                        <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between gap-2">
+                          {m.source ? (
+                            <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500 font-medium">
+                              <AlertCircle size={12} /> {m.source}
+                            </div>
+                          ) : <span />}
+                          {ttsSupported && (
+                            <button
+                              onClick={() => toggleSpeak(m)}
+                              className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full transition-colors ${speakingId === m.id ? 'bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-400' : 'text-gray-400 dark:text-gray-500 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-500/10'}`}
+                              title={speakingId === m.id ? 'Stop speaking' : 'Read aloud'}
+                            >
+                              {speakingId === m.id ? <Square size={12} /> : <Volume2 size={12} />}
+                              {speakingId === m.id ? 'Stop' : 'Listen'}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   )}
@@ -465,9 +536,19 @@ export default function Chat() {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') sendContextualMessage();
                 }}
-                placeholder="Message Stockbuzz AI..."
+                placeholder={isListening ? 'Listening…' : 'Message Stockbuzz AI...'}
                 className="flex-1 bg-transparent border-none outline-none text-[15px] text-gray-800 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 h-full"
               />
+
+              {speechSupported && (
+                <button
+                  onClick={toggleListening}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center mr-1 transition-all ${isListening ? 'bg-red-500 text-white animate-pulse' : 'text-gray-400 dark:text-gray-500 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-500/10'}`}
+                  title={isListening ? 'Stop listening' : 'Speak your question'}
+                >
+                  <Mic size={18} />
+                </button>
+              )}
 
               <button
                 onClick={() => sendContextualMessage()}
