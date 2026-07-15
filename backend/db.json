@@ -555,6 +555,20 @@
       ],
       "createdAt": "2026-07-15T07:07:17.401Z",
       "updatedAt": "2026-07-15T07:07:46.431Z"
+    },
+    "1784101610573": {
+      "id": "1784101610573",
+      "title": "Reliance Industries Limited",
+      "messages": [
+        {
+          "id": 1784101610511,
+          "type": "user",
+          "text": "Reliance Industries Limited",
+          "file": null
+        }
+      ],
+      "createdAt": "2026-07-15T07:46:50.573Z",
+      "updatedAt": "2026-07-15T07:46:50.573Z"
     }
   },
   "watchlist": [],

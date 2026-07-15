@@ -903,14 +903,20 @@ function pickReturn(closes, dates, daysAgo) {
 app.get('/api/stock-stats/:ticker', async (req, res) => {
   try {
     const ticker = req.params.ticker;
-    const url = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=1y`;
+    // Fetch full history so the frontend can slice any range (1D…Since Inception) client-side
+    const url = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=max`;
     const r = await fetch(url, { headers: YF_HEADERS });
     if (!r.ok) throw new Error(`Yahoo chart HTTP ${r.status}`);
     const json = await r.json();
     const result = json.chart?.result?.[0];
     if (!result) throw new Error('No chart data');
-    const closes = (result.indicators?.quote?.[0]?.close || []).filter(c => c != null);
-    const dates = result.timestamp || [];
+    const rawCloses = result.indicators?.quote?.[0]?.close || [];
+    const rawDates = result.timestamp || [];
+    const closes = rawCloses.filter(c => c != null);
+    const dates = rawDates;
+    const series = rawDates
+      .map((t, i) => ({ time: t * 1000, value: rawCloses[i] }))
+      .filter(p => p.value != null);
     res.json({
       ticker,
       return1M: pickReturn(closes, dates, 30),
@@ -919,7 +925,8 @@ app.get('/api/stock-stats/:ticker', async (req, res) => {
       return1Y: pickReturn(closes, dates, 365),
       fiftyTwoWeekHigh: result.meta.fiftyTwoWeekHigh,
       fiftyTwoWeekLow: result.meta.fiftyTwoWeekLow,
-      volume: result.meta.regularMarketVolume
+      volume: result.meta.regularMarketVolume,
+      series
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -948,6 +955,9 @@ app.get('/api/fund-stats/:schemeCode', async (req, res) => {
       return Number((((latest - past.nav) / past.nav) * 100).toFixed(2));
     }
 
+    // Full history sent so the frontend can slice any range (1D…Since Inception) client-side
+    const series = parsed.map(p => ({ time: p.time, value: p.nav }));
+
     res.json({
       schemeCode: req.params.schemeCode,
       fundHouse: json.meta?.fund_house,
@@ -956,7 +966,8 @@ app.get('/api/fund-stats/:schemeCode', async (req, res) => {
       return3M: returnSince(91),
       return6M: returnSince(182),
       return1Y: returnSince(365),
-      return3Y: returnSince(1095)
+      return3Y: returnSince(1095),
+      series
     });
   } catch (err) {
     res.status(500).json({ error: err.message });

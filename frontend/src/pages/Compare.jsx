@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { BarChart2, TrendingUp, Sparkles, AlertCircle, ArrowRight, Search, Loader2 } from 'lucide-react';
+import { Line, LineChart, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
+import { BarChart2, TrendingUp, Sparkles, AlertCircle, ArrowRight, Search, Loader2, Plus, X, LineChart as LineChartIcon, SlidersHorizontal } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
-function isBetter(key, val1, val2, lowerIsBetter = false) {
+function isBetter(val1, val2, lowerIsBetter = false) {
   if (val1 == null || val2 == null || val1 === val2) return [null, null];
   const v1 = parseFloat(String(val1).replace(/[^0-9.-]/g, ''));
   const v2 = parseFloat(String(val2).replace(/[^0-9.-]/g, ''));
@@ -17,6 +18,51 @@ function fmt(n, digits = 2) {
   if (n === null || n === undefined || isNaN(n)) return '—';
   return Number(n).toLocaleString('en-IN', { maximumFractionDigits: digits });
 }
+
+const pct = (v) => v != null ? `${v >= 0 ? '+' : ''}${v}%` : '—';
+
+// Metric definitions: only fields the backend genuinely provides (no fabricated AUM/PE/etc.)
+const FUND_METRICS = [
+  { key: 'amc', label: 'AMC', get: a => a.amc },
+  { key: 'nav', label: 'NAV', get: a => a.nav != null ? `₹${fmt(a.nav)}` : '—' },
+  { key: 'navDate', label: 'NAV Date', get: a => a.navDate },
+  { key: 'category', label: 'Category', get: a => a.category },
+  { key: 'planOption', label: 'Plan / Option', get: a => a.plan ? `${a.plan} - ${a.option}` : '—' },
+  { key: 'schemeType', label: 'Scheme Type', get: a => a.schemeType },
+  { key: 'return1M', label: '1M Return', get: a => pct(a.return1M) },
+  { key: 'return3M', label: '3M Return', get: a => pct(a.return3M) },
+  { key: 'return6M', label: '6M Return', get: a => pct(a.return6M) },
+  { key: 'return1Y', label: '1Y Return', get: a => pct(a.return1Y) },
+  { key: 'return3Y', label: '3Y Return', get: a => pct(a.return3Y) },
+  { key: 'isin', label: 'ISIN', get: a => a.isin },
+];
+
+const STOCK_METRICS = [
+  { key: 'exchange', label: 'Exchange', get: a => a.exchange },
+  { key: 'price', label: 'Price', get: a => a.price != null ? `${a.currency === 'USD' ? '$' : '₹'}${fmt(a.price)}` : '—' },
+  { key: 'today', label: 'Today', get: a => pct(a.changePercent != null ? Number(a.changePercent) : null) },
+  { key: 'return1M', label: '1M Return', get: a => pct(a.return1M) },
+  { key: 'return3M', label: '3M Return', get: a => pct(a.return3M) },
+  { key: 'return6M', label: '6M Return', get: a => pct(a.return6M) },
+  { key: 'return1Y', label: '1Y Return', get: a => pct(a.return1Y) },
+  { key: 'fiftyTwoWeekHigh', label: '52W High', get: a => a.fiftyTwoWeekHigh != null ? fmt(a.fiftyTwoWeekHigh) : '—' },
+  { key: 'fiftyTwoWeekLow', label: '52W Low', get: a => a.fiftyTwoWeekLow != null ? fmt(a.fiftyTwoWeekLow) : '—' },
+  { key: 'volume', label: 'Volume', get: a => a.volume != null ? fmt(a.volume, 0) : '—' },
+];
+
+const DEFAULT_FUND_KEYS = ['amc', 'nav', 'navDate', 'category', 'return1M', 'return1Y', 'return3Y'];
+const DEFAULT_STOCK_KEYS = ['exchange', 'price', 'today', 'return1M', 'return1Y', 'fiftyTwoWeekHigh', 'fiftyTwoWeekLow'];
+
+const CHART_RANGES = [
+  { key: '1D', days: 1 },
+  { key: '1W', days: 7 },
+  { key: '1M', days: 30 },
+  { key: '1Y', days: 365 },
+  { key: '3Y', days: 1095 },
+  { key: '5Y', days: 1825 },
+  { key: '10Y', days: 3650 },
+  { key: 'MAX', days: Infinity, label: 'Since Inception' },
+];
 
 // Searchable async select backed by the live backend search/company/scheme lists
 function AssetPicker({ mode, value, onSelect, placeholder }) {
@@ -82,7 +128,7 @@ function AssetPicker({ mode, value, onSelect, placeholder }) {
         onClick={() => setOpen(true)}
         style={{
           fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-1)',
-          border: '1px solid var(--border)', borderRadius: '8px', padding: '8px 12px',
+          border: '1px solid var(--border)', borderRadius: '10px', padding: '10px 14px',
           background: 'var(--bg-card)', width: '100%', cursor: 'pointer',
           boxShadow: 'var(--shadow-xs)', display: 'flex', alignItems: 'center', gap: '8px',
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
@@ -96,7 +142,7 @@ function AssetPicker({ mode, value, onSelect, placeholder }) {
       {open && (
         <div style={{
           ...menuStyle,
-          background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '8px',
+          background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '10px',
           boxShadow: 'var(--shadow-md, 0 8px 24px rgba(0,0,0,0.25))', maxHeight: '360px',
           display: 'flex', flexDirection: 'column'
         }}>
@@ -140,6 +186,107 @@ function AssetPicker({ mode, value, onSelect, placeholder }) {
   );
 }
 
+// Filter control: toggle which metric rows are shown, placed in the "Select Assets to Compare" header
+function MetricFilterMenu({ allMetrics, activeKeys, onToggle }) {
+  const [open, setOpen] = useState(false);
+  const boxRef = useRef(null);
+
+  useEffect(() => {
+    function onClickOutside(e) {
+      if (boxRef.current && !boxRef.current.contains(e.target)) setOpen(false);
+    }
+    document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, []);
+
+  return (
+    <div ref={boxRef} style={{ position: 'relative' }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 12px',
+          borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-card)',
+          color: 'var(--text-2)', fontWeight: 700, fontSize: '0.76rem', cursor: 'pointer'
+        }}
+      >
+        <SlidersHorizontal size={13} /> Metrics ({activeKeys.length})
+      </button>
+      {open && (
+        <div style={{
+          position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 60,
+          background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '10px',
+          boxShadow: 'var(--shadow-md, 0 8px 24px rgba(0,0,0,0.2))', minWidth: '220px',
+          maxHeight: '320px', overflowY: 'auto', padding: '6px'
+        }}>
+          {allMetrics.map(m => {
+            const active = activeKeys.includes(m.key);
+            return (
+              <div
+                key={m.key}
+                onClick={() => onToggle(m.key)}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px',
+                  padding: '8px 10px', cursor: 'pointer', borderRadius: '7px', fontSize: '0.83rem',
+                  fontWeight: 600, color: active ? 'var(--text-1)' : 'var(--text-3)'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-subtle)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                <span>{m.label}</span>
+                {active
+                  ? <X size={13} color="var(--red)" />
+                  : <Plus size={13} color="var(--blue)" />}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Normalizes two time series (filtered to a range) to % change from the range's start so NAV and stock price can share one chart
+function buildComparisonChartData(leftSeries, rightSeries, rangeDays) {
+  if (!leftSeries?.length || !rightSeries?.length) return [];
+  const cutoff = Number.isFinite(rangeDays) ? Date.now() - rangeDays * 86400000 : 0;
+  const leftFiltered = leftSeries.filter(p => p.time >= cutoff);
+  const rightFiltered = rightSeries.filter(p => p.time >= cutoff);
+  if (leftFiltered.length < 2 || rightFiltered.length < 2) return [];
+
+  const leftStart = leftFiltered[0].value;
+  const rightStart = rightFiltered[0].value;
+  if (!leftStart || !rightStart) return [];
+
+  const rightByDay = new Map(rightFiltered.map(p => [new Date(p.time).toISOString().slice(0, 10), p.value]));
+  const points = [];
+  for (const p of leftFiltered) {
+    const dayKey = new Date(p.time).toISOString().slice(0, 10);
+    const rVal = rightByDay.get(dayKey);
+    if (rVal == null) continue;
+    points.push({
+      time: p.time,
+      left: Number((((p.value - leftStart) / leftStart) * 100).toFixed(2)),
+      right: Number((((rVal - rightStart) / rightStart) * 100).toFixed(2))
+    });
+  }
+  return points;
+}
+
+// Daily-return volatility (std dev of day-over-day % change) — a genuine measure computed from the series itself
+function computeVolatility(series) {
+  if (!series || series.length < 3) return null;
+  const dailyReturns = [];
+  for (let i = 1; i < series.length; i++) {
+    const prev = series[i - 1].value;
+    const cur = series[i].value;
+    if (prev && cur) dailyReturns.push((cur - prev) / prev);
+  }
+  if (dailyReturns.length < 2) return null;
+  const mean = dailyReturns.reduce((a, b) => a + b, 0) / dailyReturns.length;
+  const variance = dailyReturns.reduce((a, b) => a + (b - mean) ** 2, 0) / dailyReturns.length;
+  return Number((Math.sqrt(variance) * 100).toFixed(2));
+}
+
 export default function Compare() {
   const [mode, setMode] = useState('funds'); // 'funds' or 'stocks'
   const navigate = useNavigate();
@@ -151,6 +298,10 @@ export default function Compare() {
   const [leftStats, setLeftStats] = useState(null);
   const [rightStats, setRightStats] = useState(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  const [activeKeys, setActiveKeys] = useState(DEFAULT_FUND_KEYS);
+  const [chartRange, setChartRange] = useState('1Y');
+
+  const metrics = mode === 'funds' ? FUND_METRICS : STOCK_METRICS;
 
   const handleModeChange = (newMode) => {
     setMode(newMode);
@@ -160,6 +311,11 @@ export default function Compare() {
     setRightDetail(null);
     setLeftStats(null);
     setRightStats(null);
+    setActiveKeys(newMode === 'funds' ? DEFAULT_FUND_KEYS : DEFAULT_STOCK_KEYS);
+  };
+
+  const toggleMetric = (key) => {
+    setActiveKeys(keys => keys.includes(key) ? keys.filter(k => k !== key) : [...keys, key]);
   };
 
   // Preselect a sensible default pair on load / mode switch so the page isn't empty
@@ -190,7 +346,7 @@ export default function Compare() {
     return () => { active = false; };
   }, [mode]);
 
-  // Fetch enriched detail (live price/NAV) + historical return stats whenever a picked asset changes
+  // Fetch enriched detail (live price/NAV) + historical return stats + full chartable series whenever a picked asset changes
   useEffect(() => {
     async function loadDetail(asset, setDetail, setStats) {
       if (!asset) { setDetail(null); setStats(null); return; }
@@ -264,38 +420,49 @@ export default function Compare() {
     };
   }, [rightAsset, rightDetail, rightStats, mode]);
 
-  const pct = (v) => v != null ? `${v >= 0 ? '+' : ''}${v}%` : '—';
-
-  const fundRows = [
-    { label: 'AMC', l: left.amc, r: right.amc },
-    { label: 'NAV', l: left.nav != null ? `₹${fmt(left.nav)}` : '—', r: right.nav != null ? `₹${fmt(right.nav)}` : '—' },
-    { label: 'NAV Date', l: left.navDate, r: right.navDate },
-    { label: 'Category', l: left.category, r: right.category },
-    { label: 'Plan / Option', l: left.plan ? `${left.plan} - ${left.option}` : '—', r: right.plan ? `${right.plan} - ${right.option}` : '—' },
-    { label: 'Scheme Type', l: left.schemeType, r: right.schemeType },
-    { label: '1M Return', l: pct(left.return1M), r: pct(right.return1M) },
-    { label: '3M Return', l: pct(left.return3M), r: pct(right.return3M) },
-    { label: '6M Return', l: pct(left.return6M), r: pct(right.return6M) },
-    { label: '1Y Return', l: pct(left.return1Y), r: pct(right.return1Y) },
-    { label: '3Y Return', l: pct(left.return3Y), r: pct(right.return3Y) },
-    { label: 'ISIN', l: left.isin, r: right.isin },
-  ];
-
-  const stockRows = [
-    { label: 'Exchange', l: left.exchange, r: right.exchange },
-    { label: 'Price', l: left.price != null ? `${left.currency === 'USD' ? '$' : '₹'}${fmt(left.price)}` : '—', r: right.price != null ? `${right.currency === 'USD' ? '$' : '₹'}${fmt(right.price)}` : '—' },
-    { label: 'Today', l: pct(left.changePercent != null ? Number(left.changePercent) : null), r: pct(right.changePercent != null ? Number(right.changePercent) : null) },
-    { label: '1M Return', l: pct(left.return1M), r: pct(right.return1M) },
-    { label: '3M Return', l: pct(left.return3M), r: pct(right.return3M) },
-    { label: '6M Return', l: pct(left.return6M), r: pct(right.return6M) },
-    { label: '1Y Return', l: pct(left.return1Y), r: pct(right.return1Y) },
-    { label: '52W High', l: left.fiftyTwoWeekHigh != null ? fmt(left.fiftyTwoWeekHigh) : '—', r: right.fiftyTwoWeekHigh != null ? fmt(right.fiftyTwoWeekHigh) : '—' },
-    { label: '52W Low', l: left.fiftyTwoWeekLow != null ? fmt(left.fiftyTwoWeekLow) : '—', r: right.fiftyTwoWeekLow != null ? fmt(right.fiftyTwoWeekLow) : '—' },
-    { label: 'Volume', l: left.volume != null ? fmt(left.volume, 0) : '—', r: right.volume != null ? fmt(right.volume, 0) : '—' },
-  ];
-
-  const rows = mode === 'funds' ? fundRows : stockRows;
+  const activeMetrics = metrics.filter(m => activeKeys.includes(m.key));
   const bothSelected = leftAsset && rightAsset;
+  const sameAsset = bothSelected && leftAsset.id === rightAsset.id;
+
+  const rangeDef = CHART_RANGES.find(r => r.key === chartRange) || CHART_RANGES[3];
+  const chartData = useMemo(
+    () => buildComparisonChartData(leftStats?.series, rightStats?.series, rangeDef.days),
+    [leftStats, rightStats, rangeDef]
+  );
+
+  // Data-driven summary: computed directly from the selected metric rows + the chart's own range/trend, not a fixed template
+  const summary = useMemo(() => {
+    if (!bothSelected || sameAsset || chartData.length < 2) return null;
+
+    const leftMove = chartData[chartData.length - 1].left;
+    const rightMove = chartData[chartData.length - 1].right;
+    const leader = leftMove > rightMove ? left : right;
+    const laggard = leftMove > rightMove ? right : left;
+    const leaderMove = Math.max(leftMove, rightMove);
+    const laggardMove = Math.min(leftMove, rightMove);
+    const gap = Number((leaderMove - laggardMove).toFixed(2));
+
+    const leftVol = computeVolatility(leftStats?.series?.filter(p => Number.isFinite(rangeDef.days) ? p.time >= Date.now() - rangeDef.days * 86400000 : true));
+    const rightVol = computeVolatility(rightStats?.series?.filter(p => Number.isFinite(rangeDef.days) ? p.time >= Date.now() - rangeDef.days * 86400000 : true));
+    const steadier = (leftVol != null && rightVol != null)
+      ? (leftVol < rightVol ? left : right)
+      : null;
+    const steadierOther = steadier === left ? right : left;
+
+    const rangeLabel = rangeDef.label || rangeDef.key;
+
+    const metricLines = activeMetrics
+      .filter(m => !['navDate'].includes(m.key))
+      .map(m => {
+        const lVal = m.get(left);
+        const rVal = m.get(right);
+        if (lVal === rVal || lVal == null || rVal == null || lVal === '—' || rVal === '—') return null;
+        return `${m.label.toLowerCase()}: ${left.name.split(' ')[0]} ${lVal} vs ${right.name.split(' ')[0]} ${rVal}`;
+      })
+      .filter(Boolean);
+
+    return { leader, laggard, gap, leaderMove, laggardMove, rangeLabel, steadier, steadierOther, leftVol, rightVol, metricLines };
+  }, [bothSelected, sameAsset, chartData, left, right, leftStats, rightStats, rangeDef, activeMetrics]);
 
   return (
     <div style={{ paddingBottom: '4rem' }}>
@@ -315,12 +482,17 @@ export default function Compare() {
       </div>
 
       <div className="container" style={{ paddingTop: '32px' }}>
-        <div className="compare-table">
+        <div className="compare-table" style={{ borderRadius: '18px', overflow: 'visible' }}>
 
-          {/* Header with Asset Choice pickers */}
-          <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr 1fr' }}>
-            <div className="compare-col-header" style={{ background: 'var(--bg-subtle)', display: 'flex', alignItems: 'center', fontWeight: 700, paddingLeft: '16px', color: 'var(--text-3)', fontSize: '0.8rem', textTransform: 'uppercase' }}>
-              Select Assets to Compare
+          {/* Header with Asset Choice pickers + metric filter */}
+          <div className="compare-row compare-header-row" style={{ borderRadius: '18px 18px 0 0', overflow: 'visible', borderBottom: 'none' }}>
+            <div className="compare-col-header" style={{ background: 'var(--bg-subtle)', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap: '10px', fontWeight: 700, paddingLeft: '16px', color: 'var(--text-3)', fontSize: '0.8rem', textTransform: 'uppercase' }}>
+              <span>Select Assets to Compare</span>
+              {bothSelected && (
+                <div style={{ textTransform: 'none' }}>
+                  <MetricFilterMenu allMetrics={metrics} activeKeys={activeKeys} onToggle={toggleMetric} />
+                </div>
+              )}
             </div>
 
             <div className="compare-col-header" style={{ borderLeft: '1px solid var(--border)', padding: '16px', position: 'relative', zIndex: 5 }}>
@@ -359,23 +531,86 @@ export default function Compare() {
             <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
               <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Loading live data...
             </div>
-          ) : rows.map((row, idx) => {
-            const [lWin, rWin] = isBetter(row.label, row.l, row.r, row.lowerBetter);
+          ) : activeMetrics.length === 0 ? (
+            <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-3)' }}>
+              No metrics selected. Use the <strong>Metrics</strong> filter above to add some.
+            </div>
+          ) : activeMetrics.map((m) => {
+            const lVal = m.get(left);
+            const rVal = m.get(right);
+            const [lWin, rWin] = isBetter(lVal, rVal, m.lowerBetter);
             return (
-              <div key={idx} className="compare-row" style={{ gridTemplateColumns: '240px 1fr 1fr' }}>
-                <div className="compare-label-cell">{row.label}</div>
+              <div key={m.key} className="compare-row">
+                <div className="compare-label-cell">{m.label}</div>
                 <div className={`compare-val-cell ${lWin === 'win' ? 'winner' : lWin === 'lose' ? 'loser' : ''}`}>
-                  {row.l ?? '—'}
+                  {lVal ?? '—'}
                   {lWin === 'win' && <span style={{ marginLeft: '8px', fontSize: '0.75rem' }}>▲</span>}
                 </div>
                 <div className={`compare-val-cell ${rWin === 'win' ? 'winner' : rWin === 'lose' ? 'loser' : ''}`}>
-                  {row.r ?? '—'}
+                  {rVal ?? '—'}
                   {rWin === 'win' && <span style={{ marginLeft: '8px', fontSize: '0.75rem' }}>▲</span>}
                 </div>
               </div>
             );
           })}
         </div>
+
+        {/* Comparison Chart */}
+        {bothSelected && !loadingDetail && (
+          <div style={{ marginTop: '24px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '18px', padding: '22px 24px', boxShadow: '0 2px 8px rgba(0,0,0,.04)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <LineChartIcon size={18} color="var(--text-3)" />
+                <h3 style={{ fontSize: '1rem', fontWeight: 800, margin: 0, color: 'var(--text-1)' }}>Performance Comparison</h3>
+              </div>
+              <div style={{ display: 'flex', gap: '4px', marginLeft: 'auto', flexWrap: 'wrap' }}>
+                {CHART_RANGES.map(r => (
+                  <button
+                    key={r.key}
+                    onClick={() => setChartRange(r.key)}
+                    style={{
+                      padding: '5px 11px', borderRadius: '20px', fontSize: '0.72rem', fontWeight: 700,
+                      cursor: 'pointer', border: 'none', transition: 'all .15s',
+                      background: chartRange === r.key ? 'var(--text-1)' : 'var(--bg-subtle)',
+                      color: chartRange === r.key ? 'var(--bg-card)' : 'var(--text-3)'
+                    }}
+                  >
+                    {r.key === 'MAX' ? 'MAX' : r.key}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-3)', marginBottom: '12px' }}>
+              % change over {rangeDef.label || rangeDef.key}, normalized to a common start date
+            </div>
+            {chartData.length > 1 ? (
+              <ResponsiveContainer width="100%" height={320}>
+                <LineChart data={chartData} margin={{ top: 4, right: 12, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--neutral-200)" vertical={false} />
+                  <XAxis dataKey="time" tick={{ fontSize: 11 }} minTickGap={60} axisLine={false} tickLine={false}
+                    tickFormatter={v => new Date(v).toLocaleDateString('en-IN', chartRange === '1D' ? { hour: '2-digit', minute: '2-digit' } : { month: 'short', day: 'numeric', year: rangeDef.days > 400 ? '2-digit' : undefined })} />
+                  <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={50}
+                    tickFormatter={v => `${v}%`} />
+                  <Tooltip
+                    contentStyle={{ borderRadius: 10, fontSize: 12, border: '1px solid var(--neutral-200)', background: 'var(--bg-card)' }}
+                    labelFormatter={v => new Date(v).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    formatter={(v, name) => [`${v >= 0 ? '+' : ''}${v}%`, name === 'left' ? left.name : right.name]}
+                  />
+                  <Legend
+                    formatter={(value) => value === 'left' ? left.name : right.name}
+                    wrapperStyle={{ fontSize: '0.8rem', fontWeight: 600 }}
+                  />
+                  <Line type="monotone" dataKey="left" name="left" stroke="#1A56DB" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
+                  <Line type="monotone" dataKey="right" name="right" stroke="#8b5cf6" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-3)', fontSize: '0.85rem' }}>
+                Not enough overlapping history for this range.
+              </div>
+            )}
+          </div>
+        )}
 
         {/* AI Summary */}
         {bothSelected && !loadingDetail && (
@@ -385,32 +620,33 @@ export default function Compare() {
               <div className="ai-panel-title" style={{ fontSize: '1rem' }}>Comparison Summary</div>
               <span className="badge badge-violet" style={{ marginLeft: 'auto' }}>Research Only</span>
             </div>
-            {mode === 'funds' ? (
-              <p>
-                Comparing <strong>{left.name}</strong> vs <strong>{right.name}</strong>.
-                {leftAsset.id === rightAsset.id ? (
-                  ' You have selected the same fund in both comparison slots. Try selecting different funds to compare.'
-                ) : (
-                  ` ${left.name} is offered by ${left.amc || 'its AMC'} with a NAV of ₹${fmt(left.nav)}, while ${right.name} is offered by ${right.amc || 'its AMC'} with a NAV of ₹${fmt(right.nav)}.`
+            {sameAsset ? (
+              <p>You have selected the same {mode === 'funds' ? 'fund' : 'stock'} in both slots. Pick two different {mode === 'funds' ? 'funds' : 'stocks'} to see a comparison.</p>
+            ) : summary ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <p>
+                  Over {summary.rangeLabel.toLowerCase()}, <strong>{summary.leader.name}</strong> outperformed <strong>{summary.laggard.name}</strong> by {summary.gap} percentage points
+                  ({pct(summary.leaderMove)} vs {pct(summary.laggardMove)}).
+                  {summary.steadier && (
+                    ` ${summary.steadier.name} also showed steadier day-to-day movement (${summary.steadier === left ? summary.leftVol : summary.rightVol}% daily volatility vs ${summary.steadierOther === left ? summary.leftVol : summary.rightVol}% for ${summary.steadierOther.name}), suggesting a smoother ride for holders over this period.`
+                  )}
+                </p>
+                {summary.metricLines.length > 0 && (
+                  <div>
+                    <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-3)', marginBottom: '4px' }}>On the metrics you've selected:</div>
+                    <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '0.85rem', color: 'var(--text-2)', lineHeight: 1.7 }}>
+                      {summary.metricLines.map((line, i) => <li key={i}>{line}</li>)}
+                    </ul>
+                  </div>
                 )}
-                {left.return1Y != null && right.return1Y != null && leftAsset.id !== rightAsset.id && (
-                  ` Over the past year, ${left.name} returned ${pct(left.return1Y)} versus ${pct(right.return1Y)} for ${right.name}.`
-                )}
-              </p>
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-3)' }}>
+                  Past performance and lower volatility are not guarantees of future results — they reflect what happened in this specific window, which can change with market conditions.
+                </p>
+              </div>
             ) : (
-              <p>
-                Comparing <strong>{left.name} ({left.symbol})</strong> vs <strong>{right.name} ({right.symbol})</strong>.
-                {leftAsset.id === rightAsset.id ? (
-                  ' You have selected the same stock in both comparison slots. Try selecting a different stock to compare.'
-                ) : (
-                  ` ${left.name} trades at ${left.price != null ? fmt(left.price) : 'n/a'} on ${left.exchange}, while ${right.name} trades at ${right.price != null ? fmt(right.price) : 'n/a'} on ${right.exchange}.`
-                )}
-                {left.return1Y != null && right.return1Y != null && leftAsset.id !== rightAsset.id && (
-                  ` Over the past year, ${left.name} moved ${pct(left.return1Y)} versus ${pct(right.return1Y)} for ${right.name}.`
-                )}
-              </p>
+              <p>Comparing <strong>{left.name}</strong> vs <strong>{right.name}</strong>. Not enough historical overlap to compute a performance gap for the selected range.</p>
             )}
-            <div className="ai-disclaimer" style={{ display: 'inline-flex', width: 'fit-content' }}>
+            <div className="ai-disclaimer" style={{ display: 'inline-flex', width: 'fit-content', marginTop: '10px' }}>
               <AlertCircle size={13} />
               <span>Source: NSE/BSE/NASDAQ listings, AMFI NAV feed, Yahoo Finance • Not investment advice</span>
             </div>
