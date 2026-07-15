@@ -887,6 +887,81 @@ app.get('/api/mutual-fund/:id', async (req, res) => {
   }
 });
 
+// ─── Stock stats: 1Y price history → day range, 52w range, volume, period returns ──
+function pickReturn(closes, dates, daysAgo) {
+  if (!closes.length) return null;
+  const targetTime = Date.now() - daysAgo * 86400000;
+  let idx = dates.findIndex(t => t * 1000 >= targetTime);
+  if (idx === -1) idx = 0;
+  const past = closes[idx];
+  const latest = closes[closes.length - 1];
+  if (past == null || latest == null || past === 0) return null;
+  return Number((((latest - past) / past) * 100).toFixed(2));
+}
+
+app.get('/api/stock-stats/:ticker', async (req, res) => {
+  try {
+    const ticker = req.params.ticker;
+    const url = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=1y`;
+    const r = await fetch(url, { headers: YF_HEADERS });
+    if (!r.ok) throw new Error(`Yahoo chart HTTP ${r.status}`);
+    const json = await r.json();
+    const result = json.chart?.result?.[0];
+    if (!result) throw new Error('No chart data');
+    const closes = (result.indicators?.quote?.[0]?.close || []).filter(c => c != null);
+    const dates = result.timestamp || [];
+    res.json({
+      ticker,
+      return1M: pickReturn(closes, dates, 30),
+      return3M: pickReturn(closes, dates, 91),
+      return6M: pickReturn(closes, dates, 182),
+      return1Y: pickReturn(closes, dates, 365),
+      fiftyTwoWeekHigh: result.meta.fiftyTwoWeekHigh,
+      fiftyTwoWeekLow: result.meta.fiftyTwoWeekLow,
+      volume: result.meta.regularMarketVolume
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Fund stats: historical NAV series (mfapi.in, keyed by AMFI scheme code) ──
+app.get('/api/fund-stats/:schemeCode', async (req, res) => {
+  try {
+    const r = await fetch(`https://api.mfapi.in/mf/${encodeURIComponent(req.params.schemeCode)}`);
+    if (!r.ok) throw new Error(`mfapi HTTP ${r.status}`);
+    const json = await r.json();
+    const rows = json.data || [];
+    if (!rows.length) throw new Error('No NAV history');
+
+    const parsed = rows.map(row => {
+      const [d, m, y] = row.date.split('-');
+      return { time: new Date(`${y}-${m}-${d}`).getTime(), nav: parseFloat(row.nav) };
+    }).filter(p => !isNaN(p.nav)).sort((a, b) => a.time - b.time);
+
+    const latest = parsed[parsed.length - 1]?.nav ?? null;
+    function returnSince(daysAgo) {
+      const targetTime = Date.now() - daysAgo * 86400000;
+      const past = parsed.find(p => p.time >= targetTime);
+      if (!past || latest == null || past.nav === 0) return null;
+      return Number((((latest - past.nav) / past.nav) * 100).toFixed(2));
+    }
+
+    res.json({
+      schemeCode: req.params.schemeCode,
+      fundHouse: json.meta?.fund_house,
+      schemeType: json.meta?.scheme_type,
+      return1M: returnSince(30),
+      return3M: returnSince(91),
+      return6M: returnSince(182),
+      return1Y: returnSince(365),
+      return3Y: returnSince(1095)
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─── Unified search: stocks (NSE/BSE/US) + mutual funds + AMCs ──────────────
 app.get('/api/search', async (req, res) => {
   try {
