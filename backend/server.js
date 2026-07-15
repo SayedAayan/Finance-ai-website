@@ -608,10 +608,11 @@ async function readDB() {
     const data = await fs.readFile(DB_FILE, 'utf8');
     const db = JSON.parse(data);
     if (!db.watchlist) db.watchlist = [];
+    if (!db.trending) db.trending = {};
     return db;
   } catch (err) {
     if (err.code === 'ENOENT') {
-      return { chats: {}, watchlist: [] };
+      return { chats: {}, watchlist: [], trending: {} };
     }
     throw err;
   }
@@ -963,11 +964,61 @@ app.get('/api/fund-stats/:schemeCode', async (req, res) => {
 });
 
 // ─── Unified search: stocks (NSE/BSE/US) + mutual funds + AMCs ──────────────
+function todayKey() {
+  return new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+}
+
+async function logSearchQuery(q, topResult) {
+  const query = q.trim();
+  if (!query || query.length < 2) return;
+  try {
+    const db = await readDB();
+    const day = todayKey();
+    if (!db.trending[day]) db.trending[day] = {};
+    // Keep only the last 3 days of buckets so db.json doesn't grow unbounded
+    for (const key of Object.keys(db.trending)) {
+      if (key !== day) {
+        const age = (new Date(day) - new Date(key)) / 86400000;
+        if (age > 3) delete db.trending[key];
+      }
+    }
+    const label = topResult?.name || query;
+    const bucket = db.trending[day];
+    if (!bucket[label]) bucket[label] = { label, type: topResult?.type || null, route: topResult?.route || null, count: 0 };
+    bucket[label].count += 1;
+    await writeDB(db);
+  } catch { /* trending is best-effort, never block search */ }
+}
+
 app.get('/api/search', async (req, res) => {
   try {
     const { q, limit = '8' } = req.query;
     const results = await searchDatabase(q, { limit: Math.min(parseInt(limit, 10) || 8, 25) });
+    const topStock = results.stocks?.[0];
+    const topFund = results.funds?.[0];
+    const topAmc = results.amcs?.[0];
+    const top = topStock
+      ? { name: topStock.name, type: 'stock', route: `/stock/${topStock.id}` }
+      : topFund
+      ? { name: topFund.name, type: 'fund', route: `/fund/${topFund.id}` }
+      : topAmc
+      ? { name: topAmc.name, type: 'amc', route: `/amcs` }
+      : null;
+    logSearchQuery(q, top);
     res.json(results);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Trending searches: aggregated from today's /api/search queries ─────────
+app.get('/api/trending', async (req, res) => {
+  try {
+    const db = await readDB();
+    const limit = Math.min(parseInt(req.query.limit, 10) || 4, 10);
+    const bucket = db.trending[todayKey()] || {};
+    const top = Object.values(bucket).sort((a, b) => b.count - a.count).slice(0, limit);
+    res.json({ trending: top, date: todayKey() });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

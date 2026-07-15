@@ -25,7 +25,7 @@ export default function Chat() {
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
   const initialMessageSentRef = useRef(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
 
   // Voice input/output state
@@ -54,11 +54,23 @@ export default function Chat() {
     recognition.onerror = () => setIsListening(false);
     recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript;
-      setInput(prev => (prev ? prev + ' ' : '') + transcript);
+      sendContextualMessage(transcript, true);
     };
 
     recognitionRef.current = recognition;
     recognition.start();
+  };
+
+  const speakMessage = (message) => {
+    if (!ttsSupported) return;
+    window.speechSynthesis.cancel();
+    const plainText = message.text.replace(/[#*`_>\-]/g, '').replace(/\n+/g, '. ');
+    const utterance = new SpeechSynthesisUtterance(plainText);
+    utterance.lang = 'en-IN';
+    utterance.onend = () => setSpeakingId(null);
+    utterance.onerror = () => setSpeakingId(null);
+    setSpeakingId(message.id);
+    window.speechSynthesis.speak(utterance);
   };
 
   const toggleSpeak = (message) => {
@@ -70,14 +82,7 @@ export default function Chat() {
       return;
     }
 
-    window.speechSynthesis.cancel();
-    const plainText = message.text.replace(/[#*`_>\-]/g, '').replace(/\n+/g, '. ');
-    const utterance = new SpeechSynthesisUtterance(plainText);
-    utterance.lang = 'en-IN';
-    utterance.onend = () => setSpeakingId(null);
-    utterance.onerror = () => setSpeakingId(null);
-    setSpeakingId(message.id);
-    window.speechSynthesis.speak(utterance);
+    speakMessage(message);
   };
 
   useEffect(() => {
@@ -153,7 +158,7 @@ export default function Chat() {
 
     if (loc.state.initialMessage) {
       initialMessageSentRef.current = true;
-      sendContextualMessage(loc.state.initialMessage);
+      sendContextualMessage(loc.state.initialMessage, !!loc.state.viaVoice);
       window.history.replaceState({}, document.title);
     } else if (loc.state.initialFile) {
       initialMessageSentRef.current = true;
@@ -207,7 +212,7 @@ export default function Chat() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const sendContextualMessage = async (textToSend) => {
+  const sendContextualMessage = async (textToSend, viaVoice = false) => {
     const q = textToSend || input;
     if (!q.trim() && !selectedFile) return;
 
@@ -292,13 +297,15 @@ export default function Chat() {
         aiText = data.reply;
       }
 
-      const finalMessages = [...updatedMessages, {
+      const aiMessage = {
         id: Date.now() + 1,
         type: 'ai',
         text: aiText,
         source: 'Stockbuzz AI'
-      }];
+      };
+      const finalMessages = [...updatedMessages, aiMessage];
       setMessages(finalMessages);
+      if (viaVoice) speakMessage(aiMessage);
 
       // Update DB with AI reply
       if (currentChatId) {
@@ -319,13 +326,15 @@ export default function Chat() {
         fallbackText += `Regarding your query "${q}":\n- StockBuzz live data confirms active research is available for Reliance, TCS, HDFC, and PPFAS.\n- Please consult scheme related documents or a SEBI registered advisor.`;
       }
 
-      const finalMessages = [...updatedMessages, {
+      const aiMessage = {
         id: Date.now() + 1,
         type: 'ai',
         text: fallbackText,
         source: 'Stockbuzz AI Local Fallback'
-      }];
+      };
+      const finalMessages = [...updatedMessages, aiMessage];
       setMessages(finalMessages);
+      if (viaVoice) speakMessage(aiMessage);
 
       if (currentChatId) {
         await fetch(`${API_URL}/chats/${currentChatId}`, {
@@ -412,8 +421,8 @@ export default function Chat() {
           <div className="max-w-4xl mx-auto flex flex-col gap-6 relative">
             {messages.length === 0 ? (
               <div className="text-center py-20 flex flex-col items-center">
-                <div className="w-16 h-16 bg-blue-50 dark:bg-blue-500/10 rounded-full flex items-center justify-center mb-6">
-                  <Sparkles size={32} className="text-blue-500 dark:text-blue-400" />
+                <div className="w-16 h-16 bg-white dark:bg-gray-900 rounded-full flex items-center justify-center mb-6 shadow-sm border border-gray-100 dark:border-gray-800">
+                  <img src="/favicon.png" alt="Stockbuzz" className="w-9 h-9 object-contain" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3">How can I help you today?</h2>
                 <p className="text-gray-500 dark:text-gray-400 max-w-md">
@@ -501,7 +510,7 @@ export default function Chat() {
         )}
 
         {/* Input */}
-        <div className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 px-8 py-5 shrink-0">
+        <div className="px-8 pb-5 pt-2 shrink-0">
           <div className="max-w-4xl mx-auto">
             {filePreview && (
               <div className="mb-3 px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl flex items-center justify-between max-w-sm">
@@ -514,7 +523,7 @@ export default function Chat() {
                 </button>
               </div>
             )}
-            <div className="relative flex items-center bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full px-4 h-[60px] focus-within:bg-white dark:focus-within:bg-gray-900 focus-within:ring-2 focus-within:ring-violet-500/20 focus-within:border-violet-300 dark:focus-within:border-violet-500/40 transition-all shadow-sm">
+            <div className="relative flex items-center bg-gray-100 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 rounded-full px-4 h-[56px] shadow-sm focus-within:bg-white dark:focus-within:bg-gray-900 focus-within:border-violet-300 dark:focus-within:border-violet-500/40 focus-within:ring-2 focus-within:ring-violet-500/15 transition-all">
               <input
                 type="file"
                 ref={fileInputRef}
@@ -558,7 +567,7 @@ export default function Chat() {
                 <Send size={16} className="ml-0.5" />
               </button>
             </div>
-            <div className="text-center mt-3 text-xs text-gray-400 dark:text-gray-500">
+            <div className="text-center mt-2.5 text-xs text-gray-400 dark:text-gray-500">
               Stockbuzz AI can make mistakes. Consider verifying important information.
             </div>
           </div>

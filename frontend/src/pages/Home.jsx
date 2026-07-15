@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Sparkles, Send, ArrowRight, BookOpen, TrendingUp, BarChart2, Plus, ArrowUpRight, TrendingDown, Activity, Newspaper, Landmark } from 'lucide-react';
+import { Sparkles, Send, ArrowRight, BookOpen, TrendingUp, BarChart2, Plus, ArrowUpRight, TrendingDown, Activity, Newspaper, Landmark, Mic } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { mockStocks, mockNews } from '../data/mockData';
@@ -73,11 +73,33 @@ export default function Home({ onOpenAIChat }) {
   const [input, setInput] = useState('');
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef(null);
+  const speechSupported = typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
   const [marketMoverTab, setMarketMoverTab] = useState('gainers');
   const [stocks, setStocks] = useState(mockStocks);
   const [marketIndices, setMarketIndices] = useState(DEFAULT_INDICES);
   const { formatPrice } = useCurrency();
   const [featuredNews, setFeaturedNews] = useState(null);
+  const [trending, setTrending] = useState([]);
+
+  useEffect(() => {
+    return () => { recognitionRef.current?.stop(); };
+  }, []);
+
+  // Fetch today's most-searched queries, refreshed every 5 minutes
+  useEffect(() => {
+    let cancelled = false;
+    const loadTrending = () => {
+      fetch('/api/trending?limit=4')
+        .then(r => r.json())
+        .then(data => { if (!cancelled) setTrending(data.trending || []); })
+        .catch(() => {});
+    };
+    loadTrending();
+    const iv = setInterval(loadTrending, 5 * 60 * 1000);
+    return () => { cancelled = true; clearInterval(iv); };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -144,19 +166,52 @@ export default function Home({ onOpenAIChat }) {
     navigate('/chat', { state: { initialFile: file } });
   };
 
-  const handleAsk = (textArg) => {
+  const handleAsk = (textArg, viaVoice = false) => {
     const q = typeof textArg === 'string' ? textArg : input;
     if (!q.trim()) return;
-    navigate('/chat', { state: { initialMessage: q } });
+    navigate('/chat', { state: { initialMessage: q, viaVoice } });
     setInput('');
   };
 
-  const suggestions = [
+  const toggleListening = () => {
+    if (!speechSupported) return;
+
+    if (isListening) {
+      recognitionRef.current?.stop();
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-IN';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => setIsListening(true);
+    recognition.onend = () => setIsListening(false);
+    recognition.onerror = () => setIsListening(false);
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      handleAsk(transcript, true);
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+  };
+
+  const DEFAULT_SUGGESTIONS = [
     { label: 'What is P/E ratio?', icon: <BookOpen size={16} /> },
     { label: 'Tell me about Reliance', icon: <TrendingUp size={16} /> },
     { label: 'HDFC Flexi Cap Fund', icon: <BarChart2 size={16} /> },
     { label: 'Compare TCS vs Reliance', icon: <Activity size={16} /> }
   ];
+
+  const TRENDING_ICON = { stock: <TrendingUp size={16} />, fund: <BarChart2 size={16} />, amc: <Landmark size={16} /> };
+
+  const trendingSuggestions = trending.map(t => ({ label: t.label, icon: TRENDING_ICON[t.type] || <Activity size={16} />, trending: true }));
+  const suggestions = trendingSuggestions.length >= 4
+    ? trendingSuggestions.slice(0, 4)
+    : [...trendingSuggestions, ...DEFAULT_SUGGESTIONS].slice(0, 4);
 
   const sortedGainers = [...stocks].sort((a, b) => b.changePercent - a.changePercent).slice(0, 3);
   const sortedLosers = [...stocks].sort((a, b) => a.changePercent - b.changePercent).slice(0, 3);
@@ -184,17 +239,26 @@ export default function Home({ onOpenAIChat }) {
                 <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*,application/pdf" className="hidden" />
                 <button onClick={() => fileInputRef.current?.click()} className="p-3 text-textMuted hover:text-primary transition-colors hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-full ml-1"><Plus size={24} /></button>
 
-                <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAsk()} placeholder="Ask Stockbuzz AI about stocks, mutual funds, or finance..." className="flex-1 bg-transparent border-none outline-none text-base text-textMain px-2 h-full placeholder:text-gray-400 dark:placeholder:text-gray-500" />
+                <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAsk()} placeholder={isListening ? 'Listening…' : 'Ask Stockbuzz AI about stocks, mutual funds, or finance...'} className="flex-1 bg-transparent border-none outline-none text-base text-textMain px-2 h-full placeholder:text-gray-400 dark:placeholder:text-gray-500" />
+                {speechSupported && (
+                  <button
+                    onClick={toggleListening}
+                    className={`w-[42px] h-[42px] rounded-full flex items-center justify-center mr-1 transition-all ${isListening ? 'bg-red-500 text-white animate-pulse' : 'text-textMuted hover:text-primary hover:bg-blue-50 dark:hover:bg-blue-500/10'}`}
+                    title={isListening ? 'Stop listening' : 'Speak your question'}
+                  ><Mic size={18} /></button>
+                )}
                 <button onClick={() => handleAsk()} disabled={!input.trim()} className="w-[42px] h-[42px] rounded-full bg-gray-100 dark:bg-gray-800 text-textMuted flex items-center justify-center mr-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary hover:text-white"><Send size={16} className="ml-1" /></button>
               </div>
             </motion.div>
 
-            <motion.div variants={itemVariants} className="flex flex-wrap justify-center gap-[16px] mb-8 w-full max-w-[900px]">
-              {suggestions.map((s, i) => (
-                <button key={i} onClick={() => handleAsk(s.label)} className="flex items-center gap-2 px-[18px] h-[42px] bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-[14px] text-[14px] font-medium text-textMuted shadow-sm hover:shadow-md hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:text-primary dark:hover:text-blue-400 hover:-translate-y-[2px] transition-all duration-300">
-                  {s.icon} <span>{s.label}</span>
-                </button>
-              ))}
+            <motion.div variants={itemVariants} className="w-full max-w-[1100px] mb-8 flex flex-col items-center gap-3">
+              <div className="flex flex-nowrap justify-center gap-[12px] w-full overflow-x-auto px-2 pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                {suggestions.map((s, i) => (
+                  <button key={i} onClick={() => handleAsk(s.label)} className="flex items-center gap-2 px-[16px] h-[42px] bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-[14px] text-[14px] font-medium text-textMuted shadow-sm hover:shadow-md hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:text-primary dark:hover:text-blue-400 hover:-translate-y-[2px] transition-all duration-300 shrink-0 whitespace-nowrap">
+                    {s.icon} <span className="max-w-[240px] truncate">{s.label}</span>
+                  </button>
+                ))}
+              </div>
             </motion.div>
 
             <motion.div variants={itemVariants} className="w-full max-w-[1200px] bg-white dark:bg-gray-900 rounded-[20px] p-[18px] shadow-sm border border-gray-100 dark:border-gray-800 mb-6 mx-auto flex items-center justify-between">

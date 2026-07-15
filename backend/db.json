@@ -495,7 +495,83 @@
       ],
       "createdAt": "2026-07-14T09:49:41.649Z",
       "updatedAt": "2026-07-14T09:49:46.108Z"
+    },
+    "1784098439558": {
+      "id": "1784098439558",
+      "title": "What is P/E ratio?",
+      "messages": [
+        {
+          "id": 1784098439467,
+          "type": "user",
+          "text": "What is P/E ratio?",
+          "file": null
+        },
+        {
+          "id": 1784098443783,
+          "type": "ai",
+          "text": "The P/E ratio, or Price-to-Earnings ratio, is a widely used metric in finance to evaluate the valuation of a company. It is calculated by dividing the current market price of a company's stock by its earnings per share (EPS).\n\nP/E ratio = Current Market Price / Earnings per Share (EPS)\n\nThe P/E ratio provides insight into how much investors are willing to pay for a company's stock relative to its earnings. A higher P/E ratio may indicate that investors expect the company to grow its earnings in the future, while a lower P/E ratio may suggest that the company's stock is undervalued or that investors have lower expectations for its future growth.\n\nHowever, to provide a more specific or detailed explanation, could you please let me know what aspect of the P/E ratio you would like to know more about?",
+          "source": "Stockbuzz AI"
+        }
+      ],
+      "createdAt": "2026-07-15T06:53:59.558Z",
+      "updatedAt": "2026-07-15T06:54:03.787Z"
+    },
+    "1784098976548": {
+      "id": "1784098976548",
+      "title": "HDFC Flexi Cap Fund",
+      "messages": [
+        {
+          "id": 1784098976526,
+          "type": "user",
+          "text": "HDFC Flexi Cap Fund",
+          "file": null
+        },
+        {
+          "id": 1784098990155,
+          "type": "ai",
+          "text": "The current price of HDFC Flexi Cap Fund is ₹230.008, with a change of -₹1.56 (-0.67%). The 52-week high is ₹231.97 and the 52-week low is ₹198.616.",
+          "source": "Stockbuzz AI"
+        }
+      ],
+      "createdAt": "2026-07-15T07:02:56.549Z",
+      "updatedAt": "2026-07-15T07:03:10.159Z"
+    },
+    "1784099237401": {
+      "id": "1784099237401",
+      "title": "HDFC Flexi Cap Fund",
+      "messages": [
+        {
+          "id": 1784099237214,
+          "type": "user",
+          "text": "HDFC Flexi Cap Fund",
+          "file": null
+        },
+        {
+          "id": 1784099266425,
+          "type": "ai",
+          "text": "The current price of HDFC Flexi Cap Fund is ₹230.008, with a change of -₹1.56 (-0.67%). The 52-week high is ₹231.97 and the 52-week low is ₹198.616.",
+          "source": "Stockbuzz AI"
+        }
+      ],
+      "createdAt": "2026-07-15T07:07:17.401Z",
+      "updatedAt": "2026-07-15T07:07:46.431Z"
     }
   },
-  "watchlist": []
+  "watchlist": [],
+  "trending": {
+    "2026-07-15": {
+      "Reliance Industries Limited": {
+        "label": "Reliance Industries Limited",
+        "type": "stock",
+        "route": "/stock/NSE:RELIANCE",
+        "count": 3
+      },
+      "HDFC Flexi Cap Fund - Growth Plan": {
+        "label": "HDFC Flexi Cap Fund - Growth Plan",
+        "type": "fund",
+        "route": "/fund/MF:101762",
+        "count": 1
+      }
+    }
+  }
 }
