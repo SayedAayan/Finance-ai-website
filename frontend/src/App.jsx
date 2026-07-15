@@ -13,11 +13,13 @@ import Chat from './pages/Chat';
 import Markets from './pages/Markets';
 import WealthBucket from './pages/WealthBucket';
 import AmcDatabase from './pages/AmcDatabase';
+import Login from './pages/Login';
 import AIChatSidebar from './components/features/AIChatSidebar';
 
 function Layout() {
   const loc = useLocation();
   const isHome = loc.pathname === '/';
+  const isLogin = loc.pathname === '/login';
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
 
   useEffect(() => {
@@ -29,6 +31,14 @@ function Layout() {
     window.addEventListener('open-ai-chat', handleOpenAIChat);
     return () => window.removeEventListener('open-ai-chat', handleOpenAIChat);
   }, []);
+
+  if (isLogin) {
+    return (
+      <Routes>
+        <Route path="/login" element={<Login />} />
+      </Routes>
+    );
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative' }}>

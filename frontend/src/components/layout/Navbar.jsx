@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Search, Bell, X, Moon, Sun, Settings as SettingsIcon, ChevronDown } from 'lucide-react';
+import { Search, X, Moon, Sun, Settings as SettingsIcon, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import logo from '../../assets/logo.png';
 import { useTheme } from '../../context/ThemeContext';
 import { useCurrency } from '../../context/CurrencyContext';
+import { useAuth } from '../../context/AuthContext';
 
 const OTHER_LINKS = [
   { path: '/markets', label: 'Markets' },
   { path: '/wealth', label: 'Wealth Bucket' },
-  { path: '/news', label: 'News' },
   { path: '/amcs', label: 'AMC & Companies' }
 ];
 
@@ -25,14 +25,15 @@ export default function Navbar({ onToggleAIChat }) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchRef = useRef(null);
 
-  // Notifications State
-  const [showNotifications, setShowNotifications] = useState(false);
   const [showOthers, setShowOthers] = useState(false);
   const othersRef = useRef(null);
   const { isDarkMode, toggleTheme } = useTheme();
   const { currency, setCurrency, currencies } = useCurrency();
   const [showCurrency, setShowCurrency] = useState(false);
   const currencyRef = useRef(null);
+  const { currentUser, logout } = useAuth();
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const userMenuRef = useRef(null);
 
   useEffect(() => {
     function handleClickOutsideCurrency(event) {
@@ -54,43 +55,20 @@ export default function Navbar({ onToggleAIChat }) {
     return () => document.removeEventListener('mousedown', handleClickOutsideOthers);
   }, []);
 
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      title: 'Reliance Q1 Results',
-      desc: 'Reliance Industries Q1 net profit up 10%, beating analyst estimates.',
-      time: '2 hours ago',
-      read: false,
-      link: '/stock/RELIANCE'
-    },
-    {
-      id: 2,
-      title: 'TCS Target Price Alert',
-      desc: 'TCS dropped below ₹3,900. Sector analysis suggests support level.',
-      time: '5 hours ago',
-      read: false,
-      link: '/stock/TCS'
-    },
-    {
-      id: 3,
-      title: 'Premium Plan Subscription',
-      desc: 'Connect your Demat account to sync your portfolio automatically. Go premium.',
-      time: '1 day ago',
-      read: false,
-      link: '/settings'
+  useEffect(() => {
+    function handleClickOutsideUserMenu(event) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setShowUserMenu(false);
+      }
     }
-  ]);
-  const notificationRef = useRef(null);
-
-  const unreadCount = notifications.filter(n => !n.read).length;
+    document.addEventListener('mousedown', handleClickOutsideUserMenu);
+    return () => document.removeEventListener('mousedown', handleClickOutsideUserMenu);
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(event) {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         setShowSuggestions(false);
-      }
-      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
-        setShowNotifications(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -170,16 +148,6 @@ export default function Navbar({ onToggleAIChat }) {
     setShowSuggestions(false);
   };
 
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, read: true })));
-  };
-
-  const clickNotification = (n) => {
-    setNotifications(notifications.map(item => item.id === n.id ? { ...item, read: true } : item));
-    setShowNotifications(false);
-    navigate(n.link);
-  };
-
   return (
     <div className="sticky top-0 z-[100] flex flex-col shadow-sm">
       {/* Ticker Bar */}
@@ -210,10 +178,10 @@ export default function Navbar({ onToggleAIChat }) {
         transition={{ duration: 0.5, ease: 'easeOut' }}
         className="bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 transition-colors duration-300"
       >
-        <div className="max-w-[1400px] mx-auto px-10 h-[80px] flex items-center justify-between">
+        <div className="max-w-[1400px] mx-auto px-6 h-[80px] flex items-center justify-between gap-3">
 
           {/* Left: Logo */}
-          <Link to="/" className="flex items-center group -ml-6">
+          <Link to="/" className="flex items-center group -ml-6 shrink-0">
             <img
               src={logo}
               alt="StockBuzz — Let's Build Wealth, Together."
@@ -222,16 +190,17 @@ export default function Navbar({ onToggleAIChat }) {
           </Link>
 
           {/* Center: Navigation Links */}
-          <div className="hidden md:flex items-center gap-2 bg-gray-50/80 dark:bg-gray-900/60 p-1 rounded-full border border-gray-100 dark:border-gray-800">
+          <div className="hidden md:flex items-center gap-2 bg-gray-50/80 dark:bg-gray-900/60 p-1 rounded-full border border-gray-100 dark:border-gray-800 shrink-0">
             {[
               { path: '/', label: 'Home' },
               { path: '/compare', label: 'Compare' },
-              { path: '/watchlist', label: 'Watchlist' }
+              { path: '/watchlist', label: 'Watchlist' },
+              { path: '/news', label: 'News' }
             ].map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`px-5 py-2 rounded-full text-[0.9rem] font-medium transition-all duration-200 ${active(item.path)
+                className={`px-3.5 py-2 rounded-full text-[0.87rem] font-medium transition-all duration-200 ${active(item.path)
                     ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
                     : 'text-textMuted dark:text-gray-400 hover:text-textMain dark:hover:text-gray-100 hover:bg-gray-100/50 dark:hover:bg-gray-800/50'
                   }`}
@@ -240,11 +209,11 @@ export default function Navbar({ onToggleAIChat }) {
               </Link>
             ))}
 
-            {/* Others Dropdown (Markets, Wealth Bucket, News) */}
+            {/* Others Dropdown (Markets, Wealth Bucket, AMC & Companies) */}
             <div className="relative" ref={othersRef} onMouseEnter={() => setShowOthers(true)} onMouseLeave={() => setShowOthers(false)}>
               <button
                 onClick={() => setShowOthers(!showOthers)}
-                className={`flex items-center gap-1 px-5 py-2 rounded-full text-[0.9rem] font-medium transition-all duration-200 ${isOtherActive
+                className={`flex items-center gap-1 px-3.5 py-2 rounded-full text-[0.87rem] font-medium transition-all duration-200 ${isOtherActive
                     ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
                     : 'text-textMuted dark:text-gray-400 hover:text-textMain dark:hover:text-gray-100 hover:bg-gray-100/50 dark:hover:bg-gray-800/50'
                   }`}
@@ -280,12 +249,12 @@ export default function Navbar({ onToggleAIChat }) {
             </div>
           </div>
 
-          {/* Right: Search, Notification, Profile/CTA */}
-          <div className="flex items-center gap-4">
+          {/* Right: Search, Currency, Theme, Profile/CTA */}
+          <div className="flex items-center gap-2">
 
             {/* Search Bar */}
             <div className="relative hidden lg:block" ref={searchRef}>
-              <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-full px-4 w-[280px] h-[46px] shadow-sm focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10 transition-all duration-300">
+              <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-full px-3.5 w-[270px] h-[38px] shadow-sm focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10 focus-within:w-[330px] transition-all duration-300">
                 <Search size={16} className="text-textMuted dark:text-gray-500" />
                 <input
                   value={searchQuery}
@@ -339,65 +308,11 @@ export default function Navbar({ onToggleAIChat }) {
               </AnimatePresence>
             </div>
 
-            {/* Notifications */}
-            <div className="relative" ref={notificationRef}>
-              <button
-                onClick={() => setShowNotifications(!showNotifications)}
-                className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-textMuted dark:text-gray-400 hover:text-textMain dark:hover:text-gray-100"
-              >
-                <Bell size={18} />
-                {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 border-2 border-white dark:border-gray-950 rounded-full"></span>
-                )}
-              </button>
-
-              <AnimatePresence>
-                {showNotifications && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    className="absolute top-[calc(100%+12px)] right-0 w-[340px] z-50 bg-white/98 dark:bg-gray-900/98 backdrop-blur-xl border border-gray-100 dark:border-gray-800 rounded-3xl shadow-2xl p-4"
-                  >
-                    <div className="flex justify-between items-center mb-4 border-b border-gray-100 dark:border-gray-800 pb-3">
-                      <h4 className="font-bold text-textMain dark:text-gray-100">Notifications</h4>
-                      {unreadCount > 0 && (
-                        <button onClick={markAllAsRead} className="text-primary text-xs font-semibold hover:underline">
-                          Mark all read
-                        </button>
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto">
-                      {notifications.length > 0 ? (
-                        notifications.map(n => (
-                          <div
-                            key={n.id}
-                            onClick={() => clickNotification(n)}
-                            className={`p-3 rounded-2xl cursor-pointer transition-colors ${n.read ? 'hover:bg-gray-50 dark:hover:bg-gray-800' : 'bg-blue-50/50 dark:bg-blue-500/10 border border-blue-100/50 dark:border-blue-500/20 hover:bg-blue-50 dark:hover:bg-blue-500/20'}`}
-                          >
-                            <div className="flex justify-between items-start">
-                              <span className={`font-semibold text-sm ${n.read ? 'text-textMuted dark:text-gray-500' : 'text-textMain dark:text-gray-100'}`}>{n.title}</span>
-                              <span className="text-xs text-textMuted dark:text-gray-500 whitespace-nowrap ml-2">{n.time}</span>
-                            </div>
-                            <p className="text-xs text-textMuted dark:text-gray-500 mt-1 leading-relaxed">{n.desc}</p>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="p-6 text-center text-textMuted dark:text-gray-500 text-sm">
-                          No notifications
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
             {/* Currency Selector */}
             <div className="relative" ref={currencyRef}>
               <button
                 onClick={() => setShowCurrency(!showCurrency)}
-                className="flex items-center gap-1 px-3 py-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-textMuted dark:text-gray-400 hover:text-textMain dark:hover:text-gray-100 text-sm font-semibold"
+                className="flex items-center gap-1 px-2.5 h-[38px] rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-textMuted dark:text-gray-400 hover:text-textMain dark:hover:text-gray-100 text-[0.85rem] font-semibold whitespace-nowrap"
                 title="Change currency"
               >
                 {currencies[currency].symbol} {currency}
@@ -433,7 +348,7 @@ export default function Navbar({ onToggleAIChat }) {
             {/* Dark Mode Toggle */}
             <button
               onClick={toggleTheme}
-              className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-textMuted dark:text-gray-400 hover:text-textMain dark:hover:text-gray-100"
+              className="flex items-center justify-center w-[38px] h-[38px] rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-textMuted dark:text-gray-400 hover:text-textMain dark:hover:text-gray-100"
               title="Toggle Dark Mode"
             >
               {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
@@ -442,16 +357,60 @@ export default function Navbar({ onToggleAIChat }) {
             {/* Settings */}
             <Link
               to="/settings"
-              className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-textMuted dark:text-gray-400 hover:text-textMain dark:hover:text-gray-100"
+              className="flex items-center justify-center w-[38px] h-[38px] rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-textMuted dark:text-gray-400 hover:text-textMain dark:hover:text-gray-100"
               title="Settings"
             >
               <SettingsIcon size={18} />
             </Link>
 
+            {/* Auth: Sign In button or user avatar menu */}
+            {currentUser ? (
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  onClick={() => setShowUserMenu(s => !s)}
+                  className="flex items-center justify-center w-[38px] h-[38px] rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 text-white font-bold text-sm overflow-hidden"
+                  title={currentUser.displayName || currentUser.phoneNumber || 'Account'}
+                >
+                  {currentUser.photoURL
+                    ? <img src={currentUser.photoURL} alt="" className="w-full h-full object-cover" />
+                    : (currentUser.displayName?.[0] || currentUser.phoneNumber?.slice(-2) || 'U')}
+                </button>
+                <AnimatePresence>
+                  {showUserMenu && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+                      className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-lg p-2 z-50"
+                    >
+                      <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-800 mb-1">
+                        <div className="text-sm font-semibold text-textMain dark:text-gray-100 truncate">{currentUser.displayName || 'Stockbuzz User'}</div>
+                        <div className="text-xs text-textMuted dark:text-gray-500 truncate">{currentUser.email || currentUser.phoneNumber}</div>
+                      </div>
+                      <Link to="/settings" onClick={() => setShowUserMenu(false)} className="block px-3 py-2 rounded-lg text-sm text-textMain dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
+                        Settings
+                      </Link>
+                      <button
+                        onClick={() => { logout(); setShowUserMenu(false); }}
+                        className="w-full text-left px-3 py-2 rounded-lg text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10"
+                      >
+                        Sign out
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ) : (
+              <Link
+                to="/login"
+                className="flex items-center justify-center whitespace-nowrap border border-gray-200 dark:border-gray-800 text-textMain dark:text-gray-100 px-3.5 h-[38px] rounded-full font-semibold text-[0.82rem] hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-300"
+              >
+                Sign in
+              </Link>
+            )}
+
             {/* Ask AI Button */}
             <button
               onClick={onToggleAIChat}
-              className="flex items-center gap-2 whitespace-nowrap bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white px-5 h-[44px] rounded-full font-semibold text-sm shadow-md hover:shadow-lg transition-all duration-300"
+              className="flex items-center justify-center whitespace-nowrap bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white px-3.5 h-[38px] rounded-full font-semibold text-[0.82rem] shadow-md hover:shadow-lg transition-all duration-300"
             >
               Ask AI
             </button>

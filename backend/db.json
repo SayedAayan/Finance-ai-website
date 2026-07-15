@@ -569,6 +569,26 @@
       ],
       "createdAt": "2026-07-15T07:46:50.573Z",
       "updatedAt": "2026-07-15T07:46:50.573Z"
+    },
+    "1784108031383": {
+      "id": "1784108031383",
+      "title": "what is the best website to re...",
+      "messages": [
+        {
+          "id": 1784108031366,
+          "type": "user",
+          "text": "what is the best website to research about the mutual funds",
+          "file": null
+        },
+        {
+          "id": 1784108034811,
+          "type": "ai",
+          "text": "There are several websites that can help you research mutual funds. Here are some popular ones:\n\n*   **Moneycontrol**: Moneycontrol is a popular website for mutual fund research in India. It provides detailed information on mutual funds, including performance data, fund manager profiles, and investor reviews.\n*   **Valueresearchonline**: Valueresearchonline is another well-known website for mutual fund research. It provides in-depth analysis of mutual funds, including ratings, performance data, and portfolio holdings.\n*   **Fundsupermart**: Fundsupermart is a website that provides research and analysis on mutual funds. It offers features like fund comparison, portfolio tracking, and investment advice.\n*   **Screener**: Screener is a popular website for stock and mutual fund research. It provides detailed information on mutual funds, including performance data, portfolio holdings, and ratings.\n*   **ET Money**: ET Money is a website that provides research and analysis on mutual funds. It offers features like fund comparison, portfolio tracking, and investment advice.\n\nYou can also check the official websites of mutual fund companies, such as:\n\n*   **AMFI (Association of Mutual Funds in India)**: AMFI is the official website of the mutual fund industry in India. It provides information on mutual funds, including performance data, fund manager profiles, and investor education resources.\n*   **Mutual fund company's website**: You can also visit the website of the mutual fund company directly to get information on their schemes, performance data, and other details.\n\nIt's always a good idea to do your research and due diligence before investing in any mutual fund.",
+          "source": "Stockbuzz AI"
+        }
+      ],
+      "createdAt": "2026-07-15T09:33:51.383Z",
+      "updatedAt": "2026-07-15T09:33:54.816Z"
     }
   },
   "watchlist": [],
@@ -584,6 +604,54 @@
         "label": "HDFC Flexi Cap Fund - Growth Plan",
         "type": "fund",
         "route": "/fund/MF:101762",
+        "count": 1
+      },
+      "Balaji Telefilms Limited": {
+        "label": "Balaji Telefilms Limited",
+        "type": "stock",
+        "route": "/stock/NSE:BALAJITELE",
+        "count": 1
+      },
+      "Jio Financial Services Limited": {
+        "label": "Jio Financial Services Limited",
+        "type": "stock",
+        "route": "/stock/NSE:JIOFIN",
+        "count": 1
+      },
+      "Acutaas Chemicals Limited": {
+        "label": "Acutaas Chemicals Limited",
+        "type": "stock",
+        "route": "/stock/NSE:ACUTAAS",
+        "count": 1
+      },
+      "Universal Technical Institute Inc Common Stock": {
+        "label": "Universal Technical Institute Inc Common Stock",
+        "type": "stock",
+        "route": "/stock/NYSE:UTI",
+        "count": 2
+      },
+      "Avanti Feeds Limited": {
+        "label": "Avanti Feeds Limited",
+        "type": "stock",
+        "route": "/stock/NSE:AVANTIFEED",
+        "count": 1
+      },
+      "BF Utilities Limited": {
+        "label": "BF Utilities Limited",
+        "type": "stock",
+        "route": "/stock/NSE:BFUTILITIE",
+        "count": 1
+      },
+      "Abacus Flexible Bond Leaders ETF": {
+        "label": "Abacus Flexible Bond Leaders ETF",
+        "type": "stock",
+        "route": "/stock/CboeBZX:ABXB",
+        "count": 3
+      },
+      "UTI Flexi Cap Fund - Direct Plan - IDCW": {
+        "label": "UTI Flexi Cap Fund - Direct Plan - IDCW",
+        "type": "fund",
+        "route": "/fund/MF:120663",
         "count": 1
       }
     }
