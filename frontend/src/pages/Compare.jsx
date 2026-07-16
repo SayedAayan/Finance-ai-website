@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { Line, LineChart, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
 import { BarChart2, TrendingUp, Sparkles, AlertCircle, ArrowRight, Search, Loader2, Plus, X, LineChart as LineChartIcon, SlidersHorizontal } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useCurrency } from '../context/CurrencyContext';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -24,7 +25,7 @@ const pct = (v) => v != null ? `${v >= 0 ? '+' : ''}${v}%` : '—';
 // Metric definitions: only fields the backend genuinely provides (no fabricated AUM/PE/etc.)
 const FUND_METRICS = [
   { key: 'amc', label: 'AMC', get: a => a.amc },
-  { key: 'nav', label: 'NAV', get: a => a.nav != null ? `₹${fmt(a.nav)}` : '—' },
+  { key: 'nav', label: 'NAV', get: (a, formatPrice) => a.nav != null ? formatPrice(a.nav) : '—' },
   { key: 'navDate', label: 'NAV Date', get: a => a.navDate },
   { key: 'category', label: 'Category', get: a => a.category },
   { key: 'planOption', label: 'Plan / Option', get: a => a.plan ? `${a.plan} - ${a.option}` : '—' },
@@ -39,14 +40,14 @@ const FUND_METRICS = [
 
 const STOCK_METRICS = [
   { key: 'exchange', label: 'Exchange', get: a => a.exchange },
-  { key: 'price', label: 'Price', get: a => a.price != null ? `${a.currency === 'USD' ? '$' : '₹'}${fmt(a.price)}` : '—' },
+  { key: 'price', label: 'Price', get: (a, formatPrice) => a.price != null ? formatPrice(a.price, {}, a.currency === 'USD' ? 'USD' : 'INR') : '—' },
   { key: 'today', label: 'Today', get: a => pct(a.changePercent != null ? Number(a.changePercent) : null) },
   { key: 'return1M', label: '1M Return', get: a => pct(a.return1M) },
   { key: 'return3M', label: '3M Return', get: a => pct(a.return3M) },
   { key: 'return6M', label: '6M Return', get: a => pct(a.return6M) },
   { key: 'return1Y', label: '1Y Return', get: a => pct(a.return1Y) },
-  { key: 'fiftyTwoWeekHigh', label: '52W High', get: a => a.fiftyTwoWeekHigh != null ? fmt(a.fiftyTwoWeekHigh) : '—' },
-  { key: 'fiftyTwoWeekLow', label: '52W Low', get: a => a.fiftyTwoWeekLow != null ? fmt(a.fiftyTwoWeekLow) : '—' },
+  { key: 'fiftyTwoWeekHigh', label: '52W High', get: (a, formatPrice) => a.fiftyTwoWeekHigh != null ? formatPrice(a.fiftyTwoWeekHigh, {}, a.currency === 'USD' ? 'USD' : 'INR') : '—' },
+  { key: 'fiftyTwoWeekLow', label: '52W Low', get: (a, formatPrice) => a.fiftyTwoWeekLow != null ? formatPrice(a.fiftyTwoWeekLow, {}, a.currency === 'USD' ? 'USD' : 'INR') : '—' },
   { key: 'volume', label: 'Volume', get: a => a.volume != null ? fmt(a.volume, 0) : '—' },
 ];
 
@@ -290,6 +291,7 @@ function computeVolatility(series) {
 export default function Compare() {
   const [mode, setMode] = useState('funds'); // 'funds' or 'stocks'
   const navigate = useNavigate();
+  const { formatPrice } = useCurrency();
 
   const [leftAsset, setLeftAsset] = useState(null);
   const [rightAsset, setRightAsset] = useState(null);
@@ -454,15 +456,15 @@ export default function Compare() {
     const metricLines = activeMetrics
       .filter(m => !['navDate'].includes(m.key))
       .map(m => {
-        const lVal = m.get(left);
-        const rVal = m.get(right);
+        const lVal = m.get(left, formatPrice);
+        const rVal = m.get(right, formatPrice);
         if (lVal === rVal || lVal == null || rVal == null || lVal === '—' || rVal === '—') return null;
         return `${m.label.toLowerCase()}: ${left.name.split(' ')[0]} ${lVal} vs ${right.name.split(' ')[0]} ${rVal}`;
       })
       .filter(Boolean);
 
     return { leader, laggard, gap, leaderMove, laggardMove, rangeLabel, steadier, steadierOther, leftVol, rightVol, metricLines };
-  }, [bothSelected, sameAsset, chartData, left, right, leftStats, rightStats, rangeDef, activeMetrics]);
+  }, [bothSelected, sameAsset, chartData, left, right, leftStats, rightStats, rangeDef, activeMetrics, formatPrice]);
 
   return (
     <div style={{ paddingBottom: '4rem' }}>
@@ -536,8 +538,8 @@ export default function Compare() {
               No metrics selected. Use the <strong>Metrics</strong> filter above to add some.
             </div>
           ) : activeMetrics.map((m) => {
-            const lVal = m.get(left);
-            const rVal = m.get(right);
+            const lVal = m.get(left, formatPrice);
+            const rVal = m.get(right, formatPrice);
             const [lWin, rWin] = isBetter(lVal, rVal, m.lowerBetter);
             return (
               <div key={m.key} className="compare-row">

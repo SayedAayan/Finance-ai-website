@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { TrendingUp, TrendingDown, Info, Sparkles, AlertTriangle, ArrowRight, Home } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { useCurrency } from '../context/CurrencyContext';
 const DEFAULT_DATA = {
   price: '...', change: '...', up: true,
   name: 'Loading...', ticker: '...', sector: 'Company',
@@ -19,6 +20,7 @@ const DEFAULT_DATA = {
 
 export default function StockProfile() {
   const { id } = useParams();
+  const { formatPrice } = useCurrency();
   const [quote, setQuote] = useState(null);
   
   const [range, setRange] = useState('1Y');
@@ -54,7 +56,6 @@ export default function StockProfile() {
     return () => { cancelled = true; };
   }, [id, range]);
 
-  const formatPrice = (p) => p != null ? `₹${p.toLocaleString('en-IN', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}` : '-';
   const formatChange = (c, cp) => {
     if (c == null || cp == null) return '-';
     const sign = c >= 0 ? '+' : '';
@@ -65,13 +66,13 @@ export default function StockProfile() {
     ...DEFAULT_DATA,
     ticker: id,
     name: quote ? quote.name : id,
-    price: quote ? formatPrice(quote.currentPrice) : '...',
+    price: quote ? formatPrice(quote.currentPrice, {}, quote.currency === 'USD' ? 'USD' : 'INR') : '...',
     change: quote ? formatChange(quote.change, quote.changePercent) : '...',
     up: quote ? quote.change >= 0 : true,
   };
   if (quote) {
-    d.metrics[6].val = formatPrice(quote.fiftyTwoWeekHigh);
-    d.metrics[7].val = formatPrice(quote.fiftyTwoWeekLow);
+    d.metrics[6].val = formatPrice(quote.fiftyTwoWeekHigh, {}, quote.currency === 'USD' ? 'USD' : 'INR');
+    d.metrics[7].val = formatPrice(quote.fiftyTwoWeekLow, {}, quote.currency === 'USD' ? 'USD' : 'INR');
     if (quote.volume) {
       d.metrics[0].label = 'Volume';
       d.metrics[0].val = quote.volume.toLocaleString('en-IN');

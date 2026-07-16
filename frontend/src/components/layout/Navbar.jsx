@@ -181,7 +181,16 @@ export default function Navbar({ onToggleAIChat }) {
         <div className="max-w-[1400px] mx-auto px-6 h-[80px] flex items-center justify-between gap-3">
 
           {/* Left: Logo */}
-          <Link to="/" className="flex items-center group -ml-6 shrink-0">
+          <Link
+            to="/"
+            className="flex items-center group -ml-6 shrink-0"
+            onClick={(e) => {
+              if (loc.pathname === '/') {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+            }}
+          >
             <img
               src={logo}
               alt="StockBuzz — Let's Build Wealth, Together."
@@ -325,7 +334,7 @@ export default function Navbar({ onToggleAIChat }) {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 8 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute top-[calc(100%+8px)] right-0 w-[200px] z-50 bg-white/98 dark:bg-gray-900/98 backdrop-blur-xl border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl p-1.5"
+                    className="absolute top-[calc(100%+8px)] right-0 w-[200px] max-h-[320px] overflow-y-auto z-50 bg-white/98 dark:bg-gray-900/98 backdrop-blur-xl border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl p-1.5"
                   >
                     {Object.entries(currencies).map(([code, info]) => (
                       <button

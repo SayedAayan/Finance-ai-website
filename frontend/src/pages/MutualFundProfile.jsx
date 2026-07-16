@@ -1,18 +1,19 @@
 import { useParams, Link } from 'react-router-dom';
 import { ShieldAlert, TrendingUp, Sparkles, ArrowRight, Info, Home } from 'lucide-react';
+import { useCurrency } from '../context/CurrencyContext';
 
 const DATA = {
-  nav: '₹1,642.50',
+  navValue: 1642.50,
   change: '+4.25 (+0.26%)',
   up: true,
   name: 'HDFC Flexi Cap Fund',
   plan: 'Direct Plan • Growth',
   category: 'Flexi Cap',
   risk: 4.2, // 1 to 5
+  aumCr: 45230,
+  minSip: 500,
   metrics: [
-    { label: 'AUM', val: '₹45,230 Cr', isPrimary: true },
     { label: 'Expense Ratio', val: '0.85%', isPrimary: true },
-    { label: 'Min SIP', val: '₹500' },
     { label: 'Exit Load', val: '1% (<1Yr)' },
     { label: 'Benchmark', val: 'NIFTY 500 TRI' },
   ]
@@ -20,7 +21,18 @@ const DATA = {
 
 export default function MutualFundProfile() {
   const { id } = useParams();
-  const d = DATA;
+  const { formatPrice } = useCurrency();
+  const d = {
+    ...DATA,
+    nav: formatPrice(DATA.navValue),
+    metrics: [
+      { label: 'AUM', val: `${formatPrice(DATA.aumCr)} Cr`, isPrimary: true },
+      DATA.metrics[0],
+      { label: 'Min SIP', val: formatPrice(DATA.minSip) },
+      DATA.metrics[1],
+      DATA.metrics[2],
+    ]
+  };
 
   return (
     <div style={{ paddingBottom: '4rem' }}>

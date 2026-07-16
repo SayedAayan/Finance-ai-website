@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Building2, Landmark, Search, TrendingUp, TrendingDown, Loader2, Layers } from 'lucide-react';
+import { useCurrency } from '../context/CurrencyContext';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 export default function AmcDatabase() {
+  const { formatPrice } = useCurrency();
   const [tab, setTab] = useState('amcs'); // 'amcs' | 'companies'
 
   // AMC state
@@ -163,7 +165,7 @@ export default function AmcDatabase() {
                               {schemes.map(s => (
                                 <div key={s.schemeCode} className="flex items-center justify-between gap-3 text-sm bg-white dark:bg-gray-900 rounded-lg px-3 py-2 border border-gray-100 dark:border-gray-800">
                                   <span className="text-gray-700 dark:text-gray-300 truncate">{s.name}</span>
-                                  <span className="font-mono font-semibold text-gray-900 dark:text-gray-100 shrink-0">₹{s.nav.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                                  <span className="font-mono font-semibold text-gray-900 dark:text-gray-100 shrink-0">{formatPrice(s.nav)}</span>
                                 </div>
                               ))}
                             </div>
@@ -240,7 +242,7 @@ export default function AmcDatabase() {
                         </div>
                         {c.price != null ? (
                           <div className="flex items-baseline gap-2">
-                            <span className="text-lg font-bold text-gray-900 dark:text-gray-100 font-mono">₹{c.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                            <span className="text-lg font-bold text-gray-900 dark:text-gray-100 font-mono">{formatPrice(c.price)}</span>
                             <span className={`text-xs font-semibold ${isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                               {isPositive ? '+' : ''}{c.changePercent}%
                             </span>

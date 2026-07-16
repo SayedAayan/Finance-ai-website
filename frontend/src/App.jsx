@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
+import BackToTop from './components/layout/BackToTop';
 import Home from './pages/Home';
 import StockProfile from './pages/StockProfile';
 import MutualFundProfile from './pages/MutualFundProfile';
@@ -18,7 +19,6 @@ import AIChatSidebar from './components/features/AIChatSidebar';
 
 function Layout() {
   const loc = useLocation();
-  const isHome = loc.pathname === '/';
   const isLogin = loc.pathname === '/login';
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
 
@@ -60,10 +60,12 @@ function Layout() {
         </Routes>
       </main>
 
-      {!isHome && loc.pathname !== '/chat' && <Footer />}
+      {loc.pathname !== '/chat' && <Footer />}
 
       {/* Global Context-Aware AI Chat Sidebar */}
       <AIChatSidebar isOpen={isAIChatOpen} onClose={() => setIsAIChatOpen(false)} />
+
+      <BackToTop />
     </div>
   );
 }

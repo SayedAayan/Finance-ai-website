@@ -1167,7 +1167,7 @@ app.get('/api/trending', async (req, res) => {
 });
 
 // ─── Currency FX rates (Yahoo FX pairs primary, Alpha Vantage fallback) ─────
-const SUPPORTED_CURRENCIES = ['INR', 'USD', 'AED', 'GBP', 'EUR', 'SAR', 'KWD'];
+const SUPPORTED_CURRENCIES = ['INR', 'USD', 'EUR', 'GBP', 'AED', 'SAR', 'KWD', 'JPY', 'AUD', 'CAD', 'SGD', 'CHF', 'CNY'];
 let fxCache = { fetchedAt: 0, rates: {} };
 const FX_CACHE_MS = 30 * 60 * 1000; // 30 min
 

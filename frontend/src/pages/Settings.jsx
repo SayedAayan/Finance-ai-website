@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Settings as SettingsIcon, Shield, Bell, CreditCard, ExternalLink, Sparkles, Check, CheckCircle2, Upload, AlertCircle, FileText } from 'lucide-react';
+import { useCurrency } from '../context/CurrencyContext';
 
 export default function Settings() {
+  const { formatPrice } = useCurrency();
   const [premium, setPremium] = useState(false);
   const [notifications, setNotifications] = useState({
     emailAlerts: true,
@@ -93,7 +95,7 @@ export default function Settings() {
                     className="btn btn-violet" 
                     style={{ width: '100%', gap: '8px', borderRadius: '10px' }}
                   >
-                    <Sparkles size={14} /> Upgrade for ₹299 / month
+                    <Sparkles size={14} /> Upgrade for {formatPrice(299)} / month
                   </button>
                 </div>
               ) : (

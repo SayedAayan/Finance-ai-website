@@ -1017,6 +1017,106 @@
       ],
       "createdAt": "2026-07-16T10:33:36.350Z",
       "updatedAt": "2026-07-16T10:33:37.579Z"
+    },
+    "1784198566156": {
+      "id": "1784198566156",
+      "title": "what is the top news of today ...",
+      "messages": [
+        {
+          "id": 1784198566146,
+          "type": "user",
+          "text": "what is the top news of today in mutual funds",
+          "file": null
+        },
+        {
+          "id": 1784198567118,
+          "type": "ai",
+          "text": "There is no recent news on mutual funds in the current feed.",
+          "source": "Stockbuzz AI"
+        },
+        {
+          "id": 1784198584292,
+          "type": "user",
+          "text": "whats the news of today",
+          "file": null
+        },
+        {
+          "id": 1784198585791,
+          "type": "ai",
+          "text": "The top news of today in mutual funds is not available as the latest news articles are from yesterday. However, here are some of the top market news articles:\n\n* Wealthtech, not payments, is Indian fintech's profit engine: Jefferies\n* Govt-backed India-Japan Fund, Hero MotoCorp and Ather founders infuse ₹1,200 crore in EV maker\n* India, UAE central banks said to hold talks on FX deposit issues\n* PL Capital raises Nifty target to 27,019; favours banks, NBFCs, capital goods and defence\n* NSE, Augmont partner to expand Electronic Gold Receipts ecosystem\n\nThese articles are from yesterday, and there are no fresh articles available for today.",
+          "source": "Stockbuzz AI"
+        }
+      ],
+      "createdAt": "2026-07-16T10:42:46.156Z",
+      "updatedAt": "2026-07-16T10:43:05.804Z"
+    },
+    "1784198774032": {
+      "id": "1784198774032",
+      "title": "म्यूचुअल फंड क्या है?",
+      "messages": [
+        {
+          "id": 1784198774021,
+          "type": "user",
+          "text": "म्यूचुअल फंड क्या है?",
+          "file": null
+        },
+        {
+          "id": 1784198775599,
+          "type": "ai",
+          "text": "म्यूचुअल फंड एक प्रकार का निवेश विकल्प है जिसमें कई निवेशकों से पैसे इकट्ठे करके एक पेशेवर फंड मैनेजर द्वारा विभिन्न प्रकार के सिक्योरिटीज़ (जैसे कि शेयर, बॉन्ड, और अन्य प्रतिभूतियाँ) में निवेश किया जाता है। म्यूचुअल फंड का उद्देश्य निवेशकों को विविधीकरण और पेशेवर प्रबंधन के लाभ प्रदान करना है, जिससे उन्हें अपने निवेश लक्ष्यों को प्राप्त करने में मदद मिल सके।\n\nम्यूचुअल फंड के कुछ मुख्य लाभ हैं:\n\n* **विविधीकरण**: म्यूचुअल फंड विभिन्न प्रकार के सिक्योरिटीज़ में निवेश करते हैं, जिससे निवेशकों को अपने निवेश को विविध बनाने में मदद मिलती है।\n* **पेशेवर प्रबंधन**: म्यूचुअल फंड का प्रबंधन एक अनुभवी फंड मैनेजर द्वारा किया जाता है, जो निवेशकों के लिए सर्वोत्तम निवेश निर्णय लेता है।\n* **कम न्यूनतम निवेश**: म्यूचुअल फंड में निवेश करने के लिए न्यूनतम निवेश राशि कम होती है, जिससे छोटे निवेशक भी इसमें निवेश कर सकते हैं।\n* **तरलता**: म्यूचुअल फंड में निवेश करने वाले निवेशक अपने निवेश को आसानी से निकाल सकते हैं।\n\nम्यूचुअल फंड के विभिन्न प्रकार होते हैं, जिनमें से कुछ प्रमुख प्रकार हैं:\n\n* **इक्विटी फंड**: ये फंड शेयर बाजार में निवेश करते हैं और उच्च रिटर्न की संभावना प्रदान करते हैं।\n* **डेट फंड**: ये फंड बॉन्ड और अन्य डेट सिक्योरिटीज़ में निवेश करते हैं और नियमित आय प्रदान करते हैं।\n* **हाइब्रिड फंड**: ये फंड इक्विटी और डेट सिक्योरिटीज़ दोनों में निवेश करते हैं और संतुलित रिटर्न प्रदान करते हैं।\n* **मनी मार्केट फंड**: ये फंड अल्पकालिक डेट सिक्योरिटीज़ में निवेश करते हैं और तरलता प्रदान करते हैं।\n\nम्यूचुअल फंड में निवेश करने से पहले, निवेशकों को अपने निवेश लक्ष्यों, जोखिम सहनशक्ति, और निवेश अवधि को ध्यान में रखना चाहिए। इसके अलावा, निवेशकों को म्यूचुअल फंड के विभिन्न प्रकारों और उनके निवेश उद्देश्यों को समझना चाहिए।",
+          "source": "Stockbuzz AI"
+        },
+        {
+          "id": 1784198789396,
+          "type": "user",
+          "text": "stocks market kya hai",
+          "file": null
+        },
+        {
+          "id": 1784198791096,
+          "type": "ai",
+          "text": "**स्टॉक मार्केट क्या है?**\n\nस्टॉक मार्केट, जिसे शेयर बाजार भी कहा जाता है, एक ऐसा मंच है जहां कंपनियों के शेयर खरीदे और बेचे जाते हैं। यह एक ऐसा स्थान है जहां निवेशक कंपनियों के शेयरों में निवेश करके उनके भविष्य के प्रदर्शन पर दांव लगा सकते हैं।\n\n**स्टॉक मार्केट कैसे काम करता है?**\n\nस्टॉक मार्केट में, कंपनियां अपने शेयरों को जारी करती हैं और उन्हें बाजार में बेचती हैं। निवेशक इन शेयरों को खरीदते हैं और उम्मीद करते हैं कि कंपनी का प्रदर्शन अच्छा होगा और शेयर की कीमत बढ़ेगी। जब शेयर की कीमत बढ़ती है, तो निवेशक अपने शेयरों को अधिक कीमत पर बेचकर मुनाफा कमा सकते हैं।\n\n**स्टॉक मार्केट के मुख्य घटक**\n\n1. **शेयर**: कंपनी के शेयर उसके स्वामित्व का प्रतिनिधित्व करते हैं।\n2. **स्टॉक एक्सचेंज**: स्टॉक एक्सचेंज एक ऐसा मंच है जहां शेयर खरीदे और बेचे जाते हैं। भारत में दो प्रमुख स्टॉक एक्सचेंज हैं - नेशनल स्टॉक एक्सचेंज (एनएसई) और बॉम्बे स्टॉक एक्सचेंज (बीएसई)।\n3. **निवेशक**: निवेशक वे लोग होते हैं जो शेयर बाजार में निवेश करते हैं।\n4. **कंपनियां**: कंपनियां वे संस्थाएं होती हैं जो शेयर जारी करती हैं और उन्हें बाजार में बेचती हैं।\n\n**स्टॉक मार्केट के लाभ**\n\n1. **निवेश का अवसर**: स्टॉक मार्केट निवेशकों को कंपनियों के शेयरों में निवेश करने का अवसर प्रदान करता है।\n2. **लिक्विडिटी**: स्टॉक मार्केट में शेयरों को आसानी से खरीदा और बेचा जा सकता है।\n3. **विविधीकरण**: स्टॉक मार्केट में निवेश करके, निवेशक अपने पोर्टफोलियो को विविध बना सकते हैं।\n\n**स्टॉक मार्केट के जोखिम**\n\n1. **बाजार की अस्थिरता**: स्टॉक मार्केट में अस्थिरता हो सकती है, जिससे शेयर की कीमतें तेजी से बदल सकती हैं।\n2. **कंपनी का प्रदर्शन**: कंपनी का खराब प्रदर्शन शेयर की कीमत को प्रभावित कर सकता है।\n3. **निवेश जोखिम**: स्टॉक मार्केट में निवेश करने से निवेश जोखिम जुड़ा होता है।\n\nस्टॉक मार्केट में निवेश करने से पहले, निवेशकों को अपने निवेश लक्ष्यों, जोखिम सहनशक्ति, और निवेश अवधि को ध्यान में रखना चाहिए। इसके अलावा, निवेशकों को स्टॉक मार्केट के विभिन्न पहलुओं को समझना चाहिए और एक सूचित निर्णय लेना चाहिए।",
+          "source": "Stockbuzz AI"
+        },
+        {
+          "id": 1784198804786,
+          "type": "user",
+          "text": "please reply me in roman hindi",
+          "file": null
+        },
+        {
+          "id": 1784198804816,
+          "type": "ai",
+          "text": "**Profit & Loss (P&L)** in stocks refers to the financial gain or loss you make from buying and selling securities.\n\n**Simple formula:**\n> P&L = (Selling Price − Buying Price) × Quantity\n\n**Types:**\n- 📈 **Realised P&L** – Profit/loss from trades you've already closed (sold the stock)\n- 📊 **Unrealised P&L** – Profit/loss on positions you still hold (not yet sold); also called \"paper profit/loss\"\n\n**Example:**\n> You bought 10 shares of Reliance at ₹1,200. Current price = ₹1,350.\n> Unrealised P&L = (₹1,350 − ₹1,200) × 10 = **+₹1,500 profit**\n\n**Tax on P&L:**\n- Short-Term Capital Gain (STCG) – held < 1 year → taxed at 20%\n- Long-Term Capital Gain (LTCG) – held > 1 year → taxed at 12.5% above ₹1.25 lakh\n\nWould you like to check the live price of a specific stock to calculate your P&L?",
+          "source": "Stockbuzz AI"
+        },
+        {
+          "id": 1784198822574,
+          "type": "user",
+          "text": "hindi i said roman hindi hinglish",
+          "file": null
+        },
+        {
+          "id": 1784198824465,
+          "type": "ai",
+          "text": "**स्टॉक मार्केट में प्रॉफिट और लॉस (P&L) क्या है?**\n\nस्टॉक मार्केट में प्रॉफिट और लॉस (P&L) का मतलब है कि जब आप शेयर खरीदते हैं और फिर उन्हें बेचते हैं, तो आपको कितना फायदा या नुकसान होता है।\n\n**सरल फॉर्मूला:**\n> P&L = (बेचने की कीमत - खरीदने की कीमत) × मात्रा\n\n**प्रकार:**\n- **निवलित P&L** – जब आप शेयर बेच देते हैं और आपका फायदा या नुकसान तय हो जाता है\n- **अनिवलित P&L** – जब आप शेयर अभी भी अपने पास रखते हैं और उसका मूल्य बदलता रहता है\n\n**उदाहरण:**\n> आप 10 शेयर ₹1,200 में खरीदते हैं। अब उसकी कीमत ₹1,350 है।\n> अनिवलित P&L = (₹1,350 - ₹1,200) × 10 = **₹1,500 का फायदा**\n\n**टैक्स:**\n- **लंबी अवधि** (1 साल से ज्यादा) – 12.5% टैक्स (₹1.25 लाख से ऊपर)\n- **छोटी अवधि** (1 साल से कम) – 20% टैक्स\n\nअब आप किसी शेयर की लाइव कीमत देखना चाहते हैं ताकि आप अपने P&L की गणना कर सकें?",
+          "source": "Stockbuzz AI"
+        },
+        {
+          "id": 1784198853094,
+          "type": "user",
+          "text": "the text should be in english but the language should be hindi",
+          "file": null
+        },
+        {
+          "id": 1784198854612,
+          "type": "ai",
+          "text": "**Stock Market Mein Profit aur Loss (P&L) Kya Hai?**\n\nStock market mein profit aur loss (P&L) ka matlab hai ki jab aap shares kharidte hain aur phir unhein bechte hain, to aapko kitna fayda ya nuksan hota hai.\n\n**Saral Formula:**\n> P&L = (Bechne Ki Keemat - Kharidne Ki Keemat) × Maatra\n\n**Prakaar:**\n- **Nivlit P&L** – Jab aap shares bech dete hain aur aapka fayda ya nuksan tay ho jata hai\n- **Anivlit P&L** – Jab aap shares abhi bhi apne paas rakhte hain aur uska moolya badalta rehta hai\n\n**Udaharan:**\n> Aap 10 shares ₹1,200 mein kharidte hain. Ab uski keemat ₹1,350 hai.\n> Anivlit P&L = (₹1,350 - ₹1,200) × 10 = **₹1,500 Ka Fayda**\n\n**Tax:**\n- **Lambi Avadhi** (1 saal se jyada) – 12.5% tax (₹1.25 lakh se upar)\n- **Chhoti Avadhi** (1 saal se kam) – 20% tax\n\nAb aap kisi share ki live keemat dekhna chahte hain taki aap apne P&L ki ganana kar sakein?",
+          "source": "Stockbuzz AI"
+        }
+      ],
+      "createdAt": "2026-07-16T10:46:14.032Z",
+      "updatedAt": "2026-07-16T10:47:34.626Z"
     }
   },
   "watchlist": [],

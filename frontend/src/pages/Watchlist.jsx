@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, Sparkles, Bell, Star, BarChart2, ArrowRight, Trash2, Shield, Upload, Check, X, Search } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { mockStocks, mockFunds } from '../data/mockData';
+import { useCurrency } from '../context/CurrencyContext';
 
 export default function Watchlist() {
   const navigate = useNavigate();
+  const { formatPrice } = useCurrency();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -32,33 +34,34 @@ export default function Watchlist() {
           if (item.type !== 'stock') return item;
           const q = quotes.find(q => q.symbol === `${item.ticker}.NS`);
           if (!q || q.error || !q.currentPrice) return item;
-          const price = `₹${q.currentPrice.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+          const priceValue = q.currentPrice;
           const change = `${q.changePercent >= 0 ? '+' : ''}${q.changePercent}%`;
           const up = q.changePercent >= 0;
-          
+
           let alertTriggered = false;
           let alertMessage = '';
+          let alertDma = null;
           if (item.alert) {
             const p = q.currentPrice;
             if (item.alert === 'CROSSES_ABOVE_50DMA' && q.dma50 && p > q.dma50 && q.previousClose <= q.dma50) {
-              alertTriggered = true; alertMessage = `Crossed above 50 DMA (₹${q.dma50.toFixed(2)})`;
+              alertTriggered = true; alertMessage = 'Crossed above 50 DMA'; alertDma = q.dma50;
             } else if (item.alert === 'CROSSES_BELOW_50DMA' && q.dma50 && p < q.dma50 && q.previousClose >= q.dma50) {
-              alertTriggered = true; alertMessage = `Crossed below 50 DMA (₹${q.dma50.toFixed(2)})`;
+              alertTriggered = true; alertMessage = 'Crossed below 50 DMA'; alertDma = q.dma50;
             } else if (item.alert === 'CROSSES_ABOVE_200DMA' && q.dma200 && p > q.dma200 && q.previousClose <= q.dma200) {
-              alertTriggered = true; alertMessage = `Crossed above 200 DMA (₹${q.dma200.toFixed(2)})`;
+              alertTriggered = true; alertMessage = 'Crossed above 200 DMA'; alertDma = q.dma200;
             } else if (item.alert === 'CROSSES_BELOW_200DMA' && q.dma200 && p < q.dma200 && q.previousClose >= q.dma200) {
-              alertTriggered = true; alertMessage = `Crossed below 200 DMA (₹${q.dma200.toFixed(2)})`;
+              alertTriggered = true; alertMessage = 'Crossed below 200 DMA'; alertDma = q.dma200;
             }
             // For testing: trigger if it is currently above/below since previous price crosses are rare on single fetch
             if (!alertTriggered) {
-               if (item.alert === 'CROSSES_ABOVE_50DMA' && q.dma50 && p > q.dma50) { alertTriggered = true; alertMessage = `Currently above 50 DMA (₹${q.dma50.toFixed(2)})`; }
-               if (item.alert === 'CROSSES_BELOW_50DMA' && q.dma50 && p < q.dma50) { alertTriggered = true; alertMessage = `Currently below 50 DMA (₹${q.dma50.toFixed(2)})`; }
-               if (item.alert === 'CROSSES_ABOVE_200DMA' && q.dma200 && p > q.dma200) { alertTriggered = true; alertMessage = `Currently above 200 DMA (₹${q.dma200.toFixed(2)})`; }
-               if (item.alert === 'CROSSES_BELOW_200DMA' && q.dma200 && p < q.dma200) { alertTriggered = true; alertMessage = `Currently below 200 DMA (₹${q.dma200.toFixed(2)})`; }
+               if (item.alert === 'CROSSES_ABOVE_50DMA' && q.dma50 && p > q.dma50) { alertTriggered = true; alertMessage = 'Currently above 50 DMA'; alertDma = q.dma50; }
+               if (item.alert === 'CROSSES_BELOW_50DMA' && q.dma50 && p < q.dma50) { alertTriggered = true; alertMessage = 'Currently below 50 DMA'; alertDma = q.dma50; }
+               if (item.alert === 'CROSSES_ABOVE_200DMA' && q.dma200 && p > q.dma200) { alertTriggered = true; alertMessage = 'Currently above 200 DMA'; alertDma = q.dma200; }
+               if (item.alert === 'CROSSES_BELOW_200DMA' && q.dma200 && p < q.dma200) { alertTriggered = true; alertMessage = 'Currently below 200 DMA'; alertDma = q.dma200; }
             }
           }
 
-          return { ...item, price, change, up, alertTriggered, alertMessage };
+          return { ...item, priceValue, change, up, alertTriggered, alertMessage, alertDma };
         }));
       })
       .catch(() => {});
@@ -172,7 +175,7 @@ export default function Watchlist() {
                 </div>
               </div>
 
-              <div style={{ textAlign: 'right', fontWeight: 700, fontSize: '0.95rem' }} className="num">{item.price || '—'}</div>
+              <div style={{ textAlign: 'right', fontWeight: 700, fontSize: '0.95rem' }} className="num">{item.priceValue != null ? formatPrice(item.priceValue) : '—'}</div>
 
               <div style={{ textAlign: 'right' }}>
                 {item.change ? (
@@ -189,7 +192,7 @@ export default function Watchlist() {
 
               <div className="wl-hide" style={{ textAlign: 'right' }}>
                 {item.alertTriggered ? (
-                  <span className="badge badge-red" title={item.alertMessage}><Bell size={10} /> {item.alertMessage}</span>
+                  <span className="badge badge-red" title={item.alertMessage}><Bell size={10} /> {item.alertMessage}{item.alertDma != null ? ` (${formatPrice(item.alertDma)})` : ''}</span>
                 ) : item.alert ? (
                   <span className="badge badge-orange"><Bell size={10} /> Alert set</span>
                 ) : (
