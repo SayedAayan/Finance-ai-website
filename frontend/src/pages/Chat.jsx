@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Sparkles, Send, Plus, Paperclip, FileText, AlertCircle, ArrowRight, Image as ImageIcon, MessageSquare, Trash2, Edit, PanelLeftClose, PanelLeft, ArrowDown, Mic, Volume2, Square } from 'lucide-react';
+import { Send, Plus, Paperclip, FileText, AlertCircle, ArrowRight, Image as ImageIcon, MessageSquare, Trash2, Edit, PanelLeftClose, PanelLeft, ArrowDown, Mic, Volume2, Square, Copy, Check, RotateCcw, TrendingUp, Newspaper, HelpCircle, LineChart } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -27,6 +27,8 @@ export default function Chat() {
   const initialMessageSentRef = useRef(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [copiedId, setCopiedId] = useState(null);
+  const [regeneratingId, setRegeneratingId] = useState(null);
 
   // Voice input/output state
   const [isListening, setIsListening] = useState(false);
@@ -61,14 +63,14 @@ export default function Chat() {
     recognition.start();
   };
 
-  const speakMessage = (message) => {
-    if (!ttsSupported) return;
+  const speakMessage = (message, onDone) => {
+    if (!ttsSupported) { onDone?.(); return; }
     window.speechSynthesis.cancel();
     const plainText = message.text.replace(/[#*`_>\-]/g, '').replace(/\n+/g, '. ');
     const utterance = new SpeechSynthesisUtterance(plainText);
     utterance.lang = 'en-IN';
-    utterance.onend = () => setSpeakingId(null);
-    utterance.onerror = () => setSpeakingId(null);
+    utterance.onend = () => { setSpeakingId(null); onDone?.(); };
+    utterance.onerror = () => { setSpeakingId(null); onDone?.(); };
     setSpeakingId(message.id);
     window.speechSynthesis.speak(utterance);
   };
@@ -212,7 +214,7 @@ export default function Chat() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const sendContextualMessage = async (textToSend, viaVoice = false) => {
+  const sendContextualMessage = async (textToSend, viaVoice = false, onReply = null) => {
     const q = textToSend || input;
     if (!q.trim() && !selectedFile) return;
 
@@ -306,6 +308,7 @@ export default function Chat() {
       const finalMessages = [...updatedMessages, aiMessage];
       setMessages(finalMessages);
       if (viaVoice) speakMessage(aiMessage);
+      if (onReply) onReply(aiMessage);
 
       // Update DB with AI reply
       if (currentChatId) {
@@ -335,6 +338,7 @@ export default function Chat() {
       const finalMessages = [...updatedMessages, aiMessage];
       setMessages(finalMessages);
       if (viaVoice) speakMessage(aiMessage);
+      if (onReply) onReply(aiMessage);
 
       if (currentChatId) {
         await fetch(`${API_URL}/chats/${currentChatId}`, {
@@ -348,11 +352,41 @@ export default function Chat() {
     }
   };
 
+  const copyMessage = (message) => {
+    navigator.clipboard.writeText(message.text).then(() => {
+      setCopiedId(message.id);
+      setTimeout(() => setCopiedId(null), 1500);
+    });
+  };
+
+  const regenerateResponse = async (aiMessageId) => {
+    const idx = messages.findIndex(m => m.id === aiMessageId);
+    if (idx <= 0) return;
+    const priorUserIdx = [...messages.slice(0, idx)].map(m => m.type).lastIndexOf('user');
+    if (priorUserIdx === -1) return;
+    const priorUserMessage = messages[priorUserIdx];
+
+    setRegeneratingId(aiMessageId);
+    setMessages(messages.slice(0, priorUserIdx));
+    try {
+      await sendContextualMessage(priorUserMessage.text);
+    } finally {
+      setRegeneratingId(null);
+    }
+  };
+
+  const SUGGESTED_PROMPTS = [
+    { icon: TrendingUp, text: "How is Nifty 50 doing today?" },
+    { icon: LineChart, text: "What is the P/E ratio and why does it matter?" },
+    { icon: Newspaper, text: "Latest news on Reliance Industries" },
+    { icon: HelpCircle, text: "Explain SIP vs lump sum investing" }
+  ];
+
   return (
-    <div className="fixed top-[102px] bottom-0 left-0 right-0 flex bg-[#FCFCFF] dark:bg-gray-950 z-50">
+    <div className="chat-page-bg fixed top-[102px] bottom-0 left-0 right-0 flex z-50">
       {/* Sidebar for Chat History */}
       {sidebarOpen ? (
-        <div className="w-[280px] bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col h-full shadow-sm flex-shrink-0">
+        <div className="w-[280px] bg-gray-50 dark:bg-[#171717] border-r border-gray-200 dark:border-gray-800 flex flex-col h-full flex-shrink-0">
           <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
             <button
               onClick={createNewChat}
@@ -396,7 +430,7 @@ export default function Chat() {
           </div>
         </div>
       ) : (
-        <div className="w-[56px] bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col items-center h-full shadow-sm flex-shrink-0 py-4 gap-3">
+        <div className="w-[56px] bg-gray-50 dark:bg-[#171717] border-r border-gray-200 dark:border-gray-800 flex flex-col items-center h-full flex-shrink-0 py-4 gap-3">
           <button
             onClick={() => setSidebarOpen(true)}
             className="p-2.5 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
@@ -416,21 +450,39 @@ export default function Chat() {
 
       {/* Main Chat Window */}
       <div className="flex-1 flex flex-col h-full relative overflow-hidden">
-        {/* Messages */}
+        {messages.length === 0 ? (
+          /* Empty state: fills the viewport, never scrolls */
+          <div className="flex-1 flex flex-col items-center justify-center text-center px-8">
+            <div className="w-16 h-16 bg-white dark:bg-gray-900 rounded-full flex items-center justify-center mb-6 shadow-sm border border-gray-100 dark:border-gray-800">
+              <img src="/favicon.png" alt="Stockbuzz" className="w-9 h-9 object-contain" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3">How can I help you today?</h2>
+            <p className="text-gray-500 dark:text-gray-400 max-w-md mb-8">
+              Ask me about stocks, mutual funds, or market trends. I have access to real-time financial data.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg w-full">
+              {SUGGESTED_PROMPTS.map((p, i) => {
+                const Icon = p.icon;
+                return (
+                  <button
+                    key={i}
+                    onClick={() => sendContextualMessage(p.text)}
+                    className="flex items-center gap-3 text-left px-4 py-3.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl hover:border-violet-300 dark:hover:border-violet-500/40 hover:shadow-md transition-all group"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-violet-50 dark:bg-violet-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-violet-100 dark:group-hover:bg-violet-500/20 transition-colors">
+                      <Icon size={15} className="text-violet-600 dark:text-violet-400" />
+                    </div>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{p.text}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+        /* Messages */
         <div className="flex-1 overflow-y-auto p-8" ref={chatContainerRef} onScroll={handleScroll}>
           <div className="max-w-4xl mx-auto flex flex-col gap-6 relative">
-            {messages.length === 0 ? (
-              <div className="text-center py-20 flex flex-col items-center">
-                <div className="w-16 h-16 bg-white dark:bg-gray-900 rounded-full flex items-center justify-center mb-6 shadow-sm border border-gray-100 dark:border-gray-800">
-                  <img src="/favicon.png" alt="Stockbuzz" className="w-9 h-9 object-contain" />
-                </div>
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3">How can I help you today?</h2>
-                <p className="text-gray-500 dark:text-gray-400 max-w-md">
-                  Ask me about stocks, mutual funds, or market trends. I have access to real-time financial data.
-                </p>
-              </div>
-            ) : (
-              messages.map((m, idx) => (
+              {messages.map((m, idx) => (
                 <div
                   key={m.id}
                   ref={m.type === 'user' && idx === messages.length - 1 ? lastUserMessageRef : null}
@@ -445,61 +497,81 @@ export default function Chat() {
                         </div>
                       )}
                       {m.text && (
-                        <div className="bg-violet-600 text-white px-5 py-3.5 rounded-2xl rounded-tr-sm shadow-md text-[15px] leading-relaxed">
+                        <div className="bg-gradient-to-br from-violet-600 to-indigo-600 text-white px-5 py-3.5 rounded-2xl rounded-tr-sm shadow-md shadow-violet-500/20 text-[15px] leading-relaxed">
                           {m.text}
                         </div>
                       )}
                     </div>
                   ) : (
                     <div className="flex gap-4 max-w-[85%]">
-                      <div className="w-8 h-8 rounded-full bg-violet-100 dark:bg-violet-500/10 flex items-center justify-center flex-shrink-0 mt-1">
-                        <Sparkles size={16} className="text-violet-600 dark:text-violet-400" />
+                      <div className="w-8 h-8 rounded-full bg-white dark:bg-gray-900 shadow-sm border border-violet-100 dark:border-violet-500/20 flex items-center justify-center flex-shrink-0 mt-1 p-1.5">
+                        <img src="/favicon.png" alt="Stockbuzz AI" className="w-full h-full object-contain" />
                       </div>
-                      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 px-6 py-4 rounded-2xl rounded-tl-sm shadow-sm prose prose-sm dark:prose-invert max-w-none text-gray-800 dark:text-gray-200">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                          {m.text}
-                        </ReactMarkdown>
-                        <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between gap-2">
+                      <div className="flex flex-col gap-1.5 group/msg">
+                        <div className={`ai-reply-card px-6 py-4 rounded-2xl rounded-tl-sm prose prose-sm dark:prose-invert max-w-none text-gray-800 dark:text-gray-100 transition-opacity ${regeneratingId === m.id ? 'opacity-40' : ''}`}>
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {m.text}
+                          </ReactMarkdown>
+                        </div>
+                        <div className={`flex items-center justify-between gap-2 px-1 transition-opacity ${copiedId === m.id || speakingId === m.id || regeneratingId === m.id ? 'opacity-100' : 'opacity-0 group-hover/msg:opacity-100 focus-within:opacity-100'}`}>
                           {m.source ? (
-                            <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500 font-medium">
-                              <AlertCircle size={12} /> {m.source}
+                            <div className="flex items-center gap-1.5 text-[11px] text-gray-400 dark:text-gray-500 font-medium">
+                              <AlertCircle size={11} /> {m.source}
                             </div>
                           ) : <span />}
-                          {ttsSupported && (
+                          <div className="flex items-center gap-0.5">
                             <button
-                              onClick={() => toggleSpeak(m)}
-                              className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full transition-colors ${speakingId === m.id ? 'bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-400' : 'text-gray-400 dark:text-gray-500 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-500/10'}`}
-                              title={speakingId === m.id ? 'Stop speaking' : 'Read aloud'}
+                              onClick={() => copyMessage(m)}
+                              className="w-7 h-7 flex items-center justify-center rounded-full text-gray-400 dark:text-gray-500 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-500/10 transition-colors"
+                              title="Copy response"
                             >
-                              {speakingId === m.id ? <Square size={12} /> : <Volume2 size={12} />}
-                              {speakingId === m.id ? 'Stop' : 'Listen'}
+                              {copiedId === m.id ? <Check size={13} /> : <Copy size={13} />}
                             </button>
-                          )}
+                            <button
+                              onClick={() => regenerateResponse(m.id)}
+                              disabled={loading || regeneratingId === m.id}
+                              className="w-7 h-7 flex items-center justify-center rounded-full text-gray-400 dark:text-gray-500 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-500/10 transition-colors disabled:opacity-50"
+                              title="Regenerate response"
+                            >
+                              <RotateCcw size={13} className={regeneratingId === m.id ? 'animate-spin' : ''} />
+                            </button>
+                            {ttsSupported && (
+                              <button
+                                onClick={() => toggleSpeak(m)}
+                                className={`w-7 h-7 flex items-center justify-center rounded-full transition-colors ${speakingId === m.id ? 'bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-400' : 'text-gray-400 dark:text-gray-500 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-500/10'}`}
+                                title={speakingId === m.id ? 'Stop speaking' : 'Read aloud'}
+                              >
+                                {speakingId === m.id ? <Square size={13} /> : <Volume2 size={13} />}
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
                   )}
                 </div>
-              ))
-            )}
-            {loading && (
-              <div className="flex gap-4 max-w-[85%]">
-                <div className="w-8 h-8 rounded-full bg-violet-100 dark:bg-violet-500/10 flex items-center justify-center flex-shrink-0 mt-1">
-                  <Sparkles size={16} className="text-violet-600 dark:text-violet-400" />
+              ))}
+              {loading && (
+                <div className="flex gap-4 max-w-[85%]">
+                  <div className="w-8 h-8 rounded-full bg-white dark:bg-gray-900 shadow-sm border border-violet-100 dark:border-violet-500/20 flex items-center justify-center flex-shrink-0 mt-1 p-1.5 animate-pulse">
+                    <img src="/favicon.png" alt="Stockbuzz AI" className="w-full h-full object-contain" />
+                  </div>
+                  <div className="ai-reply-card px-5 py-4 rounded-2xl rounded-tl-sm flex flex-col gap-2 min-w-[180px]">
+                    <div className="text-xs font-semibold text-violet-600 dark:text-violet-400">Thinking…</div>
+                    <div className="flex flex-col gap-1.5">
+                      <span className="chat-shimmer h-2 w-40 rounded-full"></span>
+                      <span className="chat-shimmer h-2 w-28 rounded-full"></span>
+                    </div>
+                  </div>
                 </div>
-                <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 px-5 py-4 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-1.5 h-[52px]">
-                  <span className="w-2 h-2 rounded-full bg-violet-500 animate-pulse"></span>
-                  <span className="w-2 h-2 rounded-full bg-violet-500 animate-pulse delay-100"></span>
-                  <span className="w-2 h-2 rounded-full bg-violet-500 animate-pulse delay-200"></span>
-                </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
+              )}
+              <div ref={messagesEndRef} />
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Scroll to bottom button */}
-        {showScrollButton && (
+        {messages.length > 0 && showScrollButton && (
           <button
             onClick={scrollToBottom}
             className="absolute bottom-[100px] left-1/2 -translate-x-1/2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-md rounded-full p-2 text-gray-500 dark:text-gray-400 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all z-10"
@@ -510,7 +582,7 @@ export default function Chat() {
         )}
 
         {/* Input */}
-        <div className="px-8 pb-5 pt-2 shrink-0">
+        <div className="px-4 sm:px-8 pb-5 pt-2 shrink-0">
           <div className="max-w-4xl mx-auto">
             {filePreview && (
               <div className="mb-3 px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl flex items-center justify-between max-w-sm">
@@ -523,7 +595,7 @@ export default function Chat() {
                 </button>
               </div>
             )}
-            <div className="relative flex items-center bg-gray-100 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 rounded-full px-4 h-[56px] shadow-sm focus-within:bg-white dark:focus-within:bg-gray-900 focus-within:border-violet-300 dark:focus-within:border-violet-500/40 focus-within:ring-2 focus-within:ring-violet-500/15 transition-all">
+            <div className="chat-input-bar relative flex items-center rounded-full px-4 h-[56px] transition-all">
               <input
                 type="file"
                 ref={fileInputRef}

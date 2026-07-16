@@ -208,7 +208,10 @@ export default function Home({ onOpenAIChat }) {
 
   const TRENDING_ICON = { stock: <TrendingUp size={16} />, fund: <BarChart2 size={16} />, amc: <Landmark size={16} /> };
 
-  const trendingSuggestions = trending.map(t => ({ label: t.label, icon: TRENDING_ICON[t.type] || <Activity size={16} />, trending: true }));
+  // Trim verbose plan/option suffixes so fund names stay short enough for a single-row chip
+  const shortenLabel = (label) => label.replace(/\s*-\s*(Growth Option|Growth Plan|Direct Plan|Regular Plan|Direct|Regular|Growth).*/i, '').trim();
+
+  const trendingSuggestions = trending.map(t => ({ label: shortenLabel(t.label), icon: TRENDING_ICON[t.type] || <Activity size={16} />, trending: true }));
   const suggestions = trendingSuggestions.length >= 4
     ? trendingSuggestions.slice(0, 4)
     : [...trendingSuggestions, ...DEFAULT_SUGGESTIONS].slice(0, 4);
@@ -251,11 +254,11 @@ export default function Home({ onOpenAIChat }) {
               </div>
             </motion.div>
 
-            <motion.div variants={itemVariants} className="w-full max-w-[1100px] mb-8 flex flex-col items-center gap-3">
-              <div className="flex flex-nowrap justify-center gap-[12px] w-full overflow-x-auto px-2 pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            <motion.div variants={itemVariants} className="w-full max-w-[900px] mb-8 flex flex-col items-center gap-3">
+              <div className="flex flex-nowrap justify-center gap-[10px] w-full px-2">
                 {suggestions.map((s, i) => (
-                  <button key={i} onClick={() => handleAsk(s.label)} className="flex items-center gap-2 px-[16px] h-[42px] bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-[14px] text-[14px] font-medium text-textMuted shadow-sm hover:shadow-md hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:text-primary dark:hover:text-blue-400 hover:-translate-y-[2px] transition-all duration-300 shrink-0 whitespace-nowrap">
-                    {s.icon} <span className="max-w-[240px] truncate">{s.label}</span>
+                  <button key={i} onClick={() => handleAsk(s.label)} className="flex items-center gap-1.5 px-[12px] h-[38px] bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-[12px] text-[12.5px] font-medium text-textMuted shadow-sm hover:shadow-md hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:text-primary dark:hover:text-blue-400 hover:-translate-y-[2px] transition-all duration-300 min-w-0 flex-1 basis-0 justify-center">
+                    <span className="shrink-0">{s.icon}</span> <span className="truncate">{s.label}</span>
                   </button>
                 ))}
               </div>

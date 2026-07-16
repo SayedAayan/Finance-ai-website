@@ -703,6 +703,59 @@ img { max-width: 100%; display: block; }
   100% { box-shadow: 0 0 0 0 rgba(13,155,86,0); }
 }
 
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.chat-shimmer {
+  display: block;
+  background: linear-gradient(90deg, var(--neutral-200) 25%, var(--neutral-100) 50%, var(--neutral-200) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+html.dark .chat-shimmer {
+  background: linear-gradient(90deg, rgba(255,255,255,0.08) 25%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.08) 75%);
+  background-size: 200% 100%;
+}
+
+/* ---- Stockbuzz AI chat: branded reply card + input bar ---- */
+.chat-page-bg {
+  background: #FFFFFF;
+}
+html.dark .chat-page-bg {
+  background: #212121;
+}
+
+.ai-reply-card {
+  background: linear-gradient(180deg, #ffffff 0%, #faf8ff 100%);
+  border: 1px solid rgba(139,92,246,0.16);
+  box-shadow: 0 1px 2px rgba(15,23,42,0.04), 0 4px 14px rgba(139,92,246,0.08);
+}
+html.dark .ai-reply-card {
+  background: linear-gradient(180deg, rgba(139,92,246,0.07) 0%, rgba(30,27,46,0.9) 100%);
+  border: 1px solid rgba(139,92,246,0.22);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2), 0 4px 14px rgba(139,92,246,0.06);
+}
+
+.chat-input-bar {
+  background: #ffffff;
+  border: 1.5px solid rgba(139,92,246,0.18);
+  box-shadow: 0 2px 8px rgba(139,92,246,0.08);
+}
+.chat-input-bar:focus-within {
+  border-color: rgba(139,92,246,0.5);
+  box-shadow: 0 4px 16px rgba(139,92,246,0.16);
+}
+html.dark .chat-input-bar {
+  background: rgba(30,27,46,0.6);
+  border: 1.5px solid rgba(139,92,246,0.25);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+html.dark .chat-input-bar:focus-within {
+  border-color: rgba(139,92,246,0.55);
+  box-shadow: 0 4px 16px rgba(139,92,246,0.18);
+}
+
 /* ---- AI PANEL (Sidebar) ---- */
 .ai-panel {
   background: var(--violet-light);

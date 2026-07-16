@@ -17,10 +17,10 @@ const app = express();
 const PORT = Number(process.env.PORT) || 3001;
 
 const AI_PROVIDERS = [
+  { name: 'Groq', url: 'https://api.groq.com/openai/v1/chat/completions', key: process.env.GROQ_API_KEY, model: 'meta-llama/llama-4-scout-17b-16e-instruct' },
   { name: 'OpenRouter', url: 'https://openrouter.ai/api/v1/chat/completions', key: process.env.OPENROUTER_API_KEY, model: 'google/gemini-2.5-pro' },
-  { name: 'xAI', url: 'https://api.x.ai/v1/chat/completions', key: process.env.XAI_API_KEY, model: 'grok-beta' },
-  { name: 'DeepSeek', url: 'https://api.deepseek.com/chat/completions', key: process.env.DEEPSEEK_API_KEY, model: 'deepseek-chat' },
-  { name: 'Groq', url: 'https://api.groq.com/openai/v1/chat/completions', key: process.env.GROQ_API_KEY, model: 'meta-llama/llama-4-scout-17b-16e-instruct' }
+  { name: 'xAI', url: 'https://api.x.ai/v1/chat/completions', key: process.env.XAI_API_KEY, model: 'grok-4-fast-non-reasoning' },
+  { name: 'DeepSeek', url: 'https://api.deepseek.com/chat/completions', key: process.env.DEEPSEEK_API_KEY, model: 'deepseek-chat' }
 ].filter(p => p.key);
 
 // ─── Yahoo Finance v8 chart API ───────────────────────────────────────────────
@@ -285,69 +285,147 @@ async function getTopNews() {
 
 // ─── System prompt ────────────────────────────────────────────────────────────
 const APP_CONTEXT = `
-You are Stockbuzz AI, an expert AI-powered financial research assistant for StockBuzz — India's leading financial intelligence platform.
+You are Stockbuzz AI, an expert AI-powered financial research assistant for StockBuzz — India's leading financial intelligence platform. You serve both beginners and experienced investors.
 
-You have access to REAL-TIME live market data through four specialized tools. You MUST use these tools whenever a user asks about any price, NAV, news, or market data.
+You have access to REAL-TIME live market data through four specialized tools. Use them whenever a user asks about live prices, NAV, news, or market data.
 
 TOOLS AVAILABLE:
 1. search_ticker(query)       - Find the correct Yahoo Finance symbol for any stock, fund, or company
 2. get_stock_data(symbol)     - Live price, NAV, change, 52-week range, volume
 3. get_market_overview()      - Live Nifty 50, Sensex, Nifty Bank, USD/INR
-4. get_financial_news(query)  - Latest market and company news headlines
+4. get_financial_news(query)  - The EXACT SAME live articles shown on the Stockbuzz News page right now, optionally filtered by topic/company
 
+════════════════════════════════════════
+NEWS RULES — BE HONEST ABOUT FRESHNESS
+════════════════════════════════════════
+- Whenever a user asks about news, updates, or "what's happening with X today", ALWAYS call get_financial_news(query) — never answer news questions from memory, and never invent or guess headlines.
+- get_financial_news returns the same articles currently live on the Stockbuzz News page, each with an "hoursAgo" and "isToday" field, plus "currentTime" (the real current timestamp) and "feedFetchedAt".
+- Before answering, check hoursAgo/isToday on the top matching article(s):
+  - If isToday is true → present it as today's news normally.
+  - If isToday is false → you MUST explicitly tell the user the news is not from today, e.g. "The most recent Adani news I have is from yesterday (around X hours ago) — I don't see anything newer right now." Do not silently present old news as if it's current.
+- If matchCount is 0 (no articles found for that query/company), tell the user plainly that there's no recent news on that topic in the current feed — do not fabricate a plausible-sounding headline.
+- Always cite the source name and roughly how long ago it was published (e.g. "3 hours ago", "yesterday") so the user can judge freshness themselves.
+
+════════════════════════════════════════
+CRITICAL RULE: INTERPRET QUERIES SMARTLY
+════════════════════════════════════════
+Users often ask SHORT, VAGUE, or ABBREVIATED questions. You MUST interpret these intelligently in a finance/stock market context and give a helpful answer. NEVER say "I don't have access to [X] information" for conceptual or definition questions.
+
+EXAMPLES OF SMART INTERPRETATION:
+- "what is PL" → Profit & Loss (P&L) in stocks context — explain it
+- "what is PE" → Price-to-Earnings ratio — explain it
+- "what is SIP" → Systematic Investment Plan — explain it
+- "what is NAV" → Net Asset Value for mutual funds — explain it
+- "what is FII" → Foreign Institutional Investors — explain it
+- "what is DII" → Domestic Institutional Investors — explain it
+- "Reliance price" → call get_stock_data("RELIANCE.NS")
+- "how is market today" → call get_market_overview()
+- "HDFC fund" → call search_ticker("HDFC") then get_stock_data
+- "TCS" alone → assume they want live price, call get_stock_data("TCS.NS")
+
+════════════════════════════════════════
+COMMON FINANCIAL ABBREVIATIONS (ALWAYS RESOLVE THESE):
+════════════════════════════════════════
+P&L / PL     = Profit and Loss — the gain/loss from buying and selling stocks
+P/E / PE     = Price-to-Earnings ratio — stock price divided by earnings per share
+EPS          = Earnings Per Share
+ROE          = Return on Equity
+ROCE         = Return on Capital Employed
+EBITDA       = Earnings Before Interest, Tax, Depreciation and Amortisation
+NII          = Net Interest Income (used by banks)
+NIM          = Net Interest Margin
+PAT          = Profit After Tax
+PBT          = Profit Before Tax
+CAGR         = Compound Annual Growth Rate
+NAV          = Net Asset Value (for mutual funds)
+AUM          = Assets Under Management
+SIP          = Systematic Investment Plan
+SWP          = Systematic Withdrawal Plan
+STP          = Systematic Transfer Plan
+ELSS         = Equity Linked Savings Scheme
+NFO          = New Fund Offer
+IPO          = Initial Public Offering
+FPO          = Follow-on Public Offer
+OFS          = Offer for Sale
+QIP          = Qualified Institutional Placement
+FII / FPI    = Foreign Institutional / Portfolio Investors
+DII          = Domestic Institutional Investors
+MF           = Mutual Fund
+LTP          = Last Traded Price
+CMP          = Current Market Price
+52W H/L      = 52-Week High / Low
+MCap / M-Cap = Market Capitalisation
+DIV / DY     = Dividend / Dividend Yield
+BV           = Book Value
+P/B          = Price-to-Book ratio
+VWAP         = Volume Weighted Average Price
+ATH          = All-Time High
+ATL          = All-Time Low
+NSE          = National Stock Exchange of India
+BSE          = Bombay Stock Exchange
+SEBI         = Securities and Exchange Board of India
+RBI          = Reserve Bank of India
+F&O / FnO    = Futures and Options (derivatives)
+CE           = Call Option (in F&O)
+PE (option)  = Put Option (in F&O) — context determines if PE = P/E ratio or Put option
+IV           = Implied Volatility
+OI           = Open Interest
+T+1 / T+2   = Settlement cycle (Trade day + 1 or 2 days)
+DEMAT        = Dematerialised account (holds shares electronically)
+DP           = Depository Participant
+NSDL / CDSL  = Depositories in India
+AMC          = Asset Management Company
+AMFI         = Association of Mutual Funds in India
+XIRR         = Extended Internal Rate of Return (for irregular cash flows)
+IRR          = Internal Rate of Return
+L&T / L and T = Larsen & Toubro (company)
+HUL          = Hindustan Unilever Limited
+HDFC         = Housing Development Finance Corporation
+ICICI        = ICICI Bank
+SBI          = State Bank of India
+TCS          = Tata Consultancy Services
+ITC          = Indian Tobacco Company (now diversified — ITC Ltd)
+
+════════════════════════════════════════
 MANDATORY RULES:
-- ALWAYS call a tool for any price, NAV, index level, or news question. Never answer from memory.
+════════════════════════════════════════
+- ALWAYS answer conceptual/definition questions directly from your knowledge — DO NOT use tools for "what is X" type questions.
+- ALWAYS call a tool for live price, NAV, index level, or news questions. Never answer from memory for live data.
 - If you do not know the exact ticker symbol, call search_ticker FIRST then get_stock_data.
 - For Indian stocks use NSE suffix .NS (e.g., RELIANCE.NS, TCS.NS, HDFCBANK.NS)
-- For Indian mutual funds: Use search_ticker first. If it fails, rely on the common funds listed below. NEVER say you can't find a fund without checking the list below.
+- For Indian mutual funds: Use search_ticker first. If it fails, rely on the common funds listed below.
 - For market indices, use get_market_overview()
 - Never give Buy/Sell/Hold recommendations.
-- Respond in clear, simple language with bullet points or tables.
-- When asked to analyze a specific news article, structure your answer in two clear parts: "What happened" (a plain-language summary of the news) and "Market impact" (which sectors, companies, or indices could be affected, and why — pull live prices with get_stock_data if relevant to ground the impact).
+- Respond in clear, simple language with bullet points or tables where helpful.
+- When an abbreviation has multiple meanings (e.g., PE = P/E ratio OR Put Option), pick the most likely meaning in context and mention both if ambiguous.
+- When asked to analyze a specific news article, structure your answer in two clear parts: "What happened" and "Market impact".
+- If still truly unsure what the user means, give the most likely financial interpretation AND ask a clarifying follow-up.
 
+════════════════════════════════════════
 COMMON INDIAN STOCK SYMBOLS (NSE):
-Reliance Industries - RELIANCE.NS
-Tata Consultancy Services - TCS.NS
-HDFC Bank - HDFCBANK.NS
-Infosys - INFY.NS
-ICICI Bank - ICICIBANK.NS
-State Bank of India - SBIN.NS
+════════════════════════════════════════
+Reliance Industries - RELIANCE.NS | TCS - TCS.NS | HDFC Bank - HDFCBANK.NS
+Infosys - INFY.NS | ICICI Bank - ICICIBANK.NS | SBI - SBIN.NS
+Wipro - WIPRO.NS | Bajaj Finance - BAJFINANCE.NS | Kotak Bank - KOTAKBANK.NS
+Axis Bank - AXISBANK.NS | Sun Pharma - SUNPHARMA.NS | Maruti - MARUTI.NS
+ITC - ITC.NS | HCL Tech - HCLTECH.NS | Tata Motors - TATAMOTORS.NS
+Adani Enterprises - ADANIENT.NS | Hero MotoCorp - HEROMOTOCO.NS
+Bajaj Auto - BAJAJ-AUTO.NS | Titan - TITAN.NS | Asian Paints - ASIANPAINT.NS
+Dr Reddys - DRREDDY.NS | Cipla - CIPLA.NS | NTPC - NTPC.NS
+Coal India - COALINDIA.NS | Apollo Hospitals - APOLLOHOSP.NS
+JSW Steel - JSWSTEEL.NS | Tech Mahindra - TECHM.NS | L&T - LT.NS
 
-COMMON INDIAN MUTUAL FUND SYMBOLS (Use these EXACT symbols for get_stock_data):
-HDFC Flexi Cap Fund - 0P0000XW8F.BO
-Parag Parikh Flexi Cap Fund - 0P0000YWL1.BO
-Kotak Flexicap Fund - 0P00005V1U.BO
-Kotak Mahindra Liquid Fund - 0P00005V4Z.BO
-SBI Equity Hybrid Fund - 0P00005WLZ.BO
-ICICI Prudential Bluechip Fund - 0P00005WMI.BO
-Axis Bluechip Fund - 0P0000XW8J.BO
-Nippon India Small Cap Fund - 0P0000YWL2.BO
-Wipro - WIPRO.NS
-Bajaj Finance - BAJFINANCE.NS
-Kotak Mahindra Bank - KOTAKBANK.NS
-Axis Bank - AXISBANK.NS
-Sun Pharma - SUNPHARMA.NS
-Maruti Suzuki - MARUTI.NS
-ITC - ITC.NS
-HCL Technologies - HCLTECH.NS
-Tata Motors - TATAMOTORS.NS
-Adani Enterprises - ADANIENT.NS
-Hero MotoCorp - HEROMOTOCO.NS
-Bajaj Auto - BAJAJ-AUTO.NS
-Titan Company - TITAN.NS
-Asian Paints - ASIANPAINT.NS
-Dr Reddys - DRREDDY.NS
-Cipla - CIPLA.NS
-NTPC - NTPC.NS
-Coal India - COALINDIA.NS
-Apollo Hospitals - APOLLOHOSP.NS
-JSW Steel - JSWSTEEL.NS
-Tech Mahindra - TECHM.NS
-L&T - LT.NS
+COMMON INDIAN MUTUAL FUND SYMBOLS:
+HDFC Flexi Cap Fund - 0P0000XW8F.BO | Parag Parikh Flexi Cap - 0P0000YWL1.BO
+Kotak Flexicap - 0P00005V1U.BO | Kotak Liquid - 0P00005V4Z.BO
+SBI Equity Hybrid - 0P00005WLZ.BO | ICICI Pru Bluechip - 0P00005WMI.BO
+Axis Bluechip - 0P0000XW8J.BO | Nippon Small Cap - 0P0000YWL2.BO
 
 MARKET INDICES: Nifty 50 = ^NSEI, Sensex = ^BSESN, Nifty Bank = ^NSEBANK, Nifty IT = ^CNXIT
 FOR MUTUAL FUNDS: Always use search_ticker to find the correct symbol first.
 `;
+
+
 
 // ─── Tool schemas ─────────────────────────────────────────────────────────────
 const tools = [
@@ -391,11 +469,11 @@ const tools = [
     type: 'function',
     function: {
       name: 'get_financial_news',
-      description: 'Fetch latest live financial news headlines from Google News. Use when user asks about news, developments, or current events.',
+      description: 'Fetch the SAME live news articles currently shown on the Stockbuzz News page, optionally filtered by a topic/company. Each article includes hoursAgo and isToday so you can tell the user exactly how fresh it is. Use when user asks about news, developments, or current events for a company/topic.',
       parameters: {
         type: 'object',
         properties: {
-          query: { type: 'string', description: 'Search query. E.g. Reliance Industries, Nifty 50, RBI, mutual funds India. Leave empty for top market news.' }
+          query: { type: 'string', description: 'Topic or company to filter by. E.g. Adani, Reliance Industries, Nifty 50, RBI, mutual funds India. Leave empty for top market news.' }
         }
       }
     }
@@ -475,39 +553,49 @@ async function handleToolCall(toolCall) {
   }
 
   if (name === 'get_financial_news') {
-    const query = (args.query || 'India stock market BSE NSE Nifty').trim();
+    const query = (args.query || '').trim();
     try {
-      if (NEWSAPI_KEY) {
-        const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(query + ' finance')}&language=en&sortBy=publishedAt&pageSize=8&apiKey=${NEWSAPI_KEY}`;
-        const res = await fetch(url);
-        const json = await res.json();
-        if (res.ok && json.status === 'ok') {
-          const news = json.articles.slice(0, 8).map(item => ({
-            title: item.title,
-            source: item.source?.name || 'News',
-            published: item.publishedAt,
-            link: item.url,
-            image: item.urlToImage || null
-          }));
-          return JSON.stringify({ query, news, fetchedAt: new Date().toISOString() });
-        }
+      // Reuse the exact same feed shown on the website's News page, so the AI's
+      // answer always matches what the user can see on-site, and never invents
+      // a separate/divergent result set.
+      const { articles, fetchedAt } = await getTopNews();
+
+      let matched = articles;
+      if (query) {
+        const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
+        matched = articles.filter(a => {
+          const haystack = `${a.title} ${a.description || ''}`.toLowerCase();
+          return terms.some(t => haystack.includes(t));
+        });
       }
-      throw new Error('NewsAPI unavailable, using RSS fallback');
+
+      const now = Date.now();
+      const news = matched.slice(0, 8).map(a => {
+        const publishedMs = a.publishedMs || (a.publishedAt ? new Date(a.publishedAt).getTime() : 0);
+        const hoursAgo = publishedMs ? Math.round((now - publishedMs) / 3600000) : null;
+        return {
+          title: a.title,
+          description: a.description || '',
+          source: a.source,
+          link: a.link,
+          published: a.publishedAt || null,
+          hoursAgo,
+          isToday: hoursAgo !== null ? hoursAgo < 24 : null
+        };
+      });
+
+      return JSON.stringify({
+        query: query || '(top market news)',
+        matchCount: matched.length,
+        news,
+        note: matched.length === 0 && query
+          ? `No articles matching "${query}" found in today's feed. Do not invent news — tell the user nothing recent was found on this topic.`
+          : 'Use the hoursAgo/isToday field on each article to tell the user how fresh it is. If the freshest match is not from today, say so explicitly (e.g. "the latest I have is from yesterday").',
+        feedFetchedAt: new Date(fetchedAt).toISOString(),
+        currentTime: new Date().toISOString()
+      });
     } catch (err) {
-      try {
-        const feed = await rssParser.parseURL(
-          `https://news.google.com/rss/search?q=${encodeURIComponent(query + ' finance')}&hl=en-IN&gl=IN&ceid=IN:en`
-        );
-        const news = feed.items.slice(0, 8).map(item => ({
-          title: item.title,
-          source: item.creator || 'News',
-          published: item.pubDate,
-          link: item.link
-        }));
-        return JSON.stringify({ query, news, fetchedAt: new Date().toISOString() });
-      } catch (rssErr) {
-        return JSON.stringify({ error: `News fetch failed: ${rssErr.message}` });
-      }
+      return JSON.stringify({ error: `News fetch failed: ${err.message}` });
     }
   }
 
@@ -564,6 +652,28 @@ async function callAIWithFallback(apiMessages, providerIndex = 0, retriesLeft = 
   }
 }
 
+// ─── Raw tool-call text parser (fallback for models that don't use tool_calls) ─
+const RAW_TOOL_PATTERN = /\b(search_ticker|get_stock_data|get_market_overview|get_financial_news)\s*\(([^)]*)\)/g;
+
+function parseRawToolCalls(text) {
+  const calls = [];
+  let match;
+  RAW_TOOL_PATTERN.lastIndex = 0;
+  while ((match = RAW_TOOL_PATTERN.exec(text)) !== null) {
+    const name = match[1];
+    const argsRaw = match[2].trim();
+    // Parse key="value" or key='value' pairs
+    const args = {};
+    const kvPattern = /(\w+)\s*=\s*(?:"([^"]*)"|'([^']*)'|(\S+))/g;
+    let kv;
+    while ((kv = kvPattern.exec(argsRaw)) !== null) {
+      args[kv[1]] = kv[2] ?? kv[3] ?? kv[4] ?? '';
+    }
+    calls.push({ id: `raw-${Date.now()}-${calls.length}`, function: { name, arguments: JSON.stringify(args) } });
+  }
+  return calls;
+}
+
 // ─── Agentic loop ─────────────────────────────────────────────────────────────
 async function runAgentLoop(apiMessages) {
   for (let i = 0; i < 8; i++) {
@@ -571,8 +681,10 @@ async function runAgentLoop(apiMessages) {
     const message = data.choices?.[0]?.message;
     if (!message) throw new Error('No message in Groq response');
 
+    // Structured tool calls (standard OpenAI-compatible providers)
     if (message.tool_calls && message.tool_calls.length > 0) {
-      apiMessages.push(message);
+      // Some providers echo content alongside tool_calls — ignore content here
+      apiMessages.push({ ...message, content: message.content || null });
       console.log(`  ↻ Iter ${i + 1}: ${message.tool_calls.length} tool call(s)`);
       const results = await Promise.all(message.tool_calls.map(tc => handleToolCall(tc)));
       message.tool_calls.forEach((tc, idx) => {
@@ -581,7 +693,26 @@ async function runAgentLoop(apiMessages) {
       continue;
     }
 
+    // Content present — check if the model wrote raw tool-call text instead of using tool_calls
     if (message.content) {
+      const rawCalls = parseRawToolCalls(message.content);
+      if (rawCalls.length > 0) {
+        console.log(`  ↻ Iter ${i + 1}: ${rawCalls.length} raw tool call(s) parsed from content`);
+        // Push the assistant message that contained the raw tool call text
+        apiMessages.push({ role: 'assistant', content: message.content });
+        // Execute the tool calls and format results as a plain user message
+        // (models that output raw tool text likely don't support the "tool" role)
+        const results = await Promise.all(rawCalls.map(tc => handleToolCall(tc)));
+        const toolResultsText = rawCalls.map((tc, idx) =>
+          `[Tool: ${tc.function.name}]\n${results[idx]}`
+        ).join('\n\n');
+        apiMessages.push({
+          role: 'user',
+          content: `Here are the real-time tool results:\n\n${toolResultsText}\n\nPlease now provide a clear, well-formatted answer to the user's original question using these results.`
+        });
+        continue;
+      }
+
       console.log(`  ✅ Done on iter ${i + 1}`);
       return message.content;
     }
@@ -1011,10 +1142,10 @@ app.get('/api/search', async (req, res) => {
     const top = topStock
       ? { name: topStock.name, type: 'stock', route: `/stock/${topStock.id}` }
       : topFund
-      ? { name: topFund.name, type: 'fund', route: `/fund/${topFund.id}` }
-      : topAmc
-      ? { name: topAmc.name, type: 'amc', route: `/amcs` }
-      : null;
+        ? { name: topFund.name, type: 'fund', route: `/fund/${topFund.id}` }
+        : topAmc
+          ? { name: topAmc.name, type: 'amc', route: `/amcs` }
+          : null;
     logSearchQuery(q, top);
     res.json(results);
   } catch (err) {
@@ -1125,6 +1256,505 @@ app.get('/api/read-article', async (req, res) => {
   }
 });
 
+// ─── Financial Knowledge Base (definitions answered locally, no AI needed) ────
+const FINANCE_KB = {
+  // Profit & Loss
+  'pl': {
+    title: 'Profit & Loss (P&L)',
+    answer: `**Profit & Loss (P&L)** in stocks refers to the financial gain or loss you make from buying and selling securities.
+
+**Simple formula:**
+> P&L = (Selling Price − Buying Price) × Quantity
+
+**Types:**
+- 📈 **Realised P&L** – Profit/loss from trades you've already closed (sold the stock)
+- 📊 **Unrealised P&L** – Profit/loss on positions you still hold (not yet sold); also called "paper profit/loss"
+
+**Example:**
+> You bought 10 shares of Reliance at ₹1,200. Current price = ₹1,350.
+> Unrealised P&L = (₹1,350 − ₹1,200) × 10 = **+₹1,500 profit**
+
+**Tax on P&L:**
+- Short-Term Capital Gain (STCG) – held < 1 year → taxed at 20%
+- Long-Term Capital Gain (LTCG) – held > 1 year → taxed at 12.5% above ₹1.25 lakh
+
+Would you like to check the live price of a specific stock to calculate your P&L?`
+  },
+  'profit and loss': 'pl',
+  'profit & loss': 'pl',
+  'p&l': 'pl',
+  'p and l': 'pl',
+
+  // PE Ratio
+  'pe': {
+    title: 'Price-to-Earnings Ratio (P/E)',
+    answer: `**P/E Ratio (Price-to-Earnings)** tells you how much investors are paying for every ₹1 of a company's earnings.
+
+**Formula:**
+> P/E = Current Stock Price ÷ Earnings Per Share (EPS)
+
+**What it means:**
+- 📊 **Low P/E (< 15)** – Stock may be undervalued or the company is growing slowly
+- 📈 **High P/E (> 30)** – Investors expect strong future growth (common in IT stocks)
+- ⚠️ **Negative P/E** – Company is making a loss
+
+**Indian market context:**
+- Nifty 50 average P/E is typically between 20–25
+- FMCG, IT companies often trade at higher P/E (25–40)
+- PSU banks, commodity stocks often trade at lower P/E (8–15)
+
+**Note:** "PE" can also mean **Put Option** in F&O trading. Context determines which meaning applies.
+
+Want me to fetch the live P/E ratio of a specific stock?`
+  },
+  'pe ratio': 'pe',
+  'price to earnings': 'pe',
+  'price earnings ratio': 'pe',
+  'p/e': 'pe',
+  'p/e ratio': 'pe',
+
+  // EPS
+  'eps': {
+    title: 'Earnings Per Share (EPS)',
+    answer: `**EPS (Earnings Per Share)** is the portion of a company's profit allocated to each share of stock.
+
+**Formula:**
+> EPS = Net Profit ÷ Total Number of Shares Outstanding
+
+**Example:**
+> If TCS earns ₹45,000 crore profit and has 360 crore shares → EPS = ₹125 per share
+
+**Why it matters:**
+- Higher EPS = company is more profitable per share
+- Used to calculate the P/E ratio
+- Growing EPS quarter-over-quarter is a positive sign
+
+**Types:**
+- **Basic EPS** – Simple calculation
+- **Diluted EPS** – Accounts for stock options, convertible bonds etc.`
+  },
+
+  // SIP
+  'sip': {
+    title: 'Systematic Investment Plan (SIP)',
+    answer: `**SIP (Systematic Investment Plan)** is a method of investing a fixed amount in a mutual fund at regular intervals (monthly, weekly, etc.) rather than investing a lump sum.
+
+**How it works:**
+1. You choose a mutual fund and a fixed amount (e.g., ₹5,000/month)
+2. Every month, the amount is auto-debited and units are purchased at the current NAV
+3. Over time, you accumulate units at different prices (rupee cost averaging)
+
+**Benefits:**
+- ✅ No need to time the market
+- ✅ Builds disciplined saving habits
+- ✅ Even small amounts (₹500/month) can compound into wealth over 10–20 years
+- ✅ Rupee cost averaging reduces market risk
+
+**Example:**
+> ₹10,000/month SIP for 20 years at 12% CAGR = **~₹99 lakh corpus** from just ₹24 lakh invested`
+  },
+
+  // NAV
+  'nav': {
+    title: 'Net Asset Value (NAV)',
+    answer: `**NAV (Net Asset Value)** is the per-unit price of a mutual fund scheme.
+
+**Formula:**
+> NAV = (Total Assets of Fund − Liabilities) ÷ Number of Units Outstanding
+
+**Key points:**
+- 💡 NAV changes every day after market close
+- Unlike stocks, a lower NAV does NOT mean the fund is cheaper or better value
+- NAV of ₹10 and ₹500 in the same category doesn't matter — what matters is the fund's returns
+- When you invest in a mutual fund via SIP, units are allotted at the prevailing NAV
+
+Want me to fetch the live NAV of a specific mutual fund?`
+  },
+
+  // ROE
+  'roe': {
+    title: 'Return on Equity (ROE)',
+    answer: `**ROE (Return on Equity)** measures how efficiently a company uses shareholders' money to generate profit.
+
+**Formula:**
+> ROE = (Net Profit ÷ Shareholders' Equity) × 100
+
+**Benchmarks:**
+- ROE > 15% is generally considered good
+- ROE > 20% is excellent (e.g., HDFC Bank, Asian Paints consistently above 15–20%)
+- Compare ROE within the same sector for meaningful analysis
+
+**Why it matters:**
+- High ROE = management is using equity efficiently
+- Declining ROE may signal trouble ahead`
+  },
+
+  // ROCE
+  'roce': {
+    title: 'Return on Capital Employed (ROCE)',
+    answer: `**ROCE (Return on Capital Employed)** measures how efficiently a company uses ALL its capital (equity + debt) to generate profit.
+
+**Formula:**
+> ROCE = (EBIT ÷ Capital Employed) × 100
+> Capital Employed = Total Assets − Current Liabilities
+
+**ROCE vs ROE:**
+- ROE only looks at equity
+- ROCE includes debt — better for capital-intensive industries (steel, infra, power)
+
+**Good ROCE:** Generally above 15% is healthy`
+  },
+
+  // EBITDA
+  'ebitda': {
+    title: 'EBITDA',
+    answer: `**EBITDA** = Earnings Before Interest, Tax, Depreciation, and Amortisation
+
+It measures a company's core operational profitability, stripping out financing and accounting decisions.
+
+**Formula:**
+> EBITDA = Revenue − Operating Expenses (excluding interest, tax, D&A)
+
+**Why analysts use it:**
+- Compares profitability across companies with different debt levels or tax situations
+- Useful for valuing companies (EV/EBITDA multiple is a common valuation metric)
+
+**EBITDA margin:**
+> EBITDA Margin = (EBITDA ÷ Revenue) × 100
+> Higher margin = more profitable operations`
+  },
+
+  // NAV
+  'cagr': {
+    title: 'Compound Annual Growth Rate (CAGR)',
+    answer: `**CAGR (Compound Annual Growth Rate)** shows how much an investment has grown per year, smoothed over a period.
+
+**Formula:**
+> CAGR = [(Ending Value ÷ Beginning Value)^(1/Years) − 1] × 100
+
+**Example:**
+> ₹1 lakh invested, grew to ₹2.5 lakh in 10 years
+> CAGR = (2.5)^(1/10) − 1 = **9.6% per year**
+
+**Why it's useful:**
+- Mutual fund returns are quoted in CAGR
+- Removes the effect of market volatility year-to-year
+- Nifty 50 has delivered ~12–13% CAGR over the long term`
+  },
+
+  // IPO
+  'ipo': {
+    title: 'Initial Public Offering (IPO)',
+    answer: `**IPO (Initial Public Offering)** is when a private company offers its shares to the public for the first time on a stock exchange.
+
+**Process in India:**
+1. Company files a DRHP (Draft Red Herring Prospectus) with SEBI
+2. SEBI approves the offer
+3. IPO opens for 3 days — retail investors, HNIs, and institutions bid for shares
+4. Allotment happens via lottery (for retail, if oversubscribed)
+5. Shares list on NSE/BSE and trading begins
+
+**Key terms:**
+- **GMP (Grey Market Premium)** – Unofficial price before listing
+- **Oversubscribed** – More bids than shares available
+- **Listing Gain** – Profit if listing price > IPO price
+
+Want me to fetch news about current/upcoming IPOs?`
+  },
+
+  // FII
+  'fii': {
+    title: 'Foreign Institutional Investors (FII/FPI)',
+    answer: `**FII/FPI (Foreign Institutional/Portfolio Investors)** are large foreign entities (mutual funds, pension funds, hedge funds, sovereign wealth funds) that invest in Indian stocks and bonds.
+
+**Why FII activity matters:**
+- 📈 FII buying (net inflow) → typically pushes markets UP
+- 📉 FII selling (net outflow) → typically pulls markets DOWN
+- They hold a significant portion (~20–25%) of Nifty 50 companies
+
+**How to track:**
+- SEBI publishes daily FII/DII data
+- Available on NSE/BSE websites and financial portals
+
+**DII (Domestic Institutional Investors):** Includes LIC, domestic mutual funds, insurance companies — often buy when FIIs sell, providing a cushion.`
+  },
+  'fpi': 'fii',
+  'foreign institutional investor': 'fii',
+
+  // DII
+  'dii': {
+    title: 'Domestic Institutional Investors (DII)',
+    answer: `**DII (Domestic Institutional Investors)** are Indian institutions that invest in the stock market — primarily mutual funds, insurance companies (LIC), and banks.
+
+**Key players:**
+- 🏦 LIC (Life Insurance Corporation) – largest DII
+- 📊 Domestic Mutual Funds (AMCs like HDFC AMC, SBI MF, etc.)
+- 🏛️ Insurance companies, Provident Funds
+
+**Why DIIs matter:**
+- When FIIs sell aggressively, DIIs often step in and buy (acts as a market stabilizer)
+- DII net buying is considered a bullish signal
+- Their buying is driven by SIP inflows from retail investors (now ~₹25,000 crore/month)`
+  },
+
+  // LTP
+  'ltp': {
+    title: 'Last Traded Price (LTP)',
+    answer: `**LTP (Last Traded Price)** is the price at which the most recent trade of a stock occurred.
+
+- During market hours: LTP changes with every trade
+- After market closes: LTP = closing price
+- LTP is different from bid/ask price — it's the actual transaction price
+
+**Tip:** To get a stock's LTP live, just ask me the stock name!`
+  },
+  'cmp': {
+    title: 'Current Market Price (CMP)',
+    answer: `**CMP (Current Market Price)** is the current live price at which a stock is trading on the exchange.
+
+- Same as LTP (Last Traded Price) during market hours
+- Used by investors to compare against their buy price
+- **CMP < Buy Price** → Unrealised loss | **CMP > Buy Price** → Unrealised profit
+
+Want me to check the CMP of a stock? Just tell me the company name!`
+  },
+
+  // AUM
+  'aum': {
+    title: 'Assets Under Management (AUM)',
+    answer: `**AUM (Assets Under Management)** is the total market value of investments managed by a mutual fund or fund house.
+
+**Why it matters:**
+- Larger AUM = more investor trust, but can also make it harder for the fund to move nimbly in small-cap stocks
+- AMFI publishes monthly AUM data for all mutual funds in India
+- As of 2025, India's mutual fund industry AUM has crossed ₹65+ lakh crore
+
+**AUM for individual funds:**
+> You can ask me the NAV and AUM of any specific mutual fund by name.`
+  },
+
+  // F&O
+  'fo': {
+    title: 'Futures and Options (F&O)',
+    answer: `**F&O (Futures & Options)** are derivative instruments — their value is derived from an underlying asset (stocks, indices).
+
+**Futures:**
+- Agreement to buy/sell an asset at a set price on a future date
+- Obligation for both buyer and seller
+
+**Options:**
+- CE (Call Option) – Right to BUY at a set price (strike price)
+- PE (Put Option) – Right to SELL at a set price
+
+**Key F&O terms:**
+| Term | Meaning |
+|------|---------|
+| Strike Price | Pre-agreed price |
+| Premium | Price paid to buy the option |
+| Expiry | Date the contract expires (weekly/monthly on NSE) |
+| OI (Open Interest) | Total outstanding contracts |
+| IV (Implied Volatility) | Market's expectation of price movement |
+
+⚠️ F&O trading is high-risk. 90%+ of retail F&O traders lose money. Not recommended without thorough knowledge.`
+  },
+  'futures and options': 'fo',
+  'derivatives': 'fo',
+
+  // ELSS
+  'elss': {
+    title: 'Equity Linked Savings Scheme (ELSS)',
+    answer: `**ELSS (Equity Linked Savings Scheme)** is a type of mutual fund that provides tax deduction under Section 80C of the Income Tax Act.
+
+**Benefits:**
+- 💰 Tax deduction up to ₹1.5 lakh under Section 80C
+- 🔒 Lock-in period of only **3 years** (shortest among 80C instruments)
+- 📈 Invests primarily in equities — potential for higher returns vs PPF, FD
+
+**Comparison with other 80C options:**
+| Instrument | Lock-in | Returns |
+|-----------|---------|---------|
+| ELSS | 3 years | Market-linked (~12% CAGR historically) |
+| PPF | 15 years | ~7.1% (fixed) |
+| NSC | 5 years | ~7.7% (fixed) |
+| Tax-saving FD | 5 years | ~6–7% (fixed) |`
+  },
+
+  // Demat
+  'demat': {
+    title: 'Demat Account',
+    answer: `**Demat Account (Dematerialised Account)** is an electronic account that holds your shares and securities in digital form — replacing physical share certificates.
+
+**How it works:**
+- You buy stocks → they are credited to your Demat account
+- You sell stocks → they are debited from your Demat account
+- Maintained by depositories: **NSDL** or **CDSL**
+
+**Required to trade:**
+1. **Demat Account** – holds securities
+2. **Trading Account** – for placing buy/sell orders on NSE/BSE
+3. **Bank Account** – for fund settlement (T+1 settlement in India)
+
+**Popular brokers:** Zerodha, Groww, Upstox, Angel One, ICICI Direct`
+  },
+
+  // Market cap
+  'mcap': {
+    title: 'Market Capitalisation (Market Cap)',
+    answer: `**Market Cap (Market Capitalisation)** is the total market value of a company's outstanding shares.
+
+**Formula:**
+> Market Cap = Current Share Price × Total Shares Outstanding
+
+**Categories in India (SEBI classification):**
+| Category | Market Cap |
+|----------|-----------|
+| Large Cap | Top 100 companies by market cap |
+| Mid Cap | 101st – 250th companies |
+| Small Cap | 251st and below |
+
+**Example:**
+> Reliance Industries: ~₹17 lakh crore market cap → India's largest company
+
+Market cap helps compare company sizes — not just share prices.`
+  },
+  'market cap': 'mcap',
+  'market capitalisation': 'mcap',
+  'market capitalization': 'mcap',
+
+  // 52W High/Low
+  '52w': {
+    title: '52-Week High & Low',
+    answer: `**52-Week High/Low** is the highest and lowest price at which a stock has traded in the past 52 weeks (1 year).
+
+**Why traders watch it:**
+- 📈 **Near 52W High** → Stock is performing strongly; breakout above it is a bullish signal
+- 📉 **Near 52W Low** → Stock is weak; breakdown below it is a bearish signal
+- Helps gauge momentum and relative strength
+
+**Tip:** Ask me any stock name and I'll fetch its live 52-week high and low!`
+  },
+  '52 week high': '52w',
+  '52 week low': '52w',
+
+  // ATH
+  'ath': {
+    title: 'All-Time High (ATH)',
+    answer: `**ATH (All-Time High)** is the highest price a stock or index has EVER reached since it started trading.
+
+- If Nifty 50 ATH is 26,277 and current level is 24,500 → market is ~7% below ATH
+- Stocks breaking ATH often attract strong momentum buying
+- ATH for an index means the overall market is at peak valuations`
+  },
+
+  // VWAP
+  'vwap': {
+    title: 'Volume Weighted Average Price (VWAP)',
+    answer: `**VWAP (Volume Weighted Average Price)** is the average price of a stock weighted by trading volume during the day.
+
+**Formula:**
+> VWAP = Σ(Price × Volume) ÷ Total Volume
+
+**How traders use it:**
+- 📊 Price above VWAP → bullish intraday trend
+- 📉 Price below VWAP → bearish intraday trend
+- Institutions often use VWAP as a benchmark for executing large orders
+- Commonly used in **intraday trading** strategies`
+  },
+
+  // SEBI
+  'sebi': {
+    title: 'SEBI (Securities and Exchange Board of India)',
+    answer: `**SEBI (Securities and Exchange Board of India)** is India's capital markets regulator — the equivalent of SEC in the USA.
+
+**Role:**
+- 🏛️ Regulates stock exchanges (NSE, BSE), brokers, mutual funds, and listed companies
+- 🔍 Investigates insider trading, market manipulation, and fraud
+- 📋 Approves IPOs, sets rules for FIIs, mutual funds, and derivatives
+- 🛡️ Protects retail investor interests
+
+**Key SEBI rules:**
+- T+1 settlement (trades settle in 1 day)
+- Insider trading prohibited
+- Mandatory quarterly results disclosure by listed companies`
+  },
+
+  // RBI
+  'rbi': {
+    title: 'Reserve Bank of India (RBI)',
+    answer: `**RBI (Reserve Bank of India)** is India's central bank — it controls monetary policy, regulates banks, and manages the currency.
+
+**Impact on stock markets:**
+- 📉 **Rate hike** (repo rate ↑) → Borrowing costs rise → negative for markets, especially rate-sensitive sectors (real estate, NBFCs, banking)
+- 📈 **Rate cut** (repo rate ↓) → Cheaper loans → positive for markets
+- RBI also manages USD/INR exchange rate and foreign exchange reserves
+
+**Key RBI tools:**
+| Tool | Purpose |
+|------|---------|
+| Repo Rate | Rate at which RBI lends to banks |
+| CRR | % of deposits banks must keep with RBI |
+| SLR | % of deposits banks must hold in govt securities |`
+  },
+
+  // NII/NIM
+  'nii': {
+    title: 'Net Interest Income (NII)',
+    answer: `**NII (Net Interest Income)** is the difference between the interest income a bank earns and the interest it pays to depositors.
+
+**Formula:**
+> NII = Interest Earned − Interest Paid
+
+**Why it matters:**
+- NII is the primary revenue metric for banks
+- Growing NII → bank is lending more profitably
+- Used alongside NIM (Net Interest Margin) to assess bank health
+
+**NIM (Net Interest Margin):**
+> NIM = NII ÷ Average Earning Assets × 100
+> Indian private banks typically have NIM of 3–5%`
+  },
+  'nim': 'nii',
+  'net interest income': 'nii',
+  'net interest margin': 'nii',
+};
+
+// Resolve alias references
+function resolveKB(key) {
+  const val = FINANCE_KB[key];
+  if (typeof val === 'string') return FINANCE_KB[val]; // alias
+  return val;
+}
+
+// Extract and normalise the last user query
+function getLastUserQuery(messages) {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i].role === 'user') return (messages[i].content || '').trim().toLowerCase();
+  }
+  return '';
+}
+
+// Check if the query is a definition/explanation question for a known KB term
+function matchKBQuery(query) {
+  // Strip common question prefixes
+  const clean = query
+    .replace(/^(what(?:'s| is| are)|explain|tell me about|define|meaning of|full form of|what does .+ mean|how does .+ work)\s+/i, '')
+    .replace(/^(the |a |an )?/, '')
+    .replace(/[\?\.!]+$/, '')
+    .trim();
+
+  // Direct match
+  if (resolveKB(clean)) return resolveKB(clean);
+
+  // Check all keys for containment
+  const keys = Object.keys(FINANCE_KB);
+  for (const key of keys) {
+    if (clean === key || clean.includes(key) || key.includes(clean)) {
+      return resolveKB(key);
+    }
+  }
+  return null;
+}
+
 app.post('/api/chat', async (req, res) => {
   const body = req.body || {};
   const rawMessages = body.messages ?? body.conversation ?? null;
@@ -1138,6 +1768,14 @@ app.post('/api/chat', async (req, res) => {
     return res.status(503).json({ error: 'AI service is unavailable', detail: 'No API keys configured' });
   }
 
+  // ── Local Knowledge Base: answer definition queries instantly ─────────────
+  const lastQuery = getLastUserQuery(messages);
+  const kbMatch = matchKBQuery(lastQuery);
+  if (kbMatch) {
+    console.log(`\n📚 KB match for "${lastQuery}" → ${kbMatch.title}`);
+    return res.json({ reply: kbMatch.answer, model: 'local-kb', provider: 'Stockbuzz Knowledge Base' });
+  }
+
   const apiMessages = [{ role: 'system', content: APP_CONTEXT }, ...messages];
   console.log(`\n📨 "${messages.at(-1)?.content?.slice(0, 60)}..."`);
 
@@ -1149,6 +1787,7 @@ app.post('/api/chat', async (req, res) => {
     res.status(500).json({ error: 'Stockbuzz AI error', detail: err.message });
   }
 });
+
 
 app.listen(PORT, () => {
   console.log(`\n✅  Stockbuzz AI Backend ready at http://localhost:${PORT}`);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Sparkles, X, Send, Plus, Paperclip, FileText, AlertCircle, ArrowRight, Image as ImageIcon } from 'lucide-react';
+import { Sparkles, X, Send, Plus, Paperclip, FileText, AlertCircle, ArrowRight, Image as ImageIcon, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
 import { mockStocks, mockFunds } from '../../data/mockData';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -20,6 +20,74 @@ export default function AIChatSidebar({ isOpen, onClose }) {
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
   const sidebarContainerRef = useRef(null);
+
+  // Voice chat state
+  const [isListening, setIsListening] = useState(false);
+  const [voiceReplyEnabled, setVoiceReplyEnabled] = useState(false);
+  const [voiceSupported, setVoiceSupported] = useState(true);
+  const recognitionRef = useRef(null);
+
+  // Set up browser speech recognition (mic -> text)
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setVoiceSupported(false);
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = 'en-IN';
+
+    recognition.onresult = (event) => {
+      let transcript = '';
+      for (let i = 0; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+      setInput(transcript);
+    };
+    recognition.onerror = () => setIsListening(false);
+    recognition.onend = () => setIsListening(false);
+
+    recognitionRef.current = recognition;
+    return () => recognition.stop();
+  }, []);
+
+  const toggleListening = () => {
+    if (!recognitionRef.current) return;
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      // Stop any ongoing speech before listening
+      window.speechSynthesis?.cancel();
+      setInput('');
+      recognitionRef.current.start();
+      setIsListening(true);
+    }
+  };
+
+  const speakText = (text) => {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    // Strip markdown syntax for cleaner speech
+    const plainText = text
+      .replace(/[#*_`>~-]/g, ' ')
+      .replace(/\[(.*?)\]\(.*?\)/g, '$1')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const utterance = new SpeechSynthesisUtterance(plainText);
+    utterance.lang = 'en-IN';
+    utterance.rate = 1;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const toggleVoiceReply = () => {
+    if (voiceReplyEnabled) {
+      window.speechSynthesis?.cancel();
+    }
+    setVoiceReplyEnabled(prev => !prev);
+  };
 
   // Automatically scroll to bottom
   useEffect(() => {
@@ -192,6 +260,7 @@ export default function AIChatSidebar({ isOpen, onClose }) {
         text: aiText,
         source: 'Stockbuzz AI · Powered by Grok xAI'
       }]);
+      if (voiceReplyEnabled) speakText(aiText);
 
     } catch (err) {
       console.error(err);
@@ -210,10 +279,18 @@ export default function AIChatSidebar({ isOpen, onClose }) {
         text: fallbackText,
         source: 'Stockbuzz AI Local Fallback'
       }]);
+      if (voiceReplyEnabled) speakText(fallbackText);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!isOpen) {
+      recognitionRef.current?.stop();
+      window.speechSynthesis?.cancel();
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -257,21 +334,39 @@ export default function AIChatSidebar({ isOpen, onClose }) {
             <Sparkles size={18} color="var(--violet)" />
             <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-1)' }}>Stockbuzz AI Assistant</span>
           </div>
-          <button 
-            onClick={onClose}
-            style={{
-              background: 'var(--bg-subtle)',
-              border: 'none',
-              cursor: 'pointer',
-              padding: '6px',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            <X size={16} color="var(--text-2)" />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <button
+              onClick={toggleVoiceReply}
+              title={voiceReplyEnabled ? 'Voice replies on — click to mute' : 'Voice replies off — click to enable'}
+              style={{
+                background: voiceReplyEnabled ? 'rgba(139, 92, 246, 0.12)' : 'var(--bg-subtle)',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '6px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              {voiceReplyEnabled ? <Volume2 size={16} color="var(--violet)" /> : <VolumeX size={16} color="var(--text-2)" />}
+            </button>
+            <button
+              onClick={onClose}
+              style={{
+                background: 'var(--bg-subtle)',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '6px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <X size={16} color="var(--text-2)" />
+            </button>
+          </div>
         </div>
 
         {/* Page Context Badge */}
@@ -501,13 +596,13 @@ export default function AIChatSidebar({ isOpen, onClose }) {
               <Plus size={20} />
             </button>
             
-            <input 
+            <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') sendContextualMessage();
               }}
-              placeholder="Ask about this page..."
+              placeholder={isListening ? 'Listening...' : 'Ask about this page...'}
               style={{
                 flex: 1,
                 border: 'none',
@@ -517,8 +612,29 @@ export default function AIChatSidebar({ isOpen, onClose }) {
                 padding: '8px 4px'
               }}
             />
-            
-            <button 
+
+            {voiceSupported && (
+              <button
+                onClick={toggleListening}
+                title={isListening ? 'Stop listening' : 'Speak your question'}
+                style={{
+                  background: isListening ? 'var(--red, #ef4444)' : 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: isListening ? 'white' : 'var(--text-3)',
+                  padding: '6px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  animation: isListening ? 'pulse 1s infinite' : 'none'
+                }}
+              >
+                {isListening ? <MicOff size={16} /> : <Mic size={16} />}
+              </button>
+            )}
+
+            <button
               onClick={() => sendContextualMessage()}
               disabled={!input.trim() && !selectedFile}
               style={{
