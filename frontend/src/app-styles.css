@@ -723,7 +723,7 @@ html.dark .chat-shimmer {
   background: #FFFFFF;
 }
 html.dark .chat-page-bg {
-  background: #212121;
+  background: #030712; /* matches navbar's gray-950 */
 }
 
 .ai-reply-card {
@@ -732,9 +732,9 @@ html.dark .chat-page-bg {
   box-shadow: 0 1px 2px rgba(15,23,42,0.04), 0 4px 14px rgba(139,92,246,0.08);
 }
 html.dark .ai-reply-card {
-  background: linear-gradient(180deg, rgba(139,92,246,0.07) 0%, rgba(30,27,46,0.9) 100%);
-  border: 1px solid rgba(139,92,246,0.22);
-  box-shadow: 0 1px 2px rgba(0,0,0,0.2), 0 4px 14px rgba(139,92,246,0.06);
+  background: #111827; /* gray-900, matches sidebar/navbar family */
+  border: 1px solid rgba(139,92,246,0.14);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.3), 0 4px 14px rgba(0,0,0,0.25);
 }
 
 .chat-input-bar {
@@ -747,13 +747,13 @@ html.dark .ai-reply-card {
   box-shadow: 0 4px 16px rgba(139,92,246,0.16);
 }
 html.dark .chat-input-bar {
-  background: rgba(30,27,46,0.6);
-  border: 1.5px solid rgba(139,92,246,0.25);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  background: #111827; /* gray-900, matches sidebar/navbar family */
+  border: 1.5px solid rgba(139,92,246,0.16);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
 }
 html.dark .chat-input-bar:focus-within {
-  border-color: rgba(139,92,246,0.55);
-  box-shadow: 0 4px 16px rgba(139,92,246,0.18);
+  border-color: rgba(139,92,246,0.45);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
 }
 
 /* ---- AI PANEL (Sidebar) ---- */

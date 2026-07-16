@@ -917,6 +917,106 @@
       ],
       "createdAt": "2026-07-16T10:22:40.956Z",
       "updatedAt": "2026-07-16T10:22:42.533Z"
+    },
+    "1784197510841": {
+      "id": "1784197510841",
+      "title": "How is Nifty 50 doing today?",
+      "messages": [
+        {
+          "id": 1784197510835,
+          "type": "user",
+          "text": "How is Nifty 50 doing today?",
+          "file": null
+        },
+        {
+          "id": 1784197512237,
+          "type": "ai",
+          "text": "The Nifty 50 is currently at 24,072.75, with a change of -5.75 points, representing a -0.02% change. The day's high and low are 24,186.5 and 24,050, respectively.",
+          "source": "Stockbuzz AI"
+        }
+      ],
+      "createdAt": "2026-07-16T10:25:10.841Z",
+      "updatedAt": "2026-07-16T10:25:12.272Z"
+    },
+    "1784197598728": {
+      "id": "1784197598728",
+      "title": "What is the P/E ratio and why ...",
+      "messages": [
+        {
+          "id": 1784197598719,
+          "type": "user",
+          "text": "What is the P/E ratio and why does it matter?",
+          "file": null
+        },
+        {
+          "id": 1784197598764,
+          "type": "ai",
+          "text": "**P/E Ratio (Price-to-Earnings)** tells you how much investors are paying for every ₹1 of a company's earnings.\n\n**Formula:**\n> P/E = Current Stock Price ÷ Earnings Per Share (EPS)\n\n**What it means:**\n- 📊 **Low P/E (< 15)** – Stock may be undervalued or the company is growing slowly\n- 📈 **High P/E (> 30)** – Investors expect strong future growth (common in IT stocks)\n- ⚠️ **Negative P/E** – Company is making a loss\n\n**Indian market context:**\n- Nifty 50 average P/E is typically between 20–25\n- FMCG, IT companies often trade at higher P/E (25–40)\n- PSU banks, commodity stocks often trade at lower P/E (8–15)\n\n**Note:** \"PE\" can also mean **Put Option** in F&O trading. Context determines which meaning applies.\n\nWant me to fetch the live P/E ratio of a specific stock?",
+          "source": "Stockbuzz AI"
+        }
+      ],
+      "createdAt": "2026-07-16T10:26:38.728Z",
+      "updatedAt": "2026-07-16T10:26:38.802Z"
+    },
+    "1784197750514": {
+      "id": "1784197750514",
+      "title": "Explain SIP vs lump sum invest...",
+      "messages": [
+        {
+          "id": 1784197750506,
+          "type": "user",
+          "text": "Explain SIP vs lump sum investing",
+          "file": null
+        },
+        {
+          "id": 1784197750533,
+          "type": "ai",
+          "text": "**SIP (Systematic Investment Plan)** is a method of investing a fixed amount in a mutual fund at regular intervals (monthly, weekly, etc.) rather than investing a lump sum.\n\n**How it works:**\n1. You choose a mutual fund and a fixed amount (e.g., ₹5,000/month)\n2. Every month, the amount is auto-debited and units are purchased at the current NAV\n3. Over time, you accumulate units at different prices (rupee cost averaging)\n\n**Benefits:**\n- ✅ No need to time the market\n- ✅ Builds disciplined saving habits\n- ✅ Even small amounts (₹500/month) can compound into wealth over 10–20 years\n- ✅ Rupee cost averaging reduces market risk\n\n**Example:**\n> ₹10,000/month SIP for 20 years at 12% CAGR = **~₹99 lakh corpus** from just ₹24 lakh invested",
+          "source": "Stockbuzz AI"
+        }
+      ],
+      "createdAt": "2026-07-16T10:29:10.514Z",
+      "updatedAt": "2026-07-16T10:29:10.550Z"
+    },
+    "1784197768993": {
+      "id": "1784197768993",
+      "title": "What is YTM in mutual funds",
+      "messages": [
+        {
+          "id": 1784197768970,
+          "type": "user",
+          "text": "What is YTM in mutual funds",
+          "file": null
+        },
+        {
+          "id": 1784197769979,
+          "type": "ai",
+          "text": "YTM stands for Yield to Maturity. In the context of mutual funds, particularly debt mutual funds, YTM refers to the expected rate of return an investor can earn from a bond or a debt instrument if it is held until its maturity date.\n\nIn simpler terms, YTM is the total return anticipated on a bond or debt instrument, assuming it is held until maturity, and includes:\n\n1. Interest income (coupon payments)\n2. Capital gains or losses (if the bond is purchased at a discount or premium)\n\nFor debt mutual funds, YTM is an important metric as it helps investors understand the potential returns from the fund's underlying debt instruments. A higher YTM typically indicates a higher potential return, but it also comes with higher credit risk and interest rate risk.\n\nHere's a key point to note: YTM is not the same as the fund's NAV (Net Asset Value) return or dividend yield. While YTM focuses on the expected return from the underlying debt instruments, NAV return and dividend yield are based on the fund's actual market price and dividend distributions.\n\nWhen evaluating debt mutual funds, investors should consider YTM along with other factors such as:\n\n* Credit quality of the underlying bonds\n* Interest rate risk\n* Liquidity\n* Fund manager's track record\n\nKeep in mind that YTM is not a guaranteed return, and actual returns may vary based on market conditions and fund performance.",
+          "source": "Stockbuzz AI"
+        }
+      ],
+      "createdAt": "2026-07-16T10:29:28.993Z",
+      "updatedAt": "2026-07-16T10:29:29.987Z"
+    },
+    "1784198016350": {
+      "id": "1784198016350",
+      "title": "How is Nifty 50 doing today?",
+      "messages": [
+        {
+          "id": 1784198016326,
+          "type": "user",
+          "text": "How is Nifty 50 doing today?",
+          "file": null
+        },
+        {
+          "id": 1784198017557,
+          "type": "ai",
+          "text": "The Nifty 50 is currently at 24,072.75, with a change of -5.75 points, representing a -0.02% change. The day's high and low are 24,186.5 and 24,050, respectively.",
+          "source": "Stockbuzz AI"
+        }
+      ],
+      "createdAt": "2026-07-16T10:33:36.350Z",
+      "updatedAt": "2026-07-16T10:33:37.579Z"
     }
   },
   "watchlist": [],

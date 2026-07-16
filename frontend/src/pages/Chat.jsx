@@ -386,7 +386,7 @@ export default function Chat() {
     <div className="chat-page-bg fixed top-[102px] bottom-0 left-0 right-0 flex z-50">
       {/* Sidebar for Chat History */}
       {sidebarOpen ? (
-        <div className="w-[280px] bg-gray-50 dark:bg-[#171717] border-r border-gray-200 dark:border-gray-800 flex flex-col h-full flex-shrink-0">
+        <div className="w-[280px] bg-gray-50 dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 flex flex-col h-full flex-shrink-0">
           <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
             <button
               onClick={createNewChat}
@@ -430,7 +430,7 @@ export default function Chat() {
           </div>
         </div>
       ) : (
-        <div className="w-[56px] bg-gray-50 dark:bg-[#171717] border-r border-gray-200 dark:border-gray-800 flex flex-col items-center h-full flex-shrink-0 py-4 gap-3">
+        <div className="w-[56px] bg-gray-50 dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 flex flex-col items-center h-full flex-shrink-0 py-4 gap-3">
           <button
             onClick={() => setSidebarOpen(true)}
             className="p-2.5 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
