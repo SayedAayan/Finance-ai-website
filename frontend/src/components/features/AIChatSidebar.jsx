@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Sparkles, X, Send, Plus, Paperclip, FileText, AlertCircle, ArrowRight, Image as ImageIcon, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
+import { Sparkles, X, Send, Plus, Paperclip, FileText, AlertCircle, ArrowRight, Image as ImageIcon, Mic, MicOff, Volume2, VolumeX, Maximize2, Minimize2 } from 'lucide-react';
 import { mockStocks, mockFunds } from '../../data/mockData';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -13,6 +13,7 @@ export default function AIChatSidebar({ isOpen, onClose }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   
   // File Upload State
   const [selectedFile, setSelectedFile] = useState(null);
@@ -310,7 +311,7 @@ export default function AIChatSidebar({ isOpen, onClose }) {
     }} onClick={onClose}>
       
       <div className="ai-sidebar" style={{
-        width: '420px',
+        width: isFullscreen ? '100vw' : '420px',
         maxWidth: '100%',
         height: '100%',
         background: 'var(--bg-card)',
@@ -318,6 +319,7 @@ export default function AIChatSidebar({ isOpen, onClose }) {
         display: 'flex',
         flexDirection: 'column',
         animation: 'slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+        transition: 'width 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
         overflow: 'hidden'
       }} onClick={(e) => e.stopPropagation()}>
         
@@ -335,6 +337,22 @@ export default function AIChatSidebar({ isOpen, onClose }) {
             <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-1)' }}>Stockbuzz AI Assistant</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <button
+              onClick={() => setIsFullscreen(!isFullscreen)}
+              title={isFullscreen ? 'Exit full screen' : 'Full screen'}
+              style={{
+                background: 'var(--bg-subtle)',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '6px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              {isFullscreen ? <Minimize2 size={16} color="var(--text-2)" /> : <Maximize2 size={16} color="var(--text-2)" />}
+            </button>
             <button
               onClick={toggleVoiceReply}
               title={voiceReplyEnabled ? 'Voice replies on — click to mute' : 'Voice replies off — click to enable'}
@@ -596,11 +614,14 @@ export default function AIChatSidebar({ isOpen, onClose }) {
               <Plus size={20} />
             </button>
             
-            <input
+            <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') sendContextualMessage();
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  sendContextualMessage();
+                }
               }}
               placeholder={isListening ? 'Listening...' : 'Ask about this page...'}
               style={{
@@ -609,8 +630,12 @@ export default function AIChatSidebar({ isOpen, onClose }) {
                 background: 'none',
                 outline: 'none',
                 fontSize: '0.85rem',
-                padding: '8px 4px'
+                padding: '8px 4px',
+                resize: 'none',
+                minHeight: '32px',
+                maxHeight: '120px'
               }}
+              rows={1}
             />
 
             {voiceSupported && (

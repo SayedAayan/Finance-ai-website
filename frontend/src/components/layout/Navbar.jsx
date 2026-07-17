@@ -210,8 +210,8 @@ export default function Navbar({ onToggleAIChat }) {
                 key={item.path}
                 to={item.path}
                 className={`px-3.5 py-2 rounded-full text-[0.87rem] font-medium transition-all duration-200 ${active(item.path)
-                    ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
-                    : 'text-textMuted dark:text-gray-400 hover:text-textMain dark:hover:text-gray-100 hover:bg-gray-100/50 dark:hover:bg-gray-800/50'
+                  ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                  : 'text-textMuted dark:text-gray-400 hover:text-textMain dark:hover:text-gray-100 hover:bg-gray-100/50 dark:hover:bg-gray-800/50'
                   }`}
               >
                 {item.label}
@@ -223,8 +223,8 @@ export default function Navbar({ onToggleAIChat }) {
               <button
                 onClick={() => setShowOthers(!showOthers)}
                 className={`flex items-center gap-1 px-3.5 py-2 rounded-full text-[0.87rem] font-medium transition-all duration-200 ${isOtherActive
-                    ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
-                    : 'text-textMuted dark:text-gray-400 hover:text-textMain dark:hover:text-gray-100 hover:bg-gray-100/50 dark:hover:bg-gray-800/50'
+                  ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                  : 'text-textMuted dark:text-gray-400 hover:text-textMain dark:hover:text-gray-100 hover:bg-gray-100/50 dark:hover:bg-gray-800/50'
                   }`}
               >
                 Others
@@ -245,8 +245,8 @@ export default function Navbar({ onToggleAIChat }) {
                         key={item.path}
                         to={item.path}
                         className={`block px-4 py-2.5 rounded-xl text-[0.88rem] font-medium transition-colors ${active(item.path)
-                            ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
-                            : 'text-textMuted dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-textMain dark:hover:text-gray-100'
+                          ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                          : 'text-textMuted dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-textMain dark:hover:text-gray-100'
                           }`}
                       >
                         {item.label}
@@ -341,8 +341,8 @@ export default function Navbar({ onToggleAIChat }) {
                         key={code}
                         onClick={() => { setCurrency(code); setShowCurrency(false); }}
                         className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-[0.88rem] font-medium transition-colors text-left ${currency === code
-                            ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
-                            : 'text-textMuted dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-textMain dark:hover:text-gray-100'
+                          ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                          : 'text-textMuted dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-textMain dark:hover:text-gray-100'
                           }`}
                       >
                         <span>{info.symbol} {code}</span>
@@ -363,14 +363,15 @@ export default function Navbar({ onToggleAIChat }) {
               {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
             </button>
 
-            {/* Settings */}
-            <Link
-              to="/settings"
-              className="flex items-center justify-center w-[38px] h-[38px] rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-textMuted dark:text-gray-400 hover:text-textMain dark:hover:text-gray-100"
-              title="Settings"
+
+
+            {/* Ask AI Button */}
+            <button
+              onClick={onToggleAIChat}
+              className="flex items-center justify-center whitespace-nowrap bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white px-3.5 h-[38px] rounded-full font-semibold text-[0.82rem] shadow-md hover:shadow-lg transition-all duration-300"
             >
-              <SettingsIcon size={18} />
-            </Link>
+              Ask AI
+            </button>
 
             {/* Auth: Sign In button or user avatar menu */}
             {currentUser ? (
@@ -394,6 +395,11 @@ export default function Navbar({ onToggleAIChat }) {
                         <div className="text-sm font-semibold text-textMain dark:text-gray-100 truncate">{currentUser.displayName || 'Stockbuzz User'}</div>
                         <div className="text-xs text-textMuted dark:text-gray-500 truncate">{currentUser.email || currentUser.phoneNumber}</div>
                       </div>
+                      {currentUser.isSuperadmin && (
+                        <Link to="/superadmin" onClick={() => setShowUserMenu(false)} className="block px-3 py-2 rounded-lg text-sm text-violet-600 dark:text-violet-400 font-semibold hover:bg-violet-50 dark:hover:bg-violet-500/10">
+                          Superadmin Panel
+                        </Link>
+                      )}
                       <Link to="/settings" onClick={() => setShowUserMenu(false)} className="block px-3 py-2 rounded-lg text-sm text-textMain dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
                         Settings
                       </Link>
@@ -415,14 +421,6 @@ export default function Navbar({ onToggleAIChat }) {
                 Sign in
               </Link>
             )}
-
-            {/* Ask AI Button */}
-            <button
-              onClick={onToggleAIChat}
-              className="flex items-center justify-center whitespace-nowrap bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white px-3.5 h-[38px] rounded-full font-semibold text-[0.82rem] shadow-md hover:shadow-lg transition-all duration-300"
-            >
-              Ask AI
-            </button>
 
           </div>
         </div>

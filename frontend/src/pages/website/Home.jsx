@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef } from "react";
 import { Sparkles, Send, ArrowRight, BookOpen, TrendingUp, BarChart2, Plus, ArrowUpRight, TrendingDown, Activity, Newspaper, Landmark, Mic } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { mockStocks, mockNews } from '../data/mockData';
-import MarketGraphPanel from '../components/features/MarketGraphPanel';
-import { useCurrency } from '../context/CurrencyContext';
+import { mockStocks, mockNews } from '../../data/mockData';
+import MarketGraphPanel from '../../components/features/MarketGraphPanel';
+import { useCurrency } from '../../context/CurrencyContext';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '/api/chat';
 
@@ -82,6 +82,16 @@ export default function Home({ onOpenAIChat }) {
   const { formatPrice } = useCurrency();
   const [featuredNews, setFeaturedNews] = useState(null);
   const [trending, setTrending] = useState([]);
+  const [cmsConfig, setCmsConfig] = useState(null);
+
+  useEffect(() => {
+    fetch('/api/cms')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.pages) setCmsConfig(data);
+      })
+      .catch(err => console.error('Failed to load CMS config', err));
+  }, []);
 
   useEffect(() => {
     return () => { recognitionRef.current?.stop(); };
@@ -233,8 +243,12 @@ export default function Home({ onOpenAIChat }) {
               <div className="inline-flex items-center justify-center w-[44px] h-[44px] rounded-[14px] bg-white dark:bg-gray-900 shadow-md shadow-blue-500/10 mb-4 border border-gray-100 dark:border-gray-800">
                 <img src="/favicon.png" alt="Stockbuzz" className="w-[26px] h-[26px] object-contain" />
               </div>
-              <h1 className="text-[32px] md:text-[42px] font-bold text-textMain dark:text-gray-100 tracking-tight mb-3 leading-tight font-sans">What do you want to research?</h1>
-              <p className="text-[17px] leading-[1.5] text-gray-500 dark:text-gray-400 max-w-[700px] mx-auto">Stockbuzz AI helps you analyze stocks, mutual funds, and market trends with real-time data and smart insights.</p>
+              <h1 className="text-[32px] md:text-[42px] font-bold text-textMain dark:text-gray-100 tracking-tight mb-3 leading-tight font-sans">
+                {cmsConfig?.pages?.home?.content?.heroTitle || "What do you want to research?"}
+              </h1>
+              <p className="text-[17px] leading-[1.5] text-gray-500 dark:text-gray-400 max-w-[700px] mx-auto">
+                {cmsConfig?.pages?.home?.content?.heroSubtitle || "Stockbuzz AI helps you analyze stocks, mutual funds, and market trends with real-time data and smart insights."}
+              </p>
             </motion.div>
 
             <motion.div variants={itemVariants} className="w-full max-w-[900px] mb-5 relative">
@@ -264,110 +278,116 @@ export default function Home({ onOpenAIChat }) {
               </div>
             </motion.div>
 
-            <motion.div variants={itemVariants} className="w-full max-w-[1200px] bg-white dark:bg-gray-900 rounded-[20px] p-[18px] shadow-sm border border-gray-100 dark:border-gray-800 mb-6 mx-auto flex items-center justify-between">
-              <div className="w-[160px] pl-2"><h3 className="font-bold text-textMain dark:text-gray-100 text-lg leading-tight">Market<br />Snapshot</h3></div>
-              <div className="flex-1 flex justify-between items-center px-8">
-                {marketIndices.map((idx, i) => (
-                  <div key={i} className="flex flex-col w-[140px]">
-                    <span className="text-[11px] font-bold text-textMuted dark:text-gray-400 uppercase tracking-wider mb-1">{idx.name}</span>
-                    <span className="text-[17px] font-extrabold text-textMain dark:text-gray-100 mb-1">{idx.value}</span>
-                    <span className={`text-[11px] font-bold ${idx.trend === 'up' ? 'text-success' : 'text-danger'} flex items-center gap-1`}>{idx.change} ({idx.percent}) {idx.trend === 'up' ? <ArrowUpRight size={12} /> : <TrendingDown size={12} />}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="w-[140px] flex justify-end pr-2"><button onClick={() => navigate('/markets')} className="px-5 py-2.5 rounded-full border border-gray-200 dark:border-gray-800 text-primary dark:text-blue-400 text-sm font-semibold hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors">View Markets</button></div>
-            </motion.div>
+            {cmsConfig?.pages?.home?.features?.showMarketSnapshot && (
+              <motion.div variants={itemVariants} className="w-full max-w-[1200px] bg-white dark:bg-gray-900 rounded-[20px] p-[18px] shadow-sm border border-gray-100 dark:border-gray-800 mb-6 mx-auto flex items-center justify-between">
+                <div className="w-[160px] pl-2"><h3 className="font-bold text-textMain dark:text-gray-100 text-lg leading-tight">Market<br />Snapshot</h3></div>
+                <div className="flex-1 flex justify-between items-center px-8">
+                  {marketIndices.map((idx, i) => (
+                    <div key={i} className="flex flex-col w-[140px]">
+                      <span className="text-[11px] font-bold text-textMuted dark:text-gray-400 uppercase tracking-wider mb-1">{idx.name}</span>
+                      <span className="text-[17px] font-extrabold text-textMain dark:text-gray-100 mb-1">{idx.value}</span>
+                      <span className={`text-[11px] font-bold ${idx.trend === 'up' ? 'text-success' : 'text-danger'} flex items-center gap-1`}>{idx.change} ({idx.percent}) {idx.trend === 'up' ? <ArrowUpRight size={12} /> : <TrendingDown size={12} />}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="w-[140px] flex justify-end pr-2"><button onClick={() => navigate('/markets')} className="px-5 py-2.5 rounded-full border border-gray-200 dark:border-gray-800 text-primary dark:text-blue-400 text-sm font-semibold hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors">View Markets</button></div>
+              </motion.div>
+            )}
 
             <motion.div variants={itemVariants} className="w-full max-w-[1200px] grid grid-cols-1 xl:grid-cols-3 gap-[24px] mb-12">
-              <div className="bg-white dark:bg-gray-900 rounded-[22px] p-[24px] h-[290px] shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-md transition-all duration-300 flex flex-col justify-center">
-                <div className="flex justify-between items-center mb-5">
-                  <h3 className="font-bold text-textMain dark:text-gray-100 flex items-center gap-2"><span className="text-xl">🔥</span> Trending Stocks</h3>
-                  <button onClick={() => navigate('/markets')} className="text-primary dark:text-blue-400 text-xs font-bold bg-blue-50 dark:bg-blue-500/10 px-3 py-1 rounded-full hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors">View all</button>
-                </div>
-                <div className="flex flex-col gap-4">
-                  {stocks.slice(0, 3).map(stock => {
-                    return (
-                      <div key={stock.id} className="flex items-center justify-between p-2 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors group">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <CompanyLogo ticker={stock.ticker} size={40} />
-                          <div className="min-w-0">
-                            <div className="font-semibold text-textMain truncate text-[13px]">{stock.name}</div>
-                            <div className="text-[12px] text-textMuted truncate">{stock.ticker}</div>
+              {cmsConfig?.pages?.home?.features?.showTrendingStocks && (
+                <div className="bg-white dark:bg-gray-900 rounded-[22px] p-[24px] h-[290px] shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-md transition-all duration-300 flex flex-col justify-center">
+                  <div className="flex justify-between items-center mb-5">
+                    <h3 className="font-bold text-textMain dark:text-gray-100 flex items-center gap-2"><span className="text-xl">🔥</span> Trending Stocks</h3>
+                    <button onClick={() => navigate('/markets')} className="text-primary dark:text-blue-400 text-xs font-bold bg-blue-50 dark:bg-blue-500/10 px-3 py-1 rounded-full hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors">View all</button>
+                  </div>
+                  <div className="flex flex-col gap-4">
+                    {stocks.slice(0, 3).map(stock => {
+                      return (
+                        <div key={stock.id} className="flex items-center justify-between p-2 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors group">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <CompanyLogo ticker={stock.ticker} size={40} />
+                            <div className="min-w-0">
+                              <div className="font-semibold text-textMain truncate text-[13px]">{stock.name}</div>
+                              <div className="text-[12px] text-textMuted truncate">{stock.ticker}</div>
+                            </div>
+                          </div>
+                          <div className="text-right flex-shrink-0 ml-2">
+                            <div className="font-bold text-textMain text-[13px]">{formatPrice(stock.price)}</div>
+                            <div className={`text-[12px] font-semibold ${stock.changePercent >= 0 ? 'text-success' : 'text-danger'}`}>{stock.changePercent >= 0 ? '+' : ''}{stock.changePercent}%</div>
                           </div>
                         </div>
-                        <div className="text-right flex-shrink-0 ml-2">
-                          <div className="font-bold text-textMain text-[13px]">{formatPrice(stock.price)}</div>
-                          <div className={`text-[12px] font-semibold ${stock.changePercent >= 0 ? 'text-success' : 'text-danger'}`}>{stock.changePercent >= 0 ? '+' : ''}{stock.changePercent}%</div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="bg-white dark:bg-gray-900 rounded-[22px] p-[24px] h-[290px] shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-md transition-all duration-300 flex flex-col justify-center">
-                <div className="flex justify-between items-center mb-5">
-                  <h3 className="font-bold text-textMain flex items-center gap-2"><TrendingUp size={18} className="text-gray-400 dark:text-gray-500" /> Market Movers</h3>
-                  <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-full">
-                    <button onClick={() => setMarketMoverTab('gainers')} className={`px-4 text-[11px] font-bold py-1.5 rounded-full transition-all ${marketMoverTab === 'gainers' ? 'bg-white dark:bg-gray-700 text-primary dark:text-blue-400 shadow-sm' : 'text-textMuted hover:text-textMain dark:hover:text-gray-100'}`}>Top Gainers</button>
-                    <button onClick={() => setMarketMoverTab('losers')} className={`px-4 text-[11px] font-bold py-1.5 rounded-full transition-all ${marketMoverTab === 'losers' ? 'bg-white dark:bg-gray-700 text-textMain dark:text-gray-100 shadow-sm' : 'text-textMuted hover:text-textMain dark:hover:text-gray-100'}`}>Top Losers</button>
+                      );
+                    })}
                   </div>
                 </div>
-                <div className="flex flex-col gap-3">
-                  {marketMovers.map(stock => {
-                    return (
-                      <div key={stock.id} className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-all hover:scale-[1.02]">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <CompanyLogo ticker={stock.ticker} size={32} />
-                          <div className="min-w-0">
-                            <div className="font-semibold text-textMain truncate text-[13px]">{stock.name}</div>
-                            <div className="text-[12px] text-textMuted truncate">{stock.ticker}</div>
+              )}
+
+              {cmsConfig?.pages?.home?.features?.showMarketMovers && (
+                <div className="bg-white dark:bg-gray-900 rounded-[22px] p-[24px] h-[290px] shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-md transition-all duration-300 flex flex-col justify-center">
+                  <div className="flex justify-between items-center mb-5">
+                    <h3 className="font-bold text-textMain flex items-center gap-2"><TrendingUp size={18} className="text-gray-400 dark:text-gray-500" /> Market Movers</h3>
+                    <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-full">
+                      <button onClick={() => setMarketMoverTab('gainers')} className={`px-4 text-[11px] font-bold py-1.5 rounded-full transition-all ${marketMoverTab === 'gainers' ? 'bg-white dark:bg-gray-700 text-primary dark:text-blue-400 shadow-sm' : 'text-textMuted hover:text-textMain dark:hover:text-gray-100'}`}>Top Gainers</button>
+                      <button onClick={() => setMarketMoverTab('losers')} className={`px-4 text-[11px] font-bold py-1.5 rounded-full transition-all ${marketMoverTab === 'losers' ? 'bg-white dark:bg-gray-700 text-textMain dark:text-gray-100 shadow-sm' : 'text-textMuted hover:text-textMain dark:hover:text-gray-100'}`}>Top Losers</button>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-3">
+                    {marketMovers.map(stock => {
+                      return (
+                        <div key={stock.id} className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-all hover:scale-[1.02]">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <CompanyLogo ticker={stock.ticker} size={32} />
+                            <div className="min-w-0">
+                              <div className="font-semibold text-textMain truncate text-[13px]">{stock.name}</div>
+                              <div className="text-[12px] text-textMuted truncate">{stock.ticker}</div>
+                            </div>
+                          </div>
+                          <div className="text-right flex-shrink-0 ml-2">
+                            <div className="font-semibold text-textMain text-[13px]">{formatPrice(stock.price)}</div>
+                            <div className={`text-[12px] font-semibold ${stock.changePercent >= 0 ? 'text-success' : 'text-danger'}`}>{stock.changePercent >= 0 ? '+' : ''}{stock.changePercent}%</div>
                           </div>
                         </div>
-                        <div className="text-right flex-shrink-0 ml-2">
-                          <div className="font-semibold text-textMain text-[13px]">{formatPrice(stock.price)}</div>
-                          <div className={`text-[12px] font-semibold ${stock.changePercent >= 0 ? 'text-success' : 'text-danger'}`}>{stock.changePercent >= 0 ? '+' : ''}{stock.changePercent}%</div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Market Pulse – auto-scrolling news widget */}
-              <div className="bg-white dark:bg-gray-900 rounded-[22px] p-[24px] h-[290px] shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-md transition-all duration-300 flex flex-col">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-textMain dark:text-gray-100 flex items-center gap-2"><Newspaper size={18} className="text-gray-400 dark:text-gray-500" /> Market Pulse</h3>
-                  <button onClick={() => navigate('/news')} className="text-primary dark:text-blue-400 text-xs font-bold bg-blue-50 dark:bg-blue-500/10 px-3 py-1 rounded-full">View all</button>
-                </div>
-                <div className="relative overflow-hidden flex-1 [mask-image:linear-gradient(to_bottom,transparent,black_12px,black_calc(100%-12px),transparent)]">
-                  <div className="flex flex-col gap-2.5 animate-[news-scroll_18s_linear_infinite] hover:[animation-play-state:paused]">
-                    {[...mockNews, ...mockNews].map((article, i) => (
-                      <div
-                        key={`${article.id}-${i}`}
-                        onClick={() => navigate('/news')}
-                        className="bg-gray-50 dark:bg-gray-800/60 rounded-[14px] p-3 border border-gray-100 dark:border-gray-800 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-all group shrink-0"
-                      >
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${article.sentiment === 'positive' ? 'bg-green-100 dark:bg-green-500/10 text-success' : article.sentiment === 'negative' ? 'bg-red-100 dark:bg-red-500/10 text-danger' : 'bg-gray-100 dark:bg-gray-800 text-textMuted dark:text-gray-400'}`}>
-                            {article.sentiment === 'positive' && <TrendingUp size={10} className="inline mr-0.5 -mt-0.5" />}
-                            {article.sentiment === 'negative' && <TrendingDown size={10} className="inline mr-0.5 -mt-0.5" />}
-                            {article.source}
-                          </span>
-                          <span className="text-[11px] text-textMuted dark:text-gray-500">{article.time}</span>
-                        </div>
-                        <p className="text-[12.5px] font-semibold text-textMain dark:text-gray-100 leading-snug line-clamp-2 group-hover:text-primary dark:group-hover:text-blue-400 transition-colors">
-                          {article.title}
-                        </p>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
-              </div>
+              )}
+
+              {cmsConfig?.pages?.home?.features?.showMarketPulse && (
+                <div className="bg-white dark:bg-gray-900 rounded-[22px] p-[24px] h-[290px] shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-md transition-all duration-300 flex flex-col">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-bold text-textMain dark:text-gray-100 flex items-center gap-2"><Newspaper size={18} className="text-gray-400 dark:text-gray-500" /> Market Pulse</h3>
+                    <button onClick={() => navigate('/news')} className="text-primary dark:text-blue-400 text-xs font-bold bg-blue-50 dark:bg-blue-500/10 px-3 py-1 rounded-full">View all</button>
+                  </div>
+                  <div className="relative overflow-hidden flex-1 [mask-image:linear-gradient(to_bottom,transparent,black_12px,black_calc(100%-12px),transparent)]">
+                    <div className="flex flex-col gap-2.5 animate-[news-scroll_18s_linear_infinite] hover:[animation-play-state:paused]">
+                      {[...mockNews, ...mockNews].map((article, i) => (
+                        <div
+                          key={`${article.id}-${i}`}
+                          onClick={() => navigate('/news')}
+                          className="bg-gray-50 dark:bg-gray-800/60 rounded-[14px] p-3 border border-gray-100 dark:border-gray-800 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-all group shrink-0"
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${article.sentiment === 'positive' ? 'bg-green-100 dark:bg-green-500/10 text-success' : article.sentiment === 'negative' ? 'bg-red-100 dark:bg-red-500/10 text-danger' : 'bg-gray-100 dark:bg-gray-800 text-textMuted dark:text-gray-400'}`}>
+                              {article.sentiment === 'positive' && <TrendingUp size={10} className="inline mr-0.5 -mt-0.5" />}
+                              {article.sentiment === 'negative' && <TrendingDown size={10} className="inline mr-0.5 -mt-0.5" />}
+                              {article.source}
+                            </span>
+                            <span className="text-[11px] text-textMuted dark:text-gray-500">{article.time}</span>
+                          </div>
+                          <p className="text-[12.5px] font-semibold text-textMain dark:text-gray-100 leading-snug line-clamp-2 group-hover:text-primary dark:group-hover:text-blue-400 transition-colors">
+                            {article.title}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </motion.div>
 
-            {/* Featured News Banner – below the widgets */}
-            {featuredNews && (
+            {cmsConfig?.pages?.home?.features?.showFeaturedNews && featuredNews && (
               <motion.div variants={itemVariants} className="w-full max-w-[1200px] mb-6">
                 <div
                   className="bg-white dark:bg-gray-900 rounded-[22px] shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden cursor-pointer hover:shadow-md transition-all duration-300"

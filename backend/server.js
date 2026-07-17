@@ -20,7 +20,8 @@ const AI_PROVIDERS = [
   { name: 'Groq', url: 'https://api.groq.com/openai/v1/chat/completions', key: process.env.GROQ_API_KEY, model: 'meta-llama/llama-4-scout-17b-16e-instruct' },
   { name: 'OpenRouter', url: 'https://openrouter.ai/api/v1/chat/completions', key: process.env.OPENROUTER_API_KEY, model: 'google/gemini-2.5-pro' },
   { name: 'xAI', url: 'https://api.x.ai/v1/chat/completions', key: process.env.XAI_API_KEY, model: 'grok-4-fast-non-reasoning' },
-  { name: 'DeepSeek', url: 'https://api.deepseek.com/chat/completions', key: process.env.DEEPSEEK_API_KEY, model: 'deepseek-chat' }
+  { name: 'DeepSeek', url: 'https://api.deepseek.com/chat/completions', key: process.env.DEEPSEEK_API_KEY, model: 'deepseek-chat' },
+  { name: 'OpenAI', url: 'https://api.openai.com/v1/chat/completions', key: process.env.OPENAI_API_KEY, model: 'gpt-4o' }
 ].filter(p => p.key);
 
 // ─── Yahoo Finance v8 chart API ───────────────────────────────────────────────
@@ -269,17 +270,44 @@ async function getTopNews() {
   const isStale = Date.now() - newsCache.fetchedAt > NEWS_CACHE_MS;
   if (!isStale && newsCache.articles.length > 0) return newsCache;
 
-  let articles;
-  try {
-    articles = await getNewsFromNewsApi();
-    console.log(`  📰 News refreshed via NewsAPI: ${articles.length} articles`);
-  } catch (err) {
-    console.log(`  ⚠ NewsAPI failed (${err.message}), falling back to Google News RSS`);
-    articles = await getNewsFromGoogleRss();
-    console.log(`  📰 News refreshed via Google RSS: ${articles.length} articles`);
+  let allArticles = [];
+
+  // Fetch from both sources in parallel
+  const [newsApiResult, googleRssResult] = await Promise.allSettled([
+    getNewsFromNewsApi(),
+    getNewsFromGoogleRss()
+  ]);
+
+  if (newsApiResult.status === 'fulfilled') {
+    allArticles.push(...newsApiResult.value);
+    console.log(`  📰 News refreshed via NewsAPI: ${newsApiResult.value.length} articles`);
+  } else {
+    console.log(`  ⚠ NewsAPI failed (${newsApiResult.reason.message})`);
   }
 
-  newsCache = { fetchedAt: Date.now(), articles };
+  if (googleRssResult.status === 'fulfilled') {
+    allArticles.push(...googleRssResult.value);
+    console.log(`  📰 News refreshed via Google RSS: ${googleRssResult.value.length} articles`);
+  } else {
+    console.log(`  ⚠ Google RSS failed (${googleRssResult.reason.message})`);
+  }
+
+  // Deduplicate by title
+  const seen = new Set();
+  const uniqueArticles = [];
+  for (const a of allArticles) {
+    const key = (a.title || '').trim().toLowerCase();
+    if (!seen.has(key)) {
+      seen.add(key);
+      uniqueArticles.push(a);
+    }
+  }
+
+  // Sort by date descending
+  uniqueArticles.sort((a, b) => b.publishedMs - a.publishedMs);
+
+  // Keep top 20
+  newsCache = { fetchedAt: Date.now(), articles: uniqueArticles.slice(0, 20) };
   return newsCache;
 }
 
@@ -294,6 +322,15 @@ TOOLS AVAILABLE:
 2. get_stock_data(symbol)     - Live price, NAV, change, 52-week range, volume
 3. get_market_overview()      - Live Nifty 50, Sensex, Nifty Bank, USD/INR
 4. get_financial_news(query)  - The EXACT SAME live articles shown on the Stockbuzz News page right now, optionally filtered by topic/company
+
+════════════════════════════════════════
+COMMUNICATION STYLE & TONE
+════════════════════════════════════════
+- Be extremely beginner-friendly. Explain things simply and avoid overwhelming jargon.
+- NEVER mention internal tool names (like \`search_ticker\`, \`get_stock_data\`, \`get_market_overview\`, \`get_financial_news\`) in your responses. Users don't need to know how you fetch data.
+- Never tell the user "I will use a tool" or "Use the search_ticker function". Just fetch the data silently and present the results in simple terms.
+- **IMPORTANT**: Whenever a user asks for investment advice, stock recommendations, or where to invest their money (e.g., SIP goals, investing a certain amount like "1 lakh"), you MUST append this exact line at the very end of your response in bold:
+  "**Disclaimer: I am an AI. You should verify the information or consult a certified financial advisor before investing.**"
 
 ════════════════════════════════════════
 NEWS RULES — BE HONEST ABOUT FRESHNESS
@@ -625,7 +662,7 @@ async function callAIWithFallback(apiMessages, providerIndex = 0, retriesLeft = 
         model: provider.model,
         messages: apiMessages,
         temperature: 0.1,
-        max_tokens: 1024,
+        max_tokens: 4096,
         tools,
         tool_choice: 'auto'
       })
@@ -644,7 +681,7 @@ async function callAIWithFallback(apiMessages, providerIndex = 0, retriesLeft = 
       throw new Error(`${provider.name} API ${response.status}: ${err}`);
     }
 
-    return await response.json();
+    return { data: await response.json(), providerIndex };
   } catch (error) {
     console.error(`❌ ${provider.name} failed:`, error.message);
     console.log(`🔄 Switching to next provider...`);
@@ -676,10 +713,12 @@ function parseRawToolCalls(text) {
 
 // ─── Agentic loop ─────────────────────────────────────────────────────────────
 async function runAgentLoop(apiMessages) {
+  let currentProviderIndex = 0;
   for (let i = 0; i < 8; i++) {
-    const data = await callAIWithFallback(apiMessages);
+    const { data, providerIndex } = await callAIWithFallback(apiMessages, currentProviderIndex);
+    currentProviderIndex = providerIndex;
     const message = data.choices?.[0]?.message;
-    if (!message) throw new Error('No message in Groq response');
+    if (!message) throw new Error('No message in response');
 
     // Structured tool calls (standard OpenAI-compatible providers)
     if (message.tool_calls && message.tool_calls.length > 0) {
@@ -696,6 +735,18 @@ async function runAgentLoop(apiMessages) {
     // Content present — check if the model wrote raw tool-call text instead of using tool_calls
     if (message.content) {
       const rawCalls = parseRawToolCalls(message.content);
+      
+      // Fallback if AI responds with refusal/don't know and no tool calls
+      const lowerContent = message.content.toLowerCase();
+      const isRefusal = ["as an ai", "i don't know", "i do not know", "i cannot", "i can't", "i am unable", "i'm sorry", "i am sorry", "i don't have access", "i do not have access"].some(kw => lowerContent.includes(kw));
+      
+      if (rawCalls.length === 0 && isRefusal && currentProviderIndex + 1 < AI_PROVIDERS.length) {
+        console.log(`  🔄 Model refusal detected. Falling back to next provider...`);
+        currentProviderIndex++;
+        i--; // Retry without counting iteration
+        continue;
+      }
+
       if (rawCalls.length > 0) {
         console.log(`  ↻ Iter ${i + 1}: ${rawCalls.length} raw tool call(s) parsed from content`);
         // Push the assistant message that contained the raw tool call text
@@ -1735,21 +1786,31 @@ function getLastUserQuery(messages) {
 
 // Check if the query is a definition/explanation question for a known KB term
 function matchKBQuery(query) {
+  const original = query.trim().toLowerCase();
+
   // Strip common question prefixes
-  const clean = query
-    .replace(/^(what(?:'s| is| are)|explain|tell me about|define|meaning of|full form of|what does .+ mean|how does .+ work)\s+/i, '')
-    .replace(/^(the |a |an )?/, '')
+  const clean = original
+    .replace(/^(what(?:'s| is| are)|explain|tell me about|define|meaning of|full form of|what does .+ mean|how does .+ work)[\s:]+/i, '')
+    .replace(/^(the |a |an )/i, '')
     .replace(/[\?\.!]+$/, '')
     .trim();
 
   // Direct match
   if (resolveKB(clean)) return resolveKB(clean);
+  if (resolveKB(original)) return resolveKB(original);
 
-  // Check all keys for containment
-  const keys = Object.keys(FINANCE_KB);
-  for (const key of keys) {
-    if (clean === key || clean.includes(key) || key.includes(clean)) {
-      return resolveKB(key);
+  // Check for whole-word containment ONLY IF it's a short query or clearly a definition question
+  const isDefQuestion = original !== clean && clean.split(/\s+/).length <= 4;
+  const isShortQuery = original.split(/\s+/).length <= 3;
+
+  if (isDefQuestion || isShortQuery) {
+    const keys = Object.keys(FINANCE_KB);
+    for (const key of keys) {
+      // Escape key for regex and match as whole word
+      const regex = new RegExp(`\\b${key.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\$&')}\\b`, 'i');
+      if (regex.test(clean)) {
+        return resolveKB(key);
+      }
     }
   }
   return null;
@@ -1776,7 +1837,17 @@ app.post('/api/chat', async (req, res) => {
     return res.json({ reply: kbMatch.answer, model: 'local-kb', provider: 'Stockbuzz Knowledge Base' });
   }
 
-  const apiMessages = [{ role: 'system', content: APP_CONTEXT }, ...messages];
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const dynamicContext = APP_CONTEXT + `
+
+════════════════════════════════════════
+CURRENT TIME & REAL-TIME DATA ACCESS
+════════════════════════════════════════
+- Today's date is **\${today}**.
+- You DO have real-time access to current market data and news through your tools.
+- NEVER say your knowledge is cut off at a past date (like August 2024). Confidently use your tools to fetch live information when needed.`;
+
+  const apiMessages = [{ role: 'system', content: dynamicContext }, ...messages];
   console.log(`\n📨 "${messages.at(-1)?.content?.slice(0, 60)}..."`);
 
   try {
@@ -1785,6 +1856,93 @@ app.post('/api/chat', async (req, res) => {
   } catch (err) {
     console.error('❌', err.message);
     res.status(500).json({ error: 'Stockbuzz AI error', detail: err.message });
+  }
+});
+// ─── CMS API for Superadmin ──────────────────────────────────────────────────
+app.get('/api/cms', async (req, res) => {
+  try {
+    const cmsPath = join(__dirname, 'data', 'cms.json');
+    const data = await fs.readFile(cmsPath, 'utf-8');
+    res.json(JSON.parse(data));
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      res.json({ features: {}, content: {} });
+    } else {
+      res.status(500).json({ error: 'Failed to read CMS configuration' });
+    }
+  }
+});
+
+app.post('/api/cms', express.json(), async (req, res) => {
+  try {
+    const cmsPath = join(__dirname, 'data', 'cms.json');
+    await fs.mkdir(join(__dirname, 'data'), { recursive: true });
+    await fs.writeFile(cmsPath, JSON.stringify(req.body, null, 2));
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to write CMS configuration' });
+  }
+});
+// ─── Users API for Superadmin ──────────────────────────────────────────────────
+async function readUsers() {
+  const usersPath = join(__dirname, 'data', 'users.json');
+  try {
+    const data = await fs.readFile(usersPath, 'utf-8');
+    return JSON.parse(data);
+  } catch (err) {
+    if (err.code === 'ENOENT') return [];
+    throw err;
+  }
+}
+
+async function writeUsers(users) {
+  const usersPath = join(__dirname, 'data', 'users.json');
+  await fs.mkdir(join(__dirname, 'data'), { recursive: true });
+  await fs.writeFile(usersPath, JSON.stringify(users, null, 2));
+}
+
+app.get('/api/users', async (req, res) => {
+  try {
+    const users = await readUsers();
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to read users' });
+  }
+});
+
+app.post('/api/users', express.json(), async (req, res) => {
+  try {
+    const users = await readUsers();
+    const newUser = { id: 'usr_' + Date.now(), ...req.body, joinDate: new Date().toISOString().split('T')[0] };
+    users.push(newUser);
+    await writeUsers(users);
+    res.json(newUser);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to add user' });
+  }
+});
+
+app.put('/api/users/:id', express.json(), async (req, res) => {
+  try {
+    let users = await readUsers();
+    const index = users.findIndex(u => u.id === req.params.id);
+    if (index === -1) return res.status(404).json({ error: 'User not found' });
+    users[index] = { ...users[index], ...req.body };
+    await writeUsers(users);
+    res.json(users[index]);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update user' });
+  }
+});
+
+app.delete('/api/users/:id', async (req, res) => {
+  try {
+    let users = await readUsers();
+    users = users.filter(u => u.id !== req.params.id);
+    await writeUsers(users);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete user' });
   }
 });
 

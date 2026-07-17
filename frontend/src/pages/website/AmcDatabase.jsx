@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Building2, Landmark, Search, TrendingUp, TrendingDown, Loader2, Layers } from 'lucide-react';
-import { useCurrency } from '../context/CurrencyContext';
+import { useCurrency } from '../../context/CurrencyContext';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 

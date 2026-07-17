@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { ShieldAlert, TrendingUp, Sparkles, ArrowRight, Info, Home } from 'lucide-react';
-import { useCurrency } from '../context/CurrencyContext';
+import { useCurrency } from '../../context/CurrencyContext';
 
 const DATA = {
   navValue: 1642.50,

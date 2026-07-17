@@ -6,9 +6,9 @@ const NIFTY_INDICES = [
   { label: 'NIFTY 50',          symbol: '^NSEI' },
   { label: 'NIFTY Bank',        symbol: '^NSEBANK' },
   { label: 'NIFTY IT',          symbol: '^CNXIT' },
-  { label: 'NIFTY Midcap 100',  symbol: 'NIFTY_MID100.NS' },
-  { label: 'NIFTY Smallcap 100',symbol: 'NIFTY_SMLCAP100.NS' },
-  { label: 'NIFTY Next 50',     symbol: '^NSMIDCP' },
+  { label: 'NIFTY Midcap 100',  symbol: 'NIFTY_MIDCAP_100.NS' },
+  { label: 'NIFTY Smallcap 50', symbol: '^CNXSC' },
+  { label: 'NIFTY Midcap 50',   symbol: '^NSEMDCP50' },
   { label: 'NIFTY Pharma',      symbol: '^CNXPHARMA' },
   { label: 'NIFTY Auto',        symbol: '^CNXAUTO' },
   { label: 'NIFTY FMCG',        symbol: '^CNXFMCG' },
@@ -19,17 +19,17 @@ const NIFTY_INDICES = [
 
 const SENSEX_INDICES = [
   { label: 'SENSEX',            symbol: '^BSESN' },
-  { label: 'BSE Sensex 50',     symbol: 'BSE-SENSEX50.BO' },
-  { label: 'BSE MidCap',        symbol: 'BSE-MID.BO' },
-  { label: 'BSE SmallCap',      symbol: 'BSE-SML.BO' },
   { label: 'BSE 100',           symbol: 'BSE-100.BO' },
   { label: 'BSE 200',           symbol: 'BSE-200.BO' },
   { label: 'BSE 500',           symbol: 'BSE-500.BO' },
-  { label: 'BSE Bankex',        symbol: 'BANKEX.BO' },
-  { label: 'BSE Consumer Disc', symbol: 'BSE-CD.BO' },
+  { label: 'BSE Bankex',        symbol: 'BSE-BANK.BO' },
+  { label: 'BSE Consumer',      symbol: 'BSE-CD.BO' },
   { label: 'BSE Healthcare',    symbol: 'BSE-HC.BO' },
   { label: 'BSE IT',            symbol: 'BSE-IT.BO' },
-  { label: 'BSE Energy',        symbol: 'BSE-ENERGY.BO' },
+  { label: 'BSE FMCG',          symbol: 'BSE-FMCG.BO' },
+  { label: 'BSE Metal',         symbol: 'BSE-METAL.BO' },
+  { label: 'BSE Auto',          symbol: 'BSE-AUTO.BO' },
+  { label: 'BSE Realty',        symbol: 'BSE-REALTY.BO' },
 ];
 
 const RANGES = ['1D', '1W', '1M', '1Y', '5Y', 'MAX'];
@@ -66,6 +66,7 @@ function MiniChart({ symbol, range }) {
 
   if (loading) return <div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-3)', fontSize: '0.8rem' }}>Loading...</div>;
   if (!points.length) return <div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-3)', fontSize: '0.8rem' }}>No data</div>;
+  if (points.length === 1) return <div style={{ height: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-3)', fontSize: '0.8rem' }}><span>Not enough data points for {range} range</span></div>;
 
   return (
     <div>
@@ -133,7 +134,7 @@ function IndexGroup({ title, indices, defaultOpen, accentColor }) {
       {open && (
         <div style={{ borderTop: '1px solid var(--neutral-200)' }}>
           {/* Index selector tabs */}
-          <div style={{ padding: '12px 16px 8px', display: 'flex', gap: 8, overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
+          <div className="thin-scrollbar" style={{ padding: '12px 16px 12px', display: 'flex', gap: 8, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
             {indices.map(idx => (
               <button key={idx.symbol} onClick={() => setSelected(idx)}
                 style={{ flexShrink: 0, padding: '5px 14px', borderRadius: 20, fontSize: '0.76rem', fontWeight: 700, cursor: 'pointer', transition: 'all .18s', border: selected.symbol === idx.symbol ? '2px solid ' + accentColor : '2px solid var(--neutral-200)', background: selected.symbol === idx.symbol ? accentColor : 'var(--bg-card)', color: selected.symbol === idx.symbol ? 'white' : 'var(--text-2)' }}>

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Phone, ArrowRight, ArrowLeft, AlertCircle, Loader2 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { setupRecaptcha } from '../firebase';
+import { useAuth } from '../../context/AuthContext';
+import { setupRecaptcha } from '../../firebase';
 
 function GoogleIcon() {
   return (
@@ -18,18 +18,42 @@ function GoogleIcon() {
 const COUNTRY_CODE = '+91';
 
 export default function Login() {
-  const { loginWithGoogle, loginWithPhone } = useAuth();
+  const { loginWithGoogle, loginWithPhone, loginWithEmail } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const redirectTo = location.state?.from || '/';
 
-  const [tab, setTab] = useState('google'); // 'google' | 'phone'
+  const [tab, setTab] = useState('google'); // 'google' | 'phone' | 'email'
   const [step, setStep] = useState('enter-phone'); // 'enter-phone' | 'enter-otp'
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
   const [confirmationResult, setConfirmationResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const handleEmailLogin = async (e) => {
+    e.preventDefault();
+    setError(null);
+    if (!email || !password) {
+      setError('Please enter both email and password.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const user = await loginWithEmail(email, password);
+      if (user?.isSuperadmin) {
+        navigate('/superadmin', { replace: true });
+      } else {
+        navigate(redirectTo, { replace: true });
+      }
+    } catch (err) {
+      setError(err.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleGoogleLogin = async () => {
     setError(null);
@@ -126,7 +150,19 @@ export default function Login() {
                 boxShadow: tab === 'phone' ? 'var(--shadow-xs)' : 'none'
               }}
             >
-              Mobile Number
+              Mobile
+            </button>
+            <button
+              onClick={() => { setTab('email'); setError(null); }}
+              style={{
+                flex: 1, padding: '9px', borderRadius: '8px', border: 'none', cursor: 'pointer',
+                fontWeight: 700, fontSize: '0.84rem', transition: 'all .15s',
+                background: tab === 'email' ? 'var(--bg-card)' : 'transparent',
+                color: tab === 'email' ? 'var(--text-1)' : 'var(--text-3)',
+                boxShadow: tab === 'email' ? 'var(--shadow-xs)' : 'none'
+              }}
+            >
+              Email
             </button>
           </div>
 
@@ -151,6 +187,42 @@ export default function Login() {
               {loading ? <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> : <GoogleIcon />}
               Continue with Google
             </button>
+          )}
+
+          {tab === 'email' && (
+            <form onSubmit={handleEmailLogin}>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-3)', marginBottom: '8px', display: 'block' }}>Email</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-1)', fontSize: '0.9rem', outline: 'none' }}
+                />
+              </div>
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-3)', marginBottom: '8px', display: 'block' }}>Password</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-1)', fontSize: '0.9rem', outline: 'none' }}
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  width: '100%', padding: '12px', borderRadius: '10px', border: 'none', background: 'var(--violet)',
+                  color: 'white', fontWeight: 700, fontSize: '0.9rem', cursor: loading ? 'not-allowed' : 'pointer',
+                  opacity: loading ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                }}
+              >
+                {loading ? <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> : 'Continue with Email'}
+              </button>
+            </form>
           )}
 
           {tab === 'phone' && step === 'enter-phone' && (

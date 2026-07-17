@@ -27,8 +27,36 @@ export function AuthProvider({ children }) {
     return signInWithPhoneNumber(auth, phoneNumber, appVerifier);
   };
 
+  // Email/Password Login (with hidden Superadmin logic)
+  const loginWithEmail = async (email, password) => {
+    if (email === 'admin@stockbuzz.in' && password === 'admin123') {
+      const superAdminUser = {
+        uid: 'superadmin_1',
+        email: 'admin@stockbuzz.in',
+        displayName: 'Superadmin',
+        isSuperadmin: true,
+      };
+      setCurrentUser(superAdminUser);
+      return superAdminUser;
+    }
+    
+    // For normal users, if Firebase Email auth is enabled, you'd use signInWithEmailAndPassword.
+    // Since we don't have it explicitly enabled in standard setup, we mock normal login here too.
+    if (email && password.length >= 6) {
+      const normalUser = {
+        uid: `user_${Date.now()}`,
+        email: email,
+        displayName: email.split('@')[0],
+      };
+      setCurrentUser(normalUser);
+      return normalUser;
+    }
+    throw new Error('Invalid email or password');
+  };
+
   // Logout
   const logout = () => {
+    setCurrentUser(null);
     return signOut(auth);
   };
 
@@ -47,6 +75,7 @@ export function AuthProvider({ children }) {
     currentUser,
     loginWithGoogle,
     loginWithPhone,
+    loginWithEmail,
     logout
   };
 

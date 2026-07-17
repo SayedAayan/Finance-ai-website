@@ -918,3 +918,9 @@ html.dark .chat-input-bar:focus-within {
 .prose h3 { font-size: 1.1em; }
 .prose code { background: #F3F4F6; padding: 0.2em 0.4em; border-radius: 4px; font-family: monospace; font-size: 0.9em; }
 .dark .prose code { background: rgba(255,255,255,0.08); color: var(--text-1); }
+
+.thin-scrollbar { scrollbar-width: thin; scrollbar-color: rgba(156, 163, 175, 0.4) transparent; }
+.thin-scrollbar::-webkit-scrollbar { height: 4px; width: 4px; }
+.thin-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.thin-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(156, 163, 175, 0.4); border-radius: 10px; }
+.thin-scrollbar::-webkit-scrollbar-thumb:hover { background-color: rgba(156, 163, 175, 0.7); }

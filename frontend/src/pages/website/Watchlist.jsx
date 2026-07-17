@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, Sparkles, Bell, Star, BarChart2, ArrowRight, Trash2, Shield, Upload, Check, X, Search } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
-import { mockStocks, mockFunds } from '../data/mockData';
-import { useCurrency } from '../context/CurrencyContext';
+import { mockStocks, mockFunds } from '../../data/mockData';
+import { useCurrency } from '../../context/CurrencyContext';
 
 export default function Watchlist() {
   const navigate = useNavigate();

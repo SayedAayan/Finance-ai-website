@@ -214,6 +214,17 @@ export default function Chat() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  const handleEditUserMessage = (idx, text) => {
+    setInput(text);
+    const textarea = document.querySelector('textarea');
+    if (textarea) {
+      textarea.focus();
+      // Move cursor to end of text
+      const len = text.length;
+      textarea.setSelectionRange(len, len);
+    }
+  };
+
   const sendContextualMessage = async (textToSend, viaVoice = false, onReply = null) => {
     const q = textToSend || input;
     if (!q.trim() && !selectedFile) return;
@@ -489,7 +500,7 @@ export default function Chat() {
                   className={`flex ${m.type === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   {m.type === 'user' ? (
-                    <div className="max-w-[80%] flex flex-col items-end">
+                    <div className="max-w-[80%] flex flex-col items-end group/usermsg relative">
                       {m.file && (
                         <div className="mb-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 rounded-xl flex items-center gap-2 text-sm font-semibold text-indigo-700 dark:text-indigo-400">
                           {m.file.type.startsWith('image/') ? <ImageIcon size={16} /> : <FileText size={16} />}
@@ -497,8 +508,17 @@ export default function Chat() {
                         </div>
                       )}
                       {m.text && (
-                        <div className="bg-gradient-to-br from-violet-600 to-indigo-600 text-white px-5 py-3.5 rounded-2xl rounded-tr-sm shadow-md shadow-violet-500/20 text-[15px] leading-relaxed">
-                          {m.text}
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleEditUserMessage(idx, m.text)}
+                            className="opacity-0 group-hover/usermsg:opacity-100 text-gray-400 hover:text-violet-500 transition-opacity p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+                            title="Edit message"
+                          >
+                            <Edit size={14} />
+                          </button>
+                          <div className="bg-gradient-to-br from-violet-600 to-indigo-600 text-white px-5 py-3.5 rounded-2xl rounded-tr-sm shadow-md shadow-violet-500/20 text-[15px] leading-relaxed">
+                            {m.text}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -610,17 +630,20 @@ export default function Chat() {
               >
                 <Plus size={22} />
               </button>
-
-              <input
+              <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') sendContextualMessage();
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendContextualMessage();
+                  }
                 }}
                 placeholder={isListening ? 'Listening…' : 'Message Stockbuzz AI...'}
-                className="flex-1 bg-transparent border-none outline-none text-[15px] text-gray-800 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 h-full"
+                className="flex-1 bg-transparent border-none outline-none text-[15px] text-gray-800 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 resize-none py-3"
+                rows={1}
+                style={{ maxHeight: '120px', minHeight: '44px' }}
               />
-
               {speechSupported && (
                 <button
                   onClick={toggleListening}

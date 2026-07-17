@@ -3,18 +3,19 @@ import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import BackToTop from './components/layout/BackToTop';
-import Home from './pages/Home';
-import StockProfile from './pages/StockProfile';
-import MutualFundProfile from './pages/MutualFundProfile';
-import Compare from './pages/Compare';
-import Watchlist from './pages/Watchlist';
-import News from './pages/News';
-import Settings from './pages/Settings';
-import Chat from './pages/Chat';
-import Markets from './pages/Markets';
-import WealthBucket from './pages/WealthBucket';
-import AmcDatabase from './pages/AmcDatabase';
-import Login from './pages/Login';
+import Home from './pages/website/Home';
+import StockProfile from './pages/website/StockProfile';
+import MutualFundProfile from './pages/website/MutualFundProfile';
+import Compare from './pages/website/Compare';
+import Watchlist from './pages/website/Watchlist';
+import News from './pages/website/News';
+import Settings from './pages/website/Settings';
+import Chat from './pages/website/Chat';
+import Markets from './pages/website/Markets';
+import WealthBucket from './pages/website/WealthBucket';
+import AmcDatabase from './pages/website/AmcDatabase';
+import Login from './pages/website/Login';
+import Superadmin from './pages/admin/Superadmin';
 import AIChatSidebar from './components/features/AIChatSidebar';
 
 function Layout() {
@@ -32,10 +33,13 @@ function Layout() {
     return () => window.removeEventListener('open-ai-chat', handleOpenAIChat);
   }, []);
 
-  if (isLogin) {
+  const isSuperadminRoute = loc.pathname === '/superadmin';
+
+  if (isLogin || isSuperadminRoute) {
     return (
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/superadmin" element={<Superadmin />} />
       </Routes>
     );
   }

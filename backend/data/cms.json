@@ -1,0 +1,45 @@
+{
+  "pages": {
+    "home": {
+      "title": "Home Page",
+      "content": {
+        "heroTitle": "What do you want to research?",
+        "heroSubtitle": "Stockbuzz AI helps you analyze stocks, mutual funds, and market trends with real-time data and smart insights."
+      },
+      "features": {
+        "showMarketSnapshot": true,
+        "showTrendingStocks": true,
+        "showMarketMovers": true,
+        "showMarketPulse": true
+      }
+    },
+    "chat": {
+      "title": "AI Chat Page",
+      "features": {
+        "enableVoiceInput": true,
+        "showSuggestedPrompts": true,
+        "allowImageUploads": false
+      }
+    },
+    "news": {
+      "title": "News Hub",
+      "features": {
+        "showGlobalNews": true,
+        "showLocalNews": true,
+        "enablePushNotifications": false
+      }
+    },
+    "markets": {
+      "title": "Markets Overview",
+      "features": {
+        "showUSMarkets": true,
+        "showIndianMarkets": true,
+        "showCrypto": false
+      }
+    }
+  },
+  "global": {
+    "enableProSubscriptions": false,
+    "showBannerAds": false
+  }
+}
