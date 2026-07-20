@@ -791,10 +791,30 @@ async function readDB() {
     const db = JSON.parse(data);
     if (!db.watchlist) db.watchlist = [];
     if (!db.trending) db.trending = {};
+    if (!db.cms) db.cms = {
+      pages: {
+        home: { title: "Home Page", content: {}, features: { showMarketSnapshot: true, showTrendingStocks: true, showMarketMovers: true, showMarketPulse: true, showFeaturedNews: true } },
+        chat: { title: "AI Chat Page", features: { allowFileUpload: true, allowVoiceInput: true, showLiveMarketData: true } },
+        news: { title: "News Hub", features: { showGlobalNews: true, showMarketMovers: true, allowSearch: true } },
+        markets: { title: "Markets Overview", features: { showSectorPerformance: true, showTopGainers: true, showGlobalIndices: true } }
+      },
+      global: { enableProSubscriptions: false, showBannerAds: false }
+    };
     return db;
   } catch (err) {
     if (err.code === 'ENOENT') {
-      return { chats: {}, watchlist: [], trending: {} };
+      return { 
+        chats: {}, watchlist: [], trending: {}, 
+        cms: {
+          pages: {
+            home: { title: "Home Page", content: {}, features: { showMarketSnapshot: true, showTrendingStocks: true, showMarketMovers: true, showMarketPulse: true, showFeaturedNews: true } },
+            chat: { title: "AI Chat Page", features: { allowFileUpload: true, allowVoiceInput: true, showLiveMarketData: true } },
+            news: { title: "News Hub", features: { showGlobalNews: true, showMarketMovers: true, allowSearch: true } },
+            markets: { title: "Markets Overview", features: { showSectorPerformance: true, showTopGainers: true, showGlobalIndices: true } }
+          },
+          global: { enableProSubscriptions: false, showBannerAds: false }
+        }
+      };
     }
     throw err;
   }
@@ -803,6 +823,26 @@ async function readDB() {
 async function writeDB(data) {
   await fs.writeFile(DB_FILE, JSON.stringify(data, null, 2), 'utf8');
 }
+
+app.get('/api/cms', async (req, res) => {
+  try {
+    const db = await readDB();
+    res.json(db.cms);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/cms', async (req, res) => {
+  try {
+    const db = await readDB();
+    db.cms = req.body;
+    await writeDB(db);
+    res.json({ success: true, cms: db.cms });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 app.get('/api/chats', async (req, res) => {
   try {

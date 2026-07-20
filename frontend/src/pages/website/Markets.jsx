@@ -8,6 +8,20 @@ export default function Markets() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const defaultCms = {
+    pages: { markets: { features: { showSectorPerformance: true, showTopGainers: true, showGlobalIndices: true } } }
+  };
+  const [cmsConfig, setCmsConfig] = useState(defaultCms);
+
+  useEffect(() => {
+    fetch('/api/cms')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.pages) setCmsConfig(data);
+      })
+      .catch(err => console.error('Failed to load CMS config', err));
+  }, []);
+
   useEffect(() => {
     const fetchMarkets = async () => {
       try {
@@ -70,48 +84,50 @@ export default function Markets() {
         </div>
 
         {/* Indices Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          {indices.map((index, idx) => {
-            const isPositive = parseFloat(index.change) >= 0;
-            return (
-              <div 
-                key={idx} 
-                className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group"
-              >
-                {/* Decorative background glow */}
-                <div className={`absolute -right-8 -top-8 w-24 h-24 rounded-full blur-2xl opacity-20 transition-opacity group-hover:opacity-40 ${isPositive ? 'bg-green-500' : 'bg-red-500'}`}></div>
+        {cmsConfig?.pages?.markets?.features?.showGlobalIndices && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            {indices.map((index, idx) => {
+              const isPositive = parseFloat(index.change) >= 0;
+              return (
+                <div 
+                  key={idx} 
+                  className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group"
+                >
+                  {/* Decorative background glow */}
+                  <div className={`absolute -right-8 -top-8 w-24 h-24 rounded-full blur-2xl opacity-20 transition-opacity group-hover:opacity-40 ${isPositive ? 'bg-green-500' : 'bg-red-500'}`}></div>
 
-                <div className="flex justify-between items-start mb-4 relative">
-                  <div>
-                    <h3 className="font-bold text-gray-800 dark:text-gray-100 text-lg">{index.label}</h3>
-                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 uppercase tracking-wider font-semibold">{index.symbol}</p>
+                  <div className="flex justify-between items-start mb-4 relative">
+                    <div>
+                      <h3 className="font-bold text-gray-800 dark:text-gray-100 text-lg">{index.label}</h3>
+                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 uppercase tracking-wider font-semibold">{index.symbol}</p>
+                    </div>
+                    <div className={`p-2 rounded-lg ${isPositive ? 'bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400' : 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400'}`}>
+                      {isPositive ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
+                    </div>
                   </div>
-                  <div className={`p-2 rounded-lg ${isPositive ? 'bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400' : 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400'}`}>
-                    {isPositive ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
+                  
+                  <div className="relative">
+                    <div className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2 font-mono tracking-tight">
+                      {index.label === 'USD/INR' ? '₹' : ''}
+                      {index.currentPrice?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    </div>
+                    <div className={`flex items-center gap-1.5 font-medium ${isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                      <span>{isPositive ? '+' : ''}{index.change}</span>
+                      <span className="text-sm bg-white/50 dark:bg-gray-800/50 px-1.5 py-0.5 rounded backdrop-blur-sm">
+                        ({isPositive ? '+' : ''}{index.changePercent}%)
+                      </span>
+                    </div>
                   </div>
-                </div>
-                
-                <div className="relative">
-                  <div className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2 font-mono tracking-tight">
-                    {index.label === 'USD/INR' ? '₹' : ''}
-                    {index.currentPrice?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                  </div>
-                  <div className={`flex items-center gap-1.5 font-medium ${isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                    <span>{isPositive ? '+' : ''}{index.change}</span>
-                    <span className="text-sm bg-white/50 dark:bg-gray-800/50 px-1.5 py-0.5 rounded backdrop-blur-sm">
-                      ({isPositive ? '+' : ''}{index.changePercent}%)
-                    </span>
-                  </div>
-                </div>
 
-                <div className="mt-5 pt-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between text-xs text-gray-400 dark:text-gray-500">
-                  <span className="flex items-center gap-1"><Clock size={12}/> Updated</span>
-                  <span>{index.timestamp || 'Just now'}</span>
+                  <div className="mt-5 pt-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between text-xs text-gray-400 dark:text-gray-500">
+                    <span className="flex items-center gap-1"><Clock size={12}/> Updated</span>
+                    <span>{index.timestamp || 'Just now'}</span>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Additional Markets Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

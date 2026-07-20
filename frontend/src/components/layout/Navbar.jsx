@@ -6,17 +6,19 @@ import logo from '../../assets/logo.png';
 import { useTheme } from '../../context/ThemeContext';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useAuth } from '../../context/AuthContext';
-
-const OTHER_LINKS = [
-  { path: '/markets', label: 'Markets' },
-  { path: '/wealth', label: 'Wealth Bucket' },
-  { path: '/amcs', label: 'AMC & Companies' }
-];
+import { useCms } from '../../context/CmsContext';
 
 export default function Navbar({ onToggleAIChat }) {
   const loc = useLocation();
   const navigate = useNavigate();
+  const { cmsConfig } = useCms();
   const active = (p) => loc.pathname === p;
+  
+  const navItems = cmsConfig?.navbar?.navItems || [];
+  const mainLinks = navItems.filter(item => !item.subItems);
+  const otherLinksData = navItems.find(item => item.subItems);
+  const OTHER_LINKS = otherLinksData ? otherLinksData.subItems : [];
+  
   const isOtherActive = OTHER_LINKS.some(item => active(item.path));
 
   // Search State
@@ -82,11 +84,20 @@ export default function Navbar({ onToggleAIChat }) {
     fetch('/api/market-overview')
       .then(res => res.json())
       .then(data => {
-        if (active && data.indices) setMarketData(data.indices);
+        if (active && data.indices) {
+          // Filter and order based on CMS config if available
+          const preferredTickers = cmsConfig?.navbar?.tickers || [];
+          if (preferredTickers.length > 0) {
+            const ordered = preferredTickers.map(t => data.indices.find(idx => idx.label === t || idx.symbol === t)).filter(Boolean);
+            setMarketData(ordered.length > 0 ? ordered : data.indices);
+          } else {
+            setMarketData(data.indices);
+          }
+        }
       })
       .catch(() => { });
     return () => { active = false; };
-  }, []);
+  }, [cmsConfig?.navbar?.tickers]);
 
   const searchDebounceRef = useRef(null);
 
@@ -148,6 +159,10 @@ export default function Navbar({ onToggleAIChat }) {
     setShowSuggestions(false);
   };
 
+  const siteLogo = cmsConfig?.global?.siteLogo || logo;
+  const siteName = cmsConfig?.global?.siteName || 'StockBuzz';
+  const askAiLabel = cmsConfig?.navbar?.askAiLabel || 'Ask AI';
+
   return (
     <div className="sticky top-0 z-[100] flex flex-col shadow-sm">
       {/* Ticker Bar */}
@@ -156,7 +171,7 @@ export default function Navbar({ onToggleAIChat }) {
           <div className="flex gap-8 animate-[marquee_70s_linear_infinite]">
             {Array(8).fill(marketData).flat().map((idx, i) => (
               <div key={i} className="flex items-center gap-2">
-                <span className="text-gray-400">{idx.label}</span>
+                <span className="text-gray-400">{idx.label || idx.symbol}</span>
                 {idx.error ? (
                   <span className="text-gray-500">N/A</span>
                 ) : (
@@ -192,22 +207,17 @@ export default function Navbar({ onToggleAIChat }) {
             }}
           >
             <img
-              src={logo}
-              alt="StockBuzz — Let's Build Wealth, Together."
+              src={siteLogo}
+              alt={`${siteName} — Logo`}
               className="h-12 w-auto group-hover:scale-105 transition-transform duration-300"
             />
           </Link>
 
           {/* Center: Navigation Links */}
           <div className="hidden md:flex items-center gap-2 bg-gray-50/80 dark:bg-gray-900/60 p-1 rounded-full border border-gray-100 dark:border-gray-800 shrink-0">
-            {[
-              { path: '/', label: 'Home' },
-              { path: '/compare', label: 'Compare' },
-              { path: '/watchlist', label: 'Watchlist' },
-              { path: '/news', label: 'News' }
-            ].map((item) => (
+            {mainLinks.map((item) => (
               <Link
-                key={item.path}
+                key={item.id || item.path}
                 to={item.path}
                 className={`px-3.5 py-2 rounded-full text-[0.87rem] font-medium transition-all duration-200 ${active(item.path)
                   ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
@@ -218,44 +228,46 @@ export default function Navbar({ onToggleAIChat }) {
               </Link>
             ))}
 
-            {/* Others Dropdown (Markets, Wealth Bucket, AMC & Companies) */}
-            <div className="relative" ref={othersRef} onMouseEnter={() => setShowOthers(true)} onMouseLeave={() => setShowOthers(false)}>
-              <button
-                onClick={() => setShowOthers(!showOthers)}
-                className={`flex items-center gap-1 px-3.5 py-2 rounded-full text-[0.87rem] font-medium transition-all duration-200 ${isOtherActive
-                  ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
-                  : 'text-textMuted dark:text-gray-400 hover:text-textMain dark:hover:text-gray-100 hover:bg-gray-100/50 dark:hover:bg-gray-800/50'
-                  }`}
-              >
-                Others
-                <ChevronDown size={14} className={`transition-transform duration-200 ${showOthers ? 'rotate-180' : ''}`} />
-              </button>
+            {/* Others Dropdown */}
+            {otherLinksData && OTHER_LINKS.length > 0 && (
+              <div className="relative" ref={othersRef} onMouseEnter={() => setShowOthers(true)} onMouseLeave={() => setShowOthers(false)}>
+                <button
+                  onClick={() => setShowOthers(!showOthers)}
+                  className={`flex items-center gap-1 px-3.5 py-2 rounded-full text-[0.87rem] font-medium transition-all duration-200 ${isOtherActive
+                    ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                    : 'text-textMuted dark:text-gray-400 hover:text-textMain dark:hover:text-gray-100 hover:bg-gray-100/50 dark:hover:bg-gray-800/50'
+                    }`}
+                >
+                  {otherLinksData.label.replace(' ▾', '')}
+                  <ChevronDown size={14} className={`transition-transform duration-200 ${showOthers ? 'rotate-180' : ''}`} />
+                </button>
 
-              <AnimatePresence>
-                {showOthers && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 8 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute top-[calc(100%+8px)] left-1/2 -translate-x-1/2 w-[180px] z-50 bg-white/98 dark:bg-gray-900/98 backdrop-blur-xl border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl p-1.5"
-                  >
-                    {OTHER_LINKS.map((item) => (
-                      <Link
-                        key={item.path}
-                        to={item.path}
-                        className={`block px-4 py-2.5 rounded-xl text-[0.88rem] font-medium transition-colors ${active(item.path)
-                          ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
-                          : 'text-textMuted dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-textMain dark:hover:text-gray-100'
-                          }`}
-                      >
-                        {item.label}
-                      </Link>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                <AnimatePresence>
+                  {showOthers && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 8 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute top-[calc(100%+8px)] left-1/2 -translate-x-1/2 w-[180px] z-50 bg-white/98 dark:bg-gray-900/98 backdrop-blur-xl border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl p-1.5"
+                    >
+                      {OTHER_LINKS.map((item) => (
+                        <Link
+                          key={item.id || item.path}
+                          to={item.path}
+                          className={`block px-4 py-2.5 rounded-xl text-[0.88rem] font-medium transition-colors ${active(item.path)
+                            ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                            : 'text-textMuted dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-textMain dark:hover:text-gray-100'
+                            }`}
+                        >
+                          {item.label}
+                        </Link>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
           </div>
 
           {/* Right: Search, Currency, Theme, Profile/CTA */}
@@ -370,7 +382,7 @@ export default function Navbar({ onToggleAIChat }) {
               onClick={onToggleAIChat}
               className="flex items-center justify-center whitespace-nowrap bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white px-3.5 h-[38px] rounded-full font-semibold text-[0.82rem] shadow-md hover:shadow-lg transition-all duration-300"
             >
-              Ask AI
+              {askAiLabel}
             </button>
 
             {/* Auth: Sign In button or user avatar menu */}

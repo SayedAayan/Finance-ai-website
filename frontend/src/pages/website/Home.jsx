@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { mockStocks, mockNews } from '../../data/mockData';
 import MarketGraphPanel from '../../components/features/MarketGraphPanel';
 import { useCurrency } from '../../context/CurrencyContext';
+import { useCms } from '../../context/CmsContext';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '/api/chat';
 
@@ -80,18 +81,9 @@ export default function Home({ onOpenAIChat }) {
   const [stocks, setStocks] = useState(mockStocks);
   const [marketIndices, setMarketIndices] = useState(DEFAULT_INDICES);
   const { formatPrice } = useCurrency();
+  const { cmsConfig } = useCms();
   const [featuredNews, setFeaturedNews] = useState(null);
   const [trending, setTrending] = useState([]);
-  const [cmsConfig, setCmsConfig] = useState(null);
-
-  useEffect(() => {
-    fetch('/api/cms')
-      .then(res => res.json())
-      .then(data => {
-        if (data && data.pages) setCmsConfig(data);
-      })
-      .catch(err => console.error('Failed to load CMS config', err));
-  }, []);
 
   useEffect(() => {
     return () => { recognitionRef.current?.stop(); };
@@ -241,13 +233,17 @@ export default function Home({ onOpenAIChat }) {
           <motion.div variants={containerVariants} initial="hidden" animate="show" className="w-full flex flex-col items-center">
             <motion.div variants={itemVariants} className="text-center max-w-[900px] mb-6 w-full flex flex-col items-center">
               <div className="inline-flex items-center justify-center w-[44px] h-[44px] rounded-[14px] bg-white dark:bg-gray-900 shadow-md shadow-blue-500/10 mb-4 border border-gray-100 dark:border-gray-800">
-                <img src="/favicon.png" alt="Stockbuzz" className="w-[26px] h-[26px] object-contain" />
+                {cmsConfig?.global?.favicon ? (
+                  <img src={cmsConfig.global.favicon} alt="Hero Icon" className="w-[26px] h-[26px] object-contain" />
+                ) : (
+                  <Activity className="w-[26px] h-[26px]" style={{ color: cmsConfig?.global?.primaryColor || '#7c3aed' }} />
+                )}
               </div>
               <h1 className="text-[32px] md:text-[42px] font-bold text-textMain dark:text-gray-100 tracking-tight mb-3 leading-tight font-sans">
-                {cmsConfig?.pages?.home?.content?.heroTitle || "What do you want to research?"}
+                {cmsConfig?.home?.hero?.heading || "What do you want to research?"}
               </h1>
               <p className="text-[17px] leading-[1.5] text-gray-500 dark:text-gray-400 max-w-[700px] mx-auto">
-                {cmsConfig?.pages?.home?.content?.heroSubtitle || "Stockbuzz AI helps you analyze stocks, mutual funds, and market trends with real-time data and smart insights."}
+                {cmsConfig?.home?.hero?.subheading || "Stockbuzz AI helps you analyze stocks, mutual funds, and market trends with real-time data and smart insights."}
               </p>
             </motion.div>
 
@@ -256,7 +252,7 @@ export default function Home({ onOpenAIChat }) {
                 <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*,application/pdf" className="hidden" />
                 <button onClick={() => fileInputRef.current?.click()} className="p-3 text-textMuted hover:text-primary transition-colors hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-full ml-1"><Plus size={24} /></button>
 
-                <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAsk()} placeholder={isListening ? 'Listening…' : 'Ask Stockbuzz AI about stocks, mutual funds, or finance...'} className="flex-1 bg-transparent border-none outline-none text-base text-textMain px-2 h-full placeholder:text-gray-400 dark:placeholder:text-gray-500" />
+                <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAsk()} placeholder={isListening ? 'Listening…' : (cmsConfig?.home?.hero?.searchPlaceholder || 'Ask Stockbuzz AI about stocks, mutual funds, or finance...')} className="flex-1 bg-transparent border-none outline-none text-base text-textMain px-2 h-full placeholder:text-gray-400 dark:placeholder:text-gray-500" />
                 {speechSupported && (
                   <button
                     onClick={toggleListening}

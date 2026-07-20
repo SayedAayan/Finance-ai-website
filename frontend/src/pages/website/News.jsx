@@ -41,6 +41,20 @@ export default function News() {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [fullscreen, setFullscreen] = useState(false);
 
+  const defaultCms = {
+    pages: { news: { features: { showGlobalNews: true, showMarketMovers: true, allowSearch: true } } }
+  };
+  const [cmsConfig, setCmsConfig] = useState(defaultCms);
+
+  useEffect(() => {
+    fetch('/api/cms')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.pages) setCmsConfig(data);
+      })
+      .catch(err => console.error('Failed to load CMS config', err));
+  }, []);
+
   const fetchNews = useCallback(async (manual = false) => {
     if (manual) setLoading(true);
     try {
@@ -130,7 +144,7 @@ export default function News() {
         )}
 
         {/* ── Featured ── */}
-        {featured && (
+        {cmsConfig?.pages?.news?.features?.showMarketMovers && featured && (
           <div className="news-featured" style={{ borderRadius:18,overflow:'hidden',border:'1px solid var(--neutral-200)',background:'var(--bg-card)',boxShadow:'0 2px 12px rgba(0,0,0,.06)',display:'flex',cursor:'pointer',transition:'box-shadow .25s,transform .25s',marginBottom:'2rem',height:260 }}
             onClick={() => openModal(featured)}
             onMouseEnter={e => { e.currentTarget.style.boxShadow='0 12px 36px rgba(0,0,0,.12)'; e.currentTarget.style.transform='translateY(-3px)'; }}
@@ -165,7 +179,7 @@ export default function News() {
         )}
 
         {/* ── Article list ── */}
-        {rest.length > 0 && (
+        {cmsConfig?.pages?.news?.features?.showGlobalNews && rest.length > 0 && (
           <>
             <div style={{ display:'flex',alignItems:'center',gap:10,marginBottom:'1rem' }}>
               <span style={{ fontSize:'0.72rem',fontWeight:800,color:'var(--text-3)',textTransform:'uppercase',letterSpacing:'.09em' }}>Latest Headlines</span>

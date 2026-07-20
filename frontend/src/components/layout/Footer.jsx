@@ -1,51 +1,59 @@
 import { Link } from 'react-router-dom';
 import { Shield } from 'lucide-react';
 import logo from '../../assets/logo.png';
+import { useCms } from '../../context/CmsContext';
 
 export default function Footer() {
+  const { cmsConfig } = useCms();
+  const footerConfig = cmsConfig?.footer || {};
+  const globalConfig = cmsConfig?.global || {};
+
+  const footerLogo = footerConfig.logo || globalConfig.siteLogo || logo;
+  const tagline = footerConfig.tagline || 'AI-powered research for Indian retail investors. We explain, compare, and source every answer — never recommend.';
+  const disclaimerTitle = footerConfig.disclaimerTitle || 'IMPORTANT DISCLAIMER';
+  const disclaimerText = footerConfig.disclaimerText || 'StockBuzz is a research and education platform — not a SEBI-registered investment advisor. All content is for informational and educational purposes only. We do not provide personalized investment advice, buy/sell/hold recommendations, or guarantee any returns. Mutual fund investments are subject to market risks. Please read all scheme-related documents carefully. Past performance is not indicative of future returns.';
+  const copyright = footerConfig.copyright || '© 2026 StockBuzz Technologies Pvt. Ltd. All rights reserved. Data sourced from NSE, BSE, AMFI, and public regulatory filings.';
+
+  const columns = footerConfig.columns || [
+    { id: 'c1', title: 'Research', links: [ { id: 'l1', label: 'Stocks', path: '/' }, { id: 'l2', label: 'Mutual Funds', path: '/' }, { id: 'l3', label: 'Compare', path: '/compare' }, { id: 'l4', label: 'Watchlist', path: '/watchlist' } ] },
+    { id: 'c2', title: 'Learn', links: [ { id: 'l5', label: 'What is P/E Ratio?', path: '#' }, { id: 'l6', label: 'Direct vs Regular Plans', path: '#' }, { id: 'l7', label: 'Understanding Risk', path: '#' }, { id: 'l8', label: 'Expense Ratio Explained', path: '#' } ] },
+    { id: 'c3', title: 'Company', links: [ { id: 'l9', label: 'About', path: '#' }, { id: 'l10', label: 'Compliance Center', path: '#' }, { id: 'l11', label: 'Privacy Policy', path: '#' }, { id: 'l12', label: 'Terms of Use', path: '#' } ] }
+  ];
+
   return (
     <footer className="footer">
       <div className="container">
         <div className="footer-grid">
           <div>
             <div className="footer-logo">
-              <img src={logo} alt="StockBuzz" style={{ height: '28px', width: 'auto' }} />
+              <img src={footerLogo} alt="StockBuzz" style={{ height: '28px', width: 'auto' }} />
             </div>
-            <p className="footer-desc">AI-powered research for Indian retail investors. We explain, compare, and source every answer — never recommend.</p>
+            <p className="footer-desc">{tagline}</p>
           </div>
-          <div>
-            <div className="footer-heading">Research</div>
-            <Link to="/"          className="footer-link">Stocks</Link>
-            <Link to="/"          className="footer-link">Mutual Funds</Link>
-            <Link to="/compare"   className="footer-link">Compare</Link>
-            <Link to="/watchlist" className="footer-link">Watchlist</Link>
-          </div>
-          <div>
-            <div className="footer-heading">Learn</div>
-            <a className="footer-link" href="#">What is P/E Ratio?</a>
-            <a className="footer-link" href="#">Direct vs Regular Plans</a>
-            <a className="footer-link" href="#">Understanding Risk</a>
-            <a className="footer-link" href="#">Expense Ratio Explained</a>
-          </div>
-          <div>
-            <div className="footer-heading">Company</div>
-            <a className="footer-link" href="#">About</a>
-            <a className="footer-link" href="#">Compliance Center</a>
-            <a className="footer-link" href="#">Privacy Policy</a>
-            <a className="footer-link" href="#">Terms of Use</a>
-          </div>
+          
+          {columns.map(col => (
+            <div key={col.id}>
+              <div className="footer-heading">{col.title}</div>
+              {col.links.map(link => (
+                link.path.startsWith('/') 
+                  ? <Link key={link.id} to={link.path} className="footer-link">{link.label}</Link>
+                  : <a key={link.id} href={link.path} className="footer-link">{link.label}</a>
+              ))}
+            </div>
+          ))}
+          
         </div>
 
         <div className="footer-bottom">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
             <Shield size={13} color="rgba(255,255,255,0.35)" />
-            <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Important Disclaimer</span>
+            <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{disclaimerTitle}</span>
           </div>
           <p className="footer-disclaimer">
-            StockBuzz is a research and education platform — not a SEBI-registered investment advisor. All content is for informational and educational purposes only. We do not provide personalized investment advice, buy/sell/hold recommendations, or guarantee any returns. Mutual fund investments are subject to market risks. Please read all scheme-related documents carefully. Past performance is not indicative of future returns.
+            {disclaimerText}
           </p>
           <p className="footer-disclaimer" style={{ marginTop: '10px' }}>
-            © 2026 StockBuzz Technologies Pvt. Ltd. All rights reserved. Data sourced from NSE, BSE, AMFI, and public regulatory filings.
+            {copyright}
           </p>
         </div>
       </div>

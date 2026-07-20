@@ -37,6 +37,20 @@ export default function Chat() {
   const speechSupported = typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
   const ttsSupported = typeof window !== 'undefined' && 'speechSynthesis' in window;
 
+  const defaultCms = {
+    pages: { chat: { features: { allowFileUpload: true, allowVoiceInput: true, showLiveMarketData: true } } }
+  };
+  const [cmsConfig, setCmsConfig] = useState(defaultCms);
+
+  useEffect(() => {
+    fetch('/api/cms')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.pages) setCmsConfig(data);
+      })
+      .catch(err => console.error('Failed to load CMS config, using defaults', err));
+  }, []);
+
   const toggleListening = () => {
     if (!speechSupported) return;
 
@@ -623,13 +637,15 @@ export default function Chat() {
                 className="hidden"
                 accept="image/*,application/pdf"
               />
-              <button
-                onClick={triggerFileUpload}
-                className="p-2.5 text-gray-400 dark:text-gray-500 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-500/10 rounded-full transition-colors mr-2"
-                title="Add attachment"
-              >
-                <Plus size={22} />
-              </button>
+              {cmsConfig?.pages?.chat?.features?.allowFileUpload && (
+                <button
+                  onClick={triggerFileUpload}
+                  className="p-2.5 text-gray-400 dark:text-gray-500 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-500/10 rounded-full transition-colors mr-2"
+                  title="Add attachment"
+                >
+                  <Plus size={22} />
+                </button>
+              )}
               <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -644,7 +660,7 @@ export default function Chat() {
                 rows={1}
                 style={{ maxHeight: '120px', minHeight: '44px' }}
               />
-              {speechSupported && (
+              {speechSupported && cmsConfig?.pages?.chat?.features?.allowVoiceInput && (
                 <button
                   onClick={toggleListening}
                   className={`w-10 h-10 rounded-full flex items-center justify-center mr-1 transition-all ${isListening ? 'bg-red-500 text-white animate-pulse' : 'text-gray-400 dark:text-gray-500 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-500/10'}`}
