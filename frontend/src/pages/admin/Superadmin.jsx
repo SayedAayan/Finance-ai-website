@@ -341,14 +341,14 @@ export default function Superadmin() {
             `}</style>
             <div className="ticker-feed space-y-6">
               {[
+                { icon: FileEdit, bg: 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400', title: 'CMS Updated', desc: 'Changed Platform Name from "Website" to "Stockbuzz".', time: '1 min ago' },
                 { icon: Users, bg: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400', title: 'New user registered', desc: 'admin@stockbuzz.in created a new Pro account.', time: '2 mins ago' },
-                { icon: FileEdit, bg: 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400', title: 'CMS Updated', desc: 'Superadmin published changes to Homepage Hero.', time: '1 hour ago' },
-                { icon: AlertCircle, bg: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400', title: 'API Rate Limit Warning', desc: 'NSE data feed reached 90% of hourly limit.', time: '3 hours ago' },
-                { icon: CheckCircle2, bg: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400', title: 'System Backup Complete', desc: 'Automated database backup finished successfully.', time: '12 hours ago' },
+                { icon: FileEdit, bg: 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400', title: 'CMS Updated', desc: 'Changed Homepage Heading to "What are you here for?????".', time: '5 mins ago' },
+                { icon: ImageIcon, bg: 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400', title: 'CMS Updated', desc: 'Uploaded a new Favicon in Brand Settings.', time: '10 mins ago' },
+                { icon: FileEdit, bg: 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400', title: 'CMS Updated', desc: 'Changed Platform Name from "Website" to "Stockbuzz".', time: '1 min ago' },
                 { icon: Users, bg: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400', title: 'New user registered', desc: 'admin@stockbuzz.in created a new Pro account.', time: '2 mins ago' },
-                { icon: FileEdit, bg: 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400', title: 'CMS Updated', desc: 'Superadmin published changes to Homepage Hero.', time: '1 hour ago' },
-                { icon: AlertCircle, bg: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400', title: 'API Rate Limit Warning', desc: 'NSE data feed reached 90% of hourly limit.', time: '3 hours ago' },
-                { icon: CheckCircle2, bg: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400', title: 'System Backup Complete', desc: 'Automated database backup finished successfully.', time: '12 hours ago' },
+                { icon: FileEdit, bg: 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400', title: 'CMS Updated', desc: 'Changed Homepage Heading to "What are you here for?????".', time: '5 mins ago' },
+                { icon: ImageIcon, bg: 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400', title: 'CMS Updated', desc: 'Uploaded a new Favicon in Brand Settings.', time: '10 mins ago' },
               ].map((feed, i) => (
                 <div key={i} className="flex gap-4">
                   <div className={`p-2 rounded-full h-8 w-8 flex items-center justify-center shrink-0 ${feed.bg}`}>
@@ -366,7 +366,7 @@ export default function Superadmin() {
         </div>
 
         {/* Quick Actions / System Health */}
-        <div className="space-y-4 flex flex-col min-h-0 overflow-y-auto pb-2">
+        <div className="space-y-4 flex flex-col pb-2">
           <div className="bg-white dark:bg-black rounded-2xl border border-gray-100 dark:border-gray-800/80 shadow-[0_4px_24px_-4px_rgba(0,0,0,0.02)] shrink-0">
             <div className="px-5 py-4 border-b border-gray-50 dark:border-gray-800/50">
               <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100">System Health</h3>
@@ -385,13 +385,15 @@ export default function Superadmin() {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-violet-600 to-violet-800 rounded-2xl border border-violet-500 shadow-lg shadow-violet-500/20 p-4 text-white relative overflow-hidden">
+          <div className="bg-gradient-to-br from-violet-600 to-violet-800 rounded-2xl border border-violet-500 shadow-lg shadow-violet-500/20 p-4 text-white relative overflow-hidden shrink-0 mt-auto">
             <div className="absolute -right-6 -top-6 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl"></div>
             <h3 className="text-sm font-bold mb-1 relative z-10">Upgrade API Tier</h3>
             <p className="text-[11px] text-violet-100/80 mb-3 leading-relaxed relative z-10">You are approaching your monthly API limit for market data feeds.</p>
-            <button className="w-full py-1.5 bg-white text-violet-700 rounded-lg text-xs font-bold shadow-sm hover:bg-gray-50 transition-colors relative z-10">
-              View Plans
-            </button>
+            <div className="flex justify-start">
+              <button className="inline-flex px-4 py-1.5 bg-white text-violet-700 rounded-lg text-xs font-bold shadow-sm hover:bg-gray-50 transition-colors relative z-10">
+                View Plans
+              </button>
+            </div>
           </div>
         </div>
 
