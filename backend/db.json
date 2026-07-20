@@ -1697,6 +1697,26 @@
       ],
       "createdAt": "2026-07-17T11:52:48.660Z",
       "updatedAt": "2026-07-17T11:52:50.939Z"
+    },
+    "1784544891478": {
+      "id": "1784544891478",
+      "title": "Compare TCS vs Reliance",
+      "messages": [
+        {
+          "id": 1784544891399,
+          "type": "user",
+          "text": "Compare TCS vs Reliance",
+          "file": null
+        },
+        {
+          "id": 1784544899073,
+          "type": "ai",
+          "text": "### Connection Error\nI'm unable to reach the backend AI providers.\n\nRegarding your query \"Compare TCS vs Reliance\":\n- StockBuzz live data confirms active research is available for Reliance, TCS, HDFC, and PPFAS.\n- Please consult scheme related documents or a SEBI registered advisor.",
+          "source": "Stockbuzz AI Local Fallback"
+        }
+      ],
+      "createdAt": "2026-07-20T10:54:51.478Z",
+      "updatedAt": "2026-07-20T10:54:59.125Z"
     }
   },
   "watchlist": [],
@@ -2055,7 +2075,7 @@
         {
           "id": "plan_pro",
           "name": "Pro",
-          "price": "499",
+          "price": "1999",
           "billingCycle": "Monthly",
           "features": [
             "Real-time NSE/BSE data",
@@ -2067,8 +2087,8 @@
         },
         {
           "id": "plan_ultra_pro",
-          "name": "Ultra Pro",
-          "price": "999",
+          "name": "Ultra",
+          "price": "9999",
           "billingCycle": "Monthly",
           "features": [
             "Real-time NSE/BSE data",
@@ -2078,7 +2098,7 @@
             "1-on-1 advisor calls",
             "Direct API access"
           ],
-          "buttonLabel": "Upgrade to Ultra Pro"
+          "buttonLabel": "Upgrade to Ultra"
         }
       ]
     }

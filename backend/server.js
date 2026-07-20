@@ -735,11 +735,11 @@ async function runAgentLoop(apiMessages) {
     // Content present — check if the model wrote raw tool-call text instead of using tool_calls
     if (message.content) {
       const rawCalls = parseRawToolCalls(message.content);
-      
+
       // Fallback if AI responds with refusal/don't know and no tool calls
       const lowerContent = message.content.toLowerCase();
       const isRefusal = ["as an ai", "i don't know", "i do not know", "i cannot", "i can't", "i am unable", "i'm sorry", "i am sorry", "i don't have access", "i do not have access"].some(kw => lowerContent.includes(kw));
-      
+
       if (rawCalls.length === 0 && isRefusal && currentProviderIndex + 1 < AI_PROVIDERS.length) {
         console.log(`  🔄 Model refusal detected. Falling back to next provider...`);
         currentProviderIndex++;
@@ -803,8 +803,8 @@ async function readDB() {
     return db;
   } catch (err) {
     if (err.code === 'ENOENT') {
-      return { 
-        chats: {}, watchlist: [], trending: {}, 
+      return {
+        chats: {}, watchlist: [], trending: {},
         cms: {
           pages: {
             home: { title: "Home Page", content: {}, features: { showMarketSnapshot: true, showTrendingStocks: true, showMarketMovers: true, showMarketPulse: true, showFeaturedNews: true } },
@@ -1986,6 +1986,52 @@ app.delete('/api/users/:id', async (req, res) => {
   }
 });
 
+
+// ─── Audit Logs API for Superadmin ──────────────────────────────────────────────────
+async function readAuditLogs() {
+  const logsPath = join(__dirname, 'data', 'auditLogs.json');
+  try {
+    const data = await fs.readFile(logsPath, 'utf-8');
+    return JSON.parse(data);
+  } catch (err) {
+    if (err.code === 'ENOENT') return [];
+    throw err;
+  }
+}
+
+async function writeAuditLogs(logs) {
+  const logsPath = join(__dirname, 'data', 'auditLogs.json');
+  await fs.mkdir(join(__dirname, 'data'), { recursive: true });
+  await fs.writeFile(logsPath, JSON.stringify(logs, null, 2));
+}
+
+app.get('/api/audit-logs', async (req, res) => {
+  try {
+    const logs = await readAuditLogs();
+    res.json(logs);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to read audit logs' });
+  }
+});
+
+app.post('/api/audit-logs', express.json(), async (req, res) => {
+  try {
+    const logs = await readAuditLogs();
+    const newLog = {
+      id: 'log_' + Date.now(),
+      time: new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }),
+      ...req.body
+    };
+    logs.unshift(newLog); // Add to beginning
+    // Keep only last 1000 logs
+    if (logs.length > 1000) logs.length = 1000;
+
+    await writeAuditLogs(logs);
+    res.json(newLog);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to add audit log' });
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`\n✅  Stockbuzz AI Backend ready at http://localhost:${PORT}`);

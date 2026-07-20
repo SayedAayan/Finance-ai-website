@@ -168,7 +168,8 @@ export default function Navbar({ onToggleAIChat }) {
       {/* Ticker Bar */}
       {marketData.length > 0 && (
         <div className="bg-gray-900 text-white text-[12px] font-medium py-1.5 overflow-hidden flex whitespace-nowrap border-b border-gray-800">
-          <div className="flex gap-8 animate-[marquee_70s_linear_infinite]">
+          <div className="container overflow-hidden flex">
+            <div className="flex gap-8 animate-[marquee_70s_linear_infinite]">
             {Array(8).fill(marketData).flat().map((idx, i) => (
               <div key={i} className="flex items-center gap-2">
                 <span className="text-gray-400">{idx.label || idx.symbol}</span>
@@ -184,6 +185,7 @@ export default function Navbar({ onToggleAIChat }) {
                 )}
               </div>
             ))}
+            </div>
           </div>
         </div>
       )}
@@ -193,7 +195,7 @@ export default function Navbar({ onToggleAIChat }) {
         transition={{ duration: 0.5, ease: 'easeOut' }}
         className="bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 transition-colors duration-300"
       >
-        <div className="max-w-[1400px] mx-auto px-6 h-[80px] flex items-center justify-between gap-3">
+        <div className="container h-[80px] flex items-center justify-between gap-3">
 
           {/* Left: Logo */}
           <Link

@@ -95,8 +95,9 @@ export default function News() {
         setBody(p.map(t => '<p>' + t.trim() + '</p>').join(''));
       }
     } catch {
-      setBody('<p>' + (a.description || 'No preview available.') + '</p>'
-        + '<p style="font-family:var(--font-body);font-size:0.85rem;color:var(--text-3)">Full article may be restricted by the publisher.</p>');
+      setModal(null);
+      window.open(a.link, '_blank', 'noopener,noreferrer');
+      return;
     } finally { setBodyLoading(false); }
   }
 
@@ -188,7 +189,7 @@ export default function News() {
             <div className="news-more-grid" style={{ display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(270px,1fr))',gap:'1rem' }}>
               {visible.map(a => (
                 <div key={a.link}
-                  style={{ borderRadius:16,border:'1px solid var(--neutral-200)',background:'var(--bg-card)',boxShadow:'0 1px 4px rgba(0,0,0,.05)',padding:'1.15rem 1.25rem',display:'flex',flexDirection:'column',gap:10,cursor:'pointer',transition:'box-shadow .2s,transform .2s,border-color .2s',minWidth:0 }}
+                  style={{ borderRadius:16,border:'1px solid var(--neutral-200)',background:'var(--bg-card)',boxShadow:'0 1px 4px rgba(0,0,0,.05)',padding:'1.25rem 1.5rem',display:'flex',flexDirection:'column',gap:10,cursor:'pointer',transition:'box-shadow .2s,transform .2s,border-color .2s',minWidth:0 }}
                   onClick={() => openModal(a)}
                   onMouseEnter={e => { e.currentTarget.style.boxShadow='0 12px 28px rgba(0,0,0,.09)'; e.currentTarget.style.transform='translateY(-3px)'; e.currentTarget.style.borderColor='rgba(26,86,219,.3)'; }}
                   onMouseLeave={e => { e.currentTarget.style.boxShadow='0 1px 4px rgba(0,0,0,.05)'; e.currentTarget.style.transform=''; e.currentTarget.style.borderColor='var(--neutral-200)'; }}>

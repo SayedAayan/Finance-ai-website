@@ -1,0 +1,92 @@
+[
+  {
+    "id": "log_1784545121568",
+    "time": "Jul 20, 2026, 16:28:41",
+    "admin": "admin@stockbuzz.in",
+    "section": "Users",
+    "action": "Updated User",
+    "details": "Updated user: testuser@stockbuzz.in",
+    "actionColor": "text-blue-600 dark:text-blue-400"
+  },
+  {
+    "id": "log_1784545113952",
+    "time": "Jul 20, 2026, 16:28:33",
+    "admin": "admin@stockbuzz.in",
+    "section": "Users",
+    "action": "Updated User",
+    "details": "Updated user: testuser@stockbuzz.in",
+    "actionColor": "text-blue-600 dark:text-blue-400"
+  },
+  {
+    "id": "log_1784545105371",
+    "time": "Jul 20, 2026, 16:28:25",
+    "admin": "admin@stockbuzz.in",
+    "section": "Users",
+    "action": "Deleted User",
+    "details": "Deleted user: testuser@stockbuzz.in",
+    "actionColor": "text-red-600 dark:text-red-400"
+  },
+  {
+    "id": "log_1784544576805",
+    "time": "Jul 20, 2026, 16:19:36",
+    "admin": "admin@stockbuzz.in",
+    "section": "Users",
+    "action": "Created User",
+    "details": "New user: testuser2@stockbuzz.in (Ultra)",
+    "actionColor": "text-blue-600 dark:text-blue-400"
+  },
+  {
+    "id": "log_1784543749124",
+    "time": "Jul 20, 2026, 16:05:49",
+    "admin": "admin@stockbuzz.in",
+    "section": "Website CMS",
+    "action": "Updated Configuration",
+    "details": "Global CMS Settings modified",
+    "actionColor": "text-violet-600 dark:text-violet-400"
+  },
+  {
+    "id": "log_1784543658581",
+    "time": "Jul 20, 2026, 16:04:18",
+    "admin": "admin@stockbuzz.in",
+    "section": "Users",
+    "action": "Created User",
+    "details": "New user: aayanprogram@gmail.com",
+    "actionColor": "text-blue-600 dark:text-blue-400"
+  },
+  {
+    "id": "log_1784543646053",
+    "time": "Jul 20, 2026, 16:04:06",
+    "admin": "admin@stockbuzz.in",
+    "section": "Users",
+    "action": "Deleted User",
+    "details": "Deleted user: aayanprogram@gmail.com",
+    "actionColor": "text-red-600 dark:text-red-400"
+  },
+  {
+    "id": "log_1784543634962",
+    "time": "Jul 20, 2026, 16:03:54",
+    "admin": "admin@stockbuzz.in",
+    "section": "Users",
+    "action": "Updated User",
+    "details": "Updated user: testuser@stockbuzz.in",
+    "actionColor": "text-blue-600 dark:text-blue-400"
+  },
+  {
+    "id": "log_1784543578851",
+    "time": "Jul 20, 2026, 16:02:58",
+    "admin": "admin@stockbuzz.in",
+    "section": "Users",
+    "action": "Updated User",
+    "details": "Updated user: aayanprogram@gmail.com",
+    "actionColor": "text-blue-600 dark:text-blue-400"
+  },
+  {
+    "id": "log_1784543493686",
+    "time": "Jul 20, 2026, 16:01:33",
+    "admin": "admin@stockbuzz.in",
+    "section": "Users",
+    "action": "Created User",
+    "details": "New user: testuser@stockbuzz.in",
+    "actionColor": "text-blue-600 dark:text-blue-400"
+  }
+]
