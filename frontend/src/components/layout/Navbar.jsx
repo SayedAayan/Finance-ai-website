@@ -395,9 +395,25 @@ export default function Navbar({ onToggleAIChat }) {
                   className="flex items-center justify-center w-[38px] h-[38px] rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 text-white font-bold text-sm overflow-hidden"
                   title={currentUser.displayName || currentUser.phoneNumber || 'Account'}
                 >
-                  {currentUser.photoURL
-                    ? <img src={currentUser.photoURL} alt="" className="w-full h-full object-cover" />
-                    : (currentUser.displayName?.[0] || currentUser.phoneNumber?.slice(-2) || 'U')}
+                  {currentUser.photoURL ? (
+                    <img
+                      src={currentUser.photoURL}
+                      alt={currentUser.displayName || 'User'}
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-cover rounded-full"
+                      onError={(e) => {
+                        // If image fails, hide it and show the initial letter instead
+                        e.target.style.display = 'none';
+                        e.target.parentElement.setAttribute('data-fallback', 'true');
+                        e.target.parentElement.innerHTML =
+                          `<span style="font-size:1rem;font-weight:700;color:white">${(currentUser.displayName?.[0] || currentUser.email?.[0] || 'U').toUpperCase()}</span>`;
+                      }}
+                    />
+                  ) : (
+                    <span style={{ fontSize: '1rem', fontWeight: 700, color: 'white' }}>
+                      {(currentUser.displayName?.[0] || currentUser.email?.[0] || currentUser.phoneNumber?.slice(-1) || 'U').toUpperCase()}
+                    </span>
+                  )}
                 </button>
                 <AnimatePresence>
                   {showUserMenu && (

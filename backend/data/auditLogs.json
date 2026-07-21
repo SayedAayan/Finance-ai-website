@@ -1,5 +1,131 @@
 [
   {
+    "id": "log_1784632277133",
+    "time": "Jul 21, 2026, 16:41:17",
+    "admin": "admin@stockbuzz.in",
+    "section": "Users",
+    "action": "Exported Data",
+    "details": "Exported users to CSV",
+    "actionColor": "text-blue-600 dark:text-blue-400"
+  },
+  {
+    "id": "log_1784632262699",
+    "time": "Jul 21, 2026, 16:41:02",
+    "admin": "admin@stockbuzz.in",
+    "section": "Users",
+    "action": "Updated User",
+    "details": "Updated user: it@stockbuzz.in",
+    "actionColor": "text-blue-600 dark:text-blue-400"
+  },
+  {
+    "id": "log_1784632247954",
+    "time": "Jul 21, 2026, 16:40:47",
+    "admin": "admin@stockbuzz.in",
+    "section": "Users",
+    "action": "Updated User",
+    "details": "Updated user: it@stockbuzz.in",
+    "actionColor": "text-blue-600 dark:text-blue-400"
+  },
+  {
+    "id": "log_1784625747940",
+    "time": "Jul 21, 2026, 14:52:27",
+    "admin": "admin@stockbuzz.in",
+    "section": "Users",
+    "action": "Deleted User",
+    "details": "Deleted user: testuser2@gmal.com",
+    "actionColor": "text-red-600 dark:text-red-400"
+  },
+  {
+    "id": "log_1784625726809",
+    "time": "Jul 21, 2026, 14:52:06",
+    "admin": "admin@stockbuzz.in",
+    "section": "Users",
+    "action": "Updated User",
+    "details": "Updated user: testuser2@gmal.com",
+    "actionColor": "text-blue-600 dark:text-blue-400"
+  },
+  {
+    "id": "log_1784625713721",
+    "time": "Jul 21, 2026, 14:51:53",
+    "admin": "admin@stockbuzz.in",
+    "section": "Users",
+    "action": "Created User",
+    "details": "New user: testuser2@gmail..com (Free)",
+    "actionColor": "text-blue-600 dark:text-blue-400"
+  },
+  {
+    "id": "log_1784611019238",
+    "time": "Jul 21, 2026, 10:46:59",
+    "admin": "admin@stockbuzz.in",
+    "section": "Users",
+    "action": "Exported Data",
+    "details": "Exported users to CSV",
+    "actionColor": "text-blue-600 dark:text-blue-400"
+  },
+  {
+    "id": "log_1784611010152",
+    "time": "Jul 21, 2026, 10:46:50",
+    "admin": "admin@stockbuzz.in",
+    "section": "System",
+    "action": "Updated Settings",
+    "details": "Global Admin Settings updated",
+    "actionColor": "text-violet-600 dark:text-violet-400"
+  },
+  {
+    "id": "log_1784611009922",
+    "time": "Jul 21, 2026, 10:46:49",
+    "admin": "admin@stockbuzz.in",
+    "section": "System",
+    "action": "Updated Settings",
+    "details": "Global Admin Settings updated",
+    "actionColor": "text-violet-600 dark:text-violet-400"
+  },
+  {
+    "id": "log_1784611005562",
+    "time": "Jul 21, 2026, 10:46:45",
+    "admin": "admin@stockbuzz.in",
+    "section": "System",
+    "action": "Updated Settings",
+    "details": "Global Admin Settings updated",
+    "actionColor": "text-violet-600 dark:text-violet-400"
+  },
+  {
+    "id": "log_1784611005074",
+    "time": "Jul 21, 2026, 10:46:45",
+    "admin": "admin@stockbuzz.in",
+    "section": "System",
+    "action": "Updated Settings",
+    "details": "Global Admin Settings updated",
+    "actionColor": "text-violet-600 dark:text-violet-400"
+  },
+  {
+    "id": "log_1784611004203",
+    "time": "Jul 21, 2026, 10:46:44",
+    "admin": "admin@stockbuzz.in",
+    "section": "System",
+    "action": "Updated Settings",
+    "details": "Global Admin Settings updated",
+    "actionColor": "text-violet-600 dark:text-violet-400"
+  },
+  {
+    "id": "log_1784611003887",
+    "time": "Jul 21, 2026, 10:46:43",
+    "admin": "admin@stockbuzz.in",
+    "section": "System",
+    "action": "Updated Settings",
+    "details": "Global Admin Settings updated",
+    "actionColor": "text-violet-600 dark:text-violet-400"
+  },
+  {
+    "id": "log_1784608991697",
+    "time": "Jul 21, 2026, 10:13:11",
+    "admin": "admin@stockbuzz.in",
+    "section": "System",
+    "action": "Exported Data",
+    "details": "Exported auditLogs to CSV",
+    "actionColor": "text-blue-600 dark:text-blue-400"
+  },
+  {
     "id": "log_1784545121568",
     "time": "Jul 20, 2026, 16:28:41",
     "admin": "admin@stockbuzz.in",

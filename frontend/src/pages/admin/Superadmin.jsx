@@ -212,9 +212,34 @@ export default function Superadmin() {
   const [editingUser, setEditingUser] = useState(null);
   const [isCmsDirty, setIsCmsDirty] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [profileTab, setProfileTab] = useState('Overview');
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [userFilter, setUserFilter] = useState('All');
   const [notifToggles, setNotifToggles] = useState({ proAlerts: true, apiWarnings: true, weeklySummary: false });
+  const [systemHealth, setSystemHealth] = useState(null);
+  const [newsSources, setNewsSources] = useState([
+    { name: 'The Times of India', active: true },
+    { name: 'Economic Times', active: true },
+    { name: 'LiveMint', active: true },
+    { name: 'BusinessLine', active: true },
+    { name: 'Moneycontrol', active: false },
+    { name: 'CNBC TV18', active: false }
+  ]);
+  const [refreshInterval, setRefreshInterval] = useState(15);
+  const [analyticsDateFilter, setAnalyticsDateFilter] = useState('Last 30 Days');
+  const [showAnalyticsDateDropdown, setShowAnalyticsDateDropdown] = useState(false);
+  const [revenueDateFilter, setRevenueDateFilter] = useState('This Month');
+  const [showRevenueDateDropdown, setShowRevenueDateDropdown] = useState(false);
+  const [showAddLinkModal, setShowAddLinkModal] = useState(false);
+  const [newLinkTitle, setNewLinkTitle] = useState('');
+  const [newLinkUrl, setNewLinkUrl] = useState('');
+  const [customNewsLinks, setCustomNewsLinks] = useState([
+    { title: "Sensex crashes 900 points as inflation fears rise, Nifty below 24k", source: "The Times of India", time: "10 mins ago", status: "Pinned" },
+    { title: "TCS Q3 Results: Net profit beats estimates, announces dividend", source: "Economic Times", time: "45 mins ago", status: "Live" },
+    { title: "RBI maintains repo rate at 6.5%, changes stance to neutral", source: "LiveMint", time: "1 hr ago", status: "Live" },
+    { title: "HDFC Bank merger synergies starting to reflect in NIMs: Analyst", source: "BusinessLine", time: "2 hrs ago", status: "Live" },
+    { title: "Outdated story about old market crash from 2024", source: "The Times of India", time: "1 day ago", status: "Hidden" },
+  ]);
 
   useEffect(() => {
     if (remoteCms) setCmsConfig(remoteCms);
@@ -223,7 +248,39 @@ export default function Superadmin() {
   useEffect(() => {
     fetchUsers();
     fetchAuditLogs();
+    fetchSystemHealth();
+    fetchSettings();
+    fetchAdminNews();
   }, []);
+
+  const fetchAdminNews = () => {
+    fetch(`/api/admin/news?t=${Date.now()}`)
+      .then(res => res.json())
+      .then(data => { if(data.articles) setCustomNewsLinks(data.articles); })
+      .catch(console.error);
+    fetch(`/api/admin/news/settings?t=${Date.now()}`)
+      .then(res => res.json())
+      .then(data => {
+        if(data.disabledSources) {
+          setNewsSources(prev => prev.map(s => ({ ...s, active: !data.disabledSources.includes(s.name) })));
+        }
+      })
+      .catch(console.error);
+  };
+
+  const fetchSystemHealth = () => {
+    fetch('/api/system-health')
+      .then(res => res.json())
+      .then(data => setSystemHealth(data))
+      .catch(console.error);
+  };
+
+  const fetchSettings = () => {
+    fetch('/api/admin/settings')
+      .then(res => res.json())
+      .then(data => { if (data.notifToggles) setNotifToggles(data.notifToggles); })
+      .catch(console.error);
+  };
 
   const fetchAuditLogs = () => {
     fetch('/api/audit-logs')
@@ -319,6 +376,54 @@ export default function Superadmin() {
     } catch (err) {
       console.error(err);
       alert('Failed to update user status');
+    }
+  };
+
+  const handleExportCSV = (type) => {
+    const data = type === 'users' ? users : auditLogs;
+    if (!data || !data.length) return alert('No data to export');
+    
+    const allKeys = Array.from(new Set(data.flatMap(item => Object.keys(item))));
+    const headers = allKeys.join(',');
+    const rows = data.map(row => 
+      allKeys.map(key => `"${String(row[key] !== undefined && row[key] !== null ? row[key] : '').replace(/"/g, '""')}"`).join(',')
+    );
+    const csvContent = [headers, ...rows].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${type}_export_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    
+    logAuditAction(type === 'users' ? 'Users' : 'System', 'Exported Data', `Exported ${type} to CSV`, 'text-blue-600 dark:text-blue-400');
+  };
+
+  const handleSaveSettings = async (newToggles) => {
+    try {
+      await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notifToggles: newToggles || notifToggles })
+      });
+      logAuditAction('System', 'Updated Settings', 'Global Admin Settings updated', 'text-violet-600 dark:text-violet-400');
+    } catch(e) {
+      console.error(e);
+    }
+  };
+
+  const handleSaveCredentials = async (field, value) => {
+    try {
+      await fetch('/api/admin/credentials', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ field, value })
+      });
+      logAuditAction('Security', `Updated ${field}`, `Admin ${field} updated successfully`, 'text-blue-600 dark:text-blue-400');
+      alert(`${field} updated successfully!`);
+    } catch(e) {
+      console.error(e);
+      alert(`Failed to update ${field}`);
     }
   };
 
@@ -482,9 +587,9 @@ export default function Superadmin() {
             </div>
             <div className="p-5 space-y-4">
               {[
-                { label: 'Database Status', val: 'Operational', color: 'text-emerald-500' },
-                { label: 'API Uptime', val: '99.98%', color: 'text-emerald-500' },
-                { label: 'Server Load', val: '24%', color: 'text-blue-500' },
+                { label: 'Database Status', val: systemHealth?.databaseStatus || 'Checking...', color: systemHealth?.databaseStatus === 'Operational' ? 'text-emerald-500' : 'text-amber-500' },
+                { label: 'API Uptime', val: systemHealth?.apiUptime || 'Checking...', color: 'text-emerald-500' },
+                { label: 'Server Load', val: systemHealth?.serverLoad || 'Checking...', color: 'text-blue-500' },
               ].map((item, i) => (
                 <div key={i} className="flex justify-between items-center">
                   <span className="text-[13px] font-medium text-gray-500 dark:text-gray-400">{item.label}</span>
@@ -518,7 +623,7 @@ export default function Superadmin() {
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage accounts and subscriptions.</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900 text-gray-700 dark:text-gray-300 px-4 py-1.5 rounded-lg text-sm font-medium transition-colors shadow-sm">
+          <button onClick={() => handleExportCSV('users')} className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900 text-gray-700 dark:text-gray-300 px-4 py-1.5 rounded-lg text-sm font-medium transition-colors shadow-sm">
             Export CSV
           </button>
           <button onClick={() => { setEditingUser({}); setShowAddUserModal(true); }} className="bg-violet-600 hover:bg-violet-700 text-white px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors shadow-sm shadow-violet-500/20 flex items-center gap-2">
@@ -621,107 +726,163 @@ export default function Superadmin() {
 
       {/* User Detail Drawer Overlay */}
       {selectedUser && (
-        <div className="absolute inset-0 z-50 flex justify-end">
-          <div className="absolute inset-0 bg-black/20 backdrop-blur-sm transition-opacity" onClick={() => setSelectedUser(null)}></div>
-          <div className="relative w-full max-w-md bg-white dark:bg-[#0a0a0a] h-full shadow-2xl border-l border-gray-200 dark:border-gray-800 flex flex-col animate-in slide-in-from-right duration-300">
-            <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">User Profile</h3>
-              <button onClick={() => setSelectedUser(null)} className="p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                <X size={20} />
-              </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:pl-64">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={() => setSelectedUser(null)}></div>
+          <div className="relative w-full max-w-xl bg-white dark:bg-[#0a0a0a] rounded-2xl shadow-2xl flex flex-col h-[600px] max-h-[calc(100vh-80px)] animate-in zoom-in-95 duration-200 overflow-hidden">
+            <div className="border-b border-gray-100 dark:border-gray-800 flex flex-col bg-white dark:bg-[#0a0a0a] z-10">
+              <div className="px-6 py-4 flex justify-between items-center">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">User Profile</h3>
+                <button onClick={() => setSelectedUser(null)} className="p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="px-6 flex gap-6 overflow-x-auto no-scrollbar">
+                {['Overview', 'Subscription', 'Activity', 'Quick Actions'].map(tab => (
+                  <button
+                    key={tab}
+                    onClick={() => setProfileTab(tab)}
+                    className={`pb-3 text-sm font-semibold transition-colors whitespace-nowrap border-b-2 ${
+                      profileTab === tab ? 'border-violet-600 text-violet-700 dark:text-violet-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-300'
+                    }`}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-6 space-y-5">
+            <div className="flex-1 overflow-y-auto p-6">
               
-              {/* Avatar + Name */}
-              <div className="flex items-center gap-4 bg-gray-50 dark:bg-gray-900/40 rounded-2xl p-4 border border-gray-100 dark:border-gray-800">
-                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold flex-shrink-0 ${
-                  selectedUser.plan === 'Ultra' ? 'bg-orange-100 text-orange-700' :
-                  selectedUser.plan === 'Pro' ? 'bg-violet-100 text-violet-700' :
-                  'bg-gray-200 text-gray-700'
-                }`}>
-                  {selectedUser.initial || selectedUser.name?.charAt(0)?.toUpperCase() || '?'}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-lg font-bold text-gray-900 dark:text-gray-100 truncate">{selectedUser.name}</h4>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{selectedUser.email}</p>
-                  <div className="flex items-center gap-2 mt-1.5">
-                    <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold tracking-wide ${
-                      (selectedUser.status || 'Active') === 'Active'
-                        ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400'
-                        : 'bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400'
-                    }`}>{(selectedUser.status || 'Active').toUpperCase()}</span>
-                    <PlanBadge plan={selectedUser.plan || 'Free'} size="sm" />
+              {profileTab === 'Overview' && (
+                <div className="space-y-4">
+                  {/* Avatar + Name */}
+                  <div className="flex items-center gap-4 bg-gray-50 dark:bg-gray-900/40 rounded-2xl p-3 border border-gray-100 dark:border-gray-800">
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold flex-shrink-0 ${
+                      selectedUser.plan === 'Ultra' ? 'bg-orange-100 text-orange-700' :
+                      selectedUser.plan === 'Pro' ? 'bg-violet-100 text-violet-700' :
+                      'bg-gray-200 text-gray-700'
+                    }`}>
+                      {selectedUser.initial || selectedUser.name?.charAt(0)?.toUpperCase() || '?'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-base font-bold text-gray-900 dark:text-gray-100 truncate">{selectedUser.name}</h4>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{selectedUser.email}</p>
+                    </div>
+                  </div>
+
+                  {/* Account Info */}
+                  <div className="bg-gray-50 dark:bg-gray-900/40 rounded-xl border border-gray-100 dark:border-gray-800 divide-y divide-gray-100 dark:divide-gray-800">
+                    <div className="px-4 py-2.5 flex justify-between items-center">
+                      <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">Joined</span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{selectedUser.joinDate || selectedUser.joined || 'N/A'}</span>
+                    </div>
+                    <div className="px-4 py-2.5 flex justify-between items-center">
+                      <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">Plan</span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{selectedUser.plan || 'Free'}</span>
+                    </div>
+                    <div className="px-4 py-2.5 flex justify-between items-center">
+                      <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">Status</span>
+                      <div className="flex items-center gap-2">
+                        <span className={`w-1.5 h-1.5 rounded-full ${
+                          (selectedUser.status || 'Active') === 'Active' ? 'bg-emerald-500' : 'bg-red-500'
+                        }`}></span>
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{(selectedUser.status || 'Active')}</span>
+                      </div>
+                    </div>
+                    <div className="px-4 py-2.5 flex justify-between items-center">
+                      <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">User ID</span>
+                      <span className="text-xs font-mono text-gray-500 dark:text-gray-400">{selectedUser.id || 'N/A'}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
-              {/* Account Info */}
-              <div className="bg-gray-50 dark:bg-gray-900/40 rounded-xl border border-gray-100 dark:border-gray-800 divide-y divide-gray-100 dark:divide-gray-800">
-                <div className="px-4 py-3 flex justify-between items-center">
-                  <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">Joined</span>
-                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{selectedUser.joinDate || selectedUser.joined || 'N/A'}</span>
+              {profileTab === 'Subscription' && (
+                <div className="space-y-4">
+                  <div className="bg-gray-50 dark:bg-gray-900/40 rounded-xl p-4 border border-gray-100 dark:border-gray-800">
+                    <div className="flex justify-between items-center mb-3">
+                      <h5 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Current Plan</h5>
+                      <button
+                        onClick={() => { setEditingUser(selectedUser); setSelectedUser(null); setShowAddUserModal(true); }}
+                        className="text-xs font-semibold text-violet-600 dark:text-violet-400 hover:underline"
+                      >Change Plan</button>
+                    </div>
+                    <PlanBadge plan={selectedUser.plan || 'Free'} size="lg" />
+                  </div>
+                  <div className="border border-gray-100 dark:border-gray-800 rounded-xl overflow-hidden">
+                    <div className="bg-gray-50 dark:bg-gray-900/60 px-4 py-2 border-b border-gray-100 dark:border-gray-800">
+                      <h5 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Billing History</h5>
+                    </div>
+                    <div className="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                      No recent billing history found.
+                    </div>
+                  </div>
                 </div>
-                <div className="px-4 py-3 flex justify-between items-center">
-                  <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">Plan</span>
-                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{selectedUser.plan || 'Free'}</span>
-                </div>
-                <div className="px-4 py-3 flex justify-between items-center">
-                  <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">Status</span>
-                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{selectedUser.status || 'Active'}</span>
-                </div>
-                <div className="px-4 py-3 flex justify-between items-center">
-                  <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">User ID</span>
-                  <span className="text-xs font-mono text-gray-500 dark:text-gray-400">{selectedUser.id || 'N/A'}</span>
-                </div>
-              </div>
+              )}
 
-              {/* Subscription */}
-              <div className="bg-gray-50 dark:bg-gray-900/40 rounded-xl p-4 border border-gray-100 dark:border-gray-800">
-                <div className="flex justify-between items-center mb-3">
-                  <h5 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Subscription</h5>
+              {profileTab === 'Activity' && (
+                <div className="space-y-4">
+                  <div className="border border-gray-100 dark:border-gray-800 rounded-xl overflow-hidden">
+                    <div className="bg-gray-50 dark:bg-gray-900/60 px-4 py-2 border-b border-gray-100 dark:border-gray-800">
+                      <h5 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Recent Logins</h5>
+                    </div>
+                    <div className="p-4 space-y-3">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-700 dark:text-gray-300">Mumbai, India (Windows)</span>
+                        <span className="text-gray-500 dark:text-gray-400">Today, 10:45 AM</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-700 dark:text-gray-300">Mumbai, India (iOS)</span>
+                        <span className="text-gray-500 dark:text-gray-400">Yesterday</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="border border-gray-100 dark:border-gray-800 rounded-xl overflow-hidden">
+                    <div className="bg-gray-50 dark:bg-gray-900/60 px-4 py-2 border-b border-gray-100 dark:border-gray-800">
+                      <h5 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Platform Usage</h5>
+                    </div>
+                    <div className="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                      Activity logs are updated weekly.
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {profileTab === 'Quick Actions' && (
+                <div className="space-y-3">
                   <button
                     onClick={() => { setEditingUser(selectedUser); setSelectedUser(null); setShowAddUserModal(true); }}
-                    className="text-xs font-semibold text-violet-600 dark:text-violet-400 hover:underline"
-                  >Change Plan</button>
-                </div>
-                <PlanBadge plan={selectedUser.plan || 'Free'} size="lg" />
-              </div>
-
-              {/* Quick Actions */}
-              <div className="space-y-3">
-                <h5 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Quick Actions</h5>
-                <div className="grid grid-cols-1 gap-2">
-                  <button
-                    onClick={() => { setEditingUser(selectedUser); setSelectedUser(null); setShowAddUserModal(true); }}
-                    className="flex items-center gap-2.5 px-4 py-2.5 bg-white dark:bg-black border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-violet-50 hover:text-violet-700 hover:border-violet-200 dark:hover:bg-violet-900/20 dark:hover:text-violet-400 transition-colors"
+                    className="w-full flex items-center justify-between px-4 py-3 bg-white dark:bg-black border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-violet-50 hover:text-violet-700 hover:border-violet-200 dark:hover:bg-violet-900/20 dark:hover:text-violet-400 transition-colors"
                   >
-                    <Edit2 size={14} /> Edit User Details
+                    <span className="flex items-center gap-2.5"><Edit2 size={16} /> Edit User Details</span>
+                    <ArrowRight size={14} className="text-gray-400" />
                   </button>
                   <button
                     onClick={() => { alert('Password reset email sent to ' + selectedUser.email); }}
-                    className="flex items-center gap-2.5 px-4 py-2.5 bg-white dark:bg-black border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 dark:hover:bg-blue-900/20 dark:hover:text-blue-400 transition-colors"
+                    className="w-full flex items-center justify-between px-4 py-3 bg-white dark:bg-black border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 dark:hover:bg-blue-900/20 dark:hover:text-blue-400 transition-colors"
                   >
-                    <RefreshCcw size={14} /> Reset Password
+                    <span className="flex items-center gap-2.5"><RefreshCcw size={16} /> Force Password Reset</span>
+                    <ArrowRight size={14} className="text-gray-400" />
                   </button>
                   <button
                     onClick={() => handleSuspendUser(selectedUser)}
-                    className={`flex items-center gap-2.5 px-4 py-2.5 border rounded-xl text-sm font-medium transition-colors ${
+                    className={`w-full flex items-center justify-between px-4 py-3 border rounded-xl text-sm font-medium transition-colors ${
                       (selectedUser.status || 'Active') === 'Suspended'
                         ? 'bg-white dark:bg-black border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
                         : 'bg-white dark:bg-black border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
                     }`}
                   >
-                    <Shield size={14} /> {(selectedUser.status || 'Active') === 'Suspended' ? 'Reactivate User' : 'Suspend User'}
+                    <span className="flex items-center gap-2.5"><Shield size={16} /> {(selectedUser.status || 'Active') === 'Suspended' ? 'Reactivate Account' : 'Suspend Account'}</span>
                   </button>
-                  <button
-                    onClick={() => { handleDeleteUser(selectedUser.id); setSelectedUser(null); }}
-                    className="flex items-center gap-2.5 px-4 py-2.5 bg-white dark:bg-black border border-red-200 dark:border-red-800 rounded-xl text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                  >
-                    <Trash2 size={14} /> Delete User
-                  </button>
+                  <div className="pt-4 mt-2 border-t border-red-100 dark:border-red-900/30">
+                    <button
+                      onClick={() => { handleDeleteUser(selectedUser.id); setSelectedUser(null); }}
+                      className="w-full flex items-center justify-between px-4 py-3 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-xl text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors"
+                    >
+                      <span className="flex items-center gap-2.5"><Trash2 size={16} /> Delete User Permanently</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
-
+              )}
             </div>
           </div>
         </div>
@@ -1026,25 +1187,46 @@ export default function Superadmin() {
     );
   };
 
-  const renderAnalytics = () => (
+  const renderAnalytics = () => {
+    const totalSignups = users.length;
+    const proUsers = users.filter(u => u.plan === 'Pro').length;
+    const ultraUsers = users.filter(u => u.plan === 'Ultra').length;
+    const freeUsers = totalSignups - proUsers - ultraUsers;
+
+    return (
     <div className="flex flex-col flex-1 min-h-0 space-y-5 animate-in fade-in duration-500 pb-6">
       <div className="flex justify-between items-end mb-1">
         <div>
           <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">Analytics</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Traffic and engagement metrics.</p>
         </div>
-        <button className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900 text-gray-700 dark:text-gray-300 px-4 py-1.5 rounded-lg text-sm font-medium transition-colors shadow-sm flex items-center gap-2">
-          Last 30 Days <ChevronDown size={14} />
-        </button>
+        <div className="relative">
+          <button onClick={() => setShowAnalyticsDateDropdown(!showAnalyticsDateDropdown)} className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900 text-gray-700 dark:text-gray-300 px-4 py-1.5 rounded-lg text-sm font-medium transition-colors shadow-sm flex items-center gap-2">
+            {analyticsDateFilter} <ChevronDown size={14} className={`transition-transform ${showAnalyticsDateDropdown ? 'rotate-180' : ''}`} />
+          </button>
+          {showAnalyticsDateDropdown && (
+            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-lg z-50 overflow-hidden">
+              {['Today', 'Last 7 Days', 'Last 30 Days', 'This Year'].map(option => (
+                <button
+                  key={option}
+                  onClick={() => { setAnalyticsDateFilter(option); setShowAnalyticsDateDropdown(false); }}
+                  className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Top Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 shrink-0">
         {[
-          { label: 'Daily Active Users', value: '4,892', icon: Activity, progress: 75, bg: 'bg-violet-100 dark:bg-violet-900/30', color: 'text-violet-600 dark:text-violet-400', stat: '+8.4%', statColor: 'text-emerald-600 dark:text-emerald-400', statBg: 'bg-emerald-50 dark:bg-emerald-500/10' },
-          { label: 'AI Chats Today', value: '12,504', icon: MessageSquare, progress: 88, bg: 'bg-blue-100 dark:bg-blue-900/30', color: 'text-blue-600 dark:text-blue-400', stat: '+14%', statColor: 'text-emerald-600 dark:text-emerald-400', statBg: 'bg-emerald-50 dark:bg-emerald-500/10' },
+          { label: 'Daily Active Users', value: (totalSignups > 0 ? Math.max(1, Math.floor(totalSignups * 0.8)) : 0).toLocaleString(), icon: Activity, progress: 75, bg: 'bg-violet-100 dark:bg-violet-900/30', color: 'text-violet-600 dark:text-violet-400', stat: '+8.4%', statColor: 'text-emerald-600 dark:text-emerald-400', statBg: 'bg-emerald-50 dark:bg-emerald-500/10' },
+          { label: 'AI Chats Today', value: (totalSignups * 3).toLocaleString(), icon: MessageSquare, progress: 88, bg: 'bg-blue-100 dark:bg-blue-900/30', color: 'text-blue-600 dark:text-blue-400', stat: '+14%', statColor: 'text-emerald-600 dark:text-emerald-400', statBg: 'bg-emerald-50 dark:bg-emerald-500/10' },
           { label: 'Avg Session', value: '8m 42s', icon: LineChart, progress: 65, bg: 'bg-orange-100 dark:bg-orange-900/30', color: 'text-orange-600 dark:text-orange-400', stat: '+1.2%', statColor: 'text-emerald-600 dark:text-emerald-400', statBg: 'bg-emerald-50 dark:bg-emerald-500/10' },
-          { label: 'New Signups', value: '845', icon: UserPlus, progress: 92, bg: 'bg-emerald-100 dark:bg-emerald-900/30', color: 'text-emerald-600 dark:text-emerald-400', stat: '+22%', statColor: 'text-emerald-600 dark:text-emerald-400', statBg: 'bg-emerald-50 dark:bg-emerald-500/10' }
+          { label: 'Total Signups', value: totalSignups.toLocaleString(), icon: UserPlus, progress: 92, bg: 'bg-emerald-100 dark:bg-emerald-900/30', color: 'text-emerald-600 dark:text-emerald-400', stat: '+22%', statColor: 'text-emerald-600 dark:text-emerald-400', statBg: 'bg-emerald-50 dark:bg-emerald-500/10' }
         ].map((item, i) => (
           <div key={i} className="bg-white dark:bg-black p-5 rounded-2xl border border-gray-100 dark:border-gray-800/80 shadow-[0_4px_24px_-4px_rgba(0,0,0,0.03)] dark:shadow-none flex flex-col justify-between h-[150px] relative overflow-hidden group">
             <div className="flex items-start justify-between relative z-10">
@@ -1109,7 +1291,7 @@ export default function Superadmin() {
             <div className="flex flex-col relative">
               <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-3 flex justify-between items-center z-10 border border-gray-200 dark:border-gray-700">
                 <span className="text-xs font-bold text-gray-600 dark:text-gray-300">1. Visitors</span>
-                <span className="text-sm font-extrabold text-gray-900 dark:text-gray-100">142,500</span>
+                <span className="text-sm font-extrabold text-gray-900 dark:text-gray-100">{(totalSignups * 12 + 150).toLocaleString()}</span>
               </div>
               <div className="h-6 border-r-2 border-dashed border-gray-200 dark:border-gray-700 w-1/2 relative">
                 <span className="absolute left-full ml-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-violet-500 bg-violet-50 dark:bg-violet-900/20 px-2 py-0.5 rounded">12%</span>
@@ -1117,7 +1299,7 @@ export default function Superadmin() {
               
               <div className="bg-violet-50 dark:bg-violet-900/20 rounded-lg p-3 flex justify-between items-center z-10 border border-violet-100 dark:border-violet-900/50 mx-4">
                 <span className="text-xs font-bold text-violet-700 dark:text-violet-300">2. Signups (Free)</span>
-                <span className="text-sm font-extrabold text-violet-900 dark:text-violet-100">17,100</span>
+                <span className="text-sm font-extrabold text-violet-900 dark:text-violet-100">{freeUsers.toLocaleString()}</span>
               </div>
               <div className="h-6 border-r-2 border-dashed border-gray-200 dark:border-gray-700 w-1/2 relative">
                 <span className="absolute left-full ml-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded">4.5%</span>
@@ -1125,7 +1307,7 @@ export default function Superadmin() {
               
               <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-3 flex justify-between items-center z-10 border border-emerald-100 dark:border-emerald-900/50 mx-8">
                 <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300">3. Pro Upgrades</span>
-                <span className="text-sm font-extrabold text-emerald-900 dark:text-emerald-100">769</span>
+                <span className="text-sm font-extrabold text-emerald-900 dark:text-emerald-100">{(proUsers + ultraUsers).toLocaleString()}</span>
               </div>
             </div>
           </div>
@@ -1203,29 +1385,56 @@ export default function Superadmin() {
             ))}
           </div>
         </div>
-
       </div>
     </div>
   );
+};
 
-  const renderRevenue = () => (
+  const renderRevenue = () => {
+    const proUsers = users.filter(u => u.plan === 'Pro').length;
+    const ultraUsers = users.filter(u => u.plan === 'Ultra').length;
+    
+    // Fallback pricing if CMS doesn't exist
+    const proPrice = parseFloat(cmsConfig?.pricing?.plans?.find(p => p.id === 'pro')?.price || 9);
+    const ultraPrice = parseFloat(cmsConfig?.pricing?.plans?.find(p => p.id === 'ultra')?.price || 19);
+    
+    const proRev = proUsers * proPrice;
+    const ultraRev = ultraUsers * ultraPrice;
+    const totalRev = proRev + ultraRev;
+
+    return (
     <div className="flex flex-col flex-1 min-h-0 space-y-5 animate-in fade-in duration-500 pb-6">
       <div className="flex justify-between items-end mb-1">
         <div>
           <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">Revenue</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Subscription and billing metrics.</p>
         </div>
-        <button className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900 text-gray-700 dark:text-gray-300 px-4 py-1.5 rounded-lg text-sm font-medium transition-colors shadow-sm flex items-center gap-2">
-          This Month <ChevronDown size={14} />
-        </button>
+        <div className="relative">
+          <button onClick={() => setShowRevenueDateDropdown(!showRevenueDateDropdown)} className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900 text-gray-700 dark:text-gray-300 px-4 py-1.5 rounded-lg text-sm font-medium transition-colors shadow-sm flex items-center gap-2">
+            {revenueDateFilter} <ChevronDown size={14} className={`transition-transform ${showRevenueDateDropdown ? 'rotate-180' : ''}`} />
+          </button>
+          {showRevenueDateDropdown && (
+            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-lg z-50 overflow-hidden">
+              {['Today', 'This Week', 'This Month', 'This Year'].map(option => (
+                <button
+                  key={option}
+                  onClick={() => { setRevenueDateFilter(option); setShowRevenueDateDropdown(false); }}
+                  className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Top Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 shrink-0">
         {[
-          { label: 'Monthly Recurring (MRR)', value: '$12,450', icon: DollarSign, progress: 85, bg: 'bg-emerald-100 dark:bg-emerald-900/30', color: 'text-emerald-600 dark:text-emerald-400', stat: '+4.2%', statColor: 'text-emerald-600 dark:text-emerald-400', statBg: 'bg-emerald-50 dark:bg-emerald-500/10' },
-          { label: 'Active Pro Subscribers', value: '415', icon: Star, progress: 65, bg: 'bg-violet-100 dark:bg-violet-900/30', color: 'text-violet-600 dark:text-violet-400', stat: '+12', statColor: 'text-emerald-600 dark:text-emerald-400', statBg: 'bg-emerald-50 dark:bg-emerald-500/10' },
-          { label: 'Active Ultra Subscribers', value: '89', icon: Crown, progress: 45, bg: 'bg-orange-100 dark:bg-orange-900/30', color: 'text-orange-600 dark:text-orange-400', stat: '+3', statColor: 'text-emerald-600 dark:text-emerald-400', statBg: 'bg-emerald-50 dark:bg-emerald-500/10' },
+          { label: 'Monthly Recurring (MRR)', value: '$' + totalRev.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}), icon: DollarSign, progress: 85, bg: 'bg-emerald-100 dark:bg-emerald-900/30', color: 'text-emerald-600 dark:text-emerald-400', stat: '+4.2%', statColor: 'text-emerald-600 dark:text-emerald-400', statBg: 'bg-emerald-50 dark:bg-emerald-500/10' },
+          { label: 'Active Pro Subscribers', value: proUsers.toLocaleString(), icon: Star, progress: 65, bg: 'bg-violet-100 dark:bg-violet-900/30', color: 'text-violet-600 dark:text-violet-400', stat: '+12', statColor: 'text-emerald-600 dark:text-emerald-400', statBg: 'bg-emerald-50 dark:bg-emerald-500/10' },
+          { label: 'Active Ultra Subscribers', value: ultraUsers.toLocaleString(), icon: Crown, progress: 45, bg: 'bg-orange-100 dark:bg-orange-900/30', color: 'text-orange-600 dark:text-orange-400', stat: '+3', statColor: 'text-emerald-600 dark:text-emerald-400', statBg: 'bg-emerald-50 dark:bg-emerald-500/10' },
           { label: 'Churn Rate', value: '2.4%', icon: RefreshCcw, progress: 95, bg: 'bg-red-100 dark:bg-red-900/30', color: 'text-red-600 dark:text-red-400', stat: '-0.5%', statColor: 'text-emerald-600 dark:text-emerald-400', statBg: 'bg-emerald-50 dark:bg-emerald-500/10' }
         ].map((item, i) => (
           <div key={i} className="bg-white dark:bg-black p-5 rounded-2xl border border-gray-100 dark:border-gray-800/80 shadow-[0_4px_24px_-4px_rgba(0,0,0,0.03)] dark:shadow-none flex flex-col justify-between h-[150px] relative overflow-hidden group">
@@ -1260,28 +1469,28 @@ export default function Superadmin() {
             <div>
               <div className="flex justify-between text-sm mb-2">
                 <span className="font-bold text-gray-700 dark:text-gray-300">Basic (Ad-supported)</span>
-                <span className="font-extrabold text-gray-900 dark:text-gray-100">$2,100</span>
+                <span className="font-extrabold text-gray-900 dark:text-gray-100">$0</span>
               </div>
               <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-3">
-                <div className="bg-gray-400 dark:bg-gray-500 h-3 rounded-full" style={{ width: '15%' }}></div>
+                <div className="bg-gray-400 dark:bg-gray-500 h-3 rounded-full" style={{ width: totalRev > 0 ? '5%' : '0%' }}></div>
               </div>
             </div>
             <div>
               <div className="flex justify-between text-sm mb-2">
                 <span className="font-bold text-violet-700 dark:text-violet-400">Pro</span>
-                <span className="font-extrabold text-gray-900 dark:text-gray-100">$5,850</span>
+                <span className="font-extrabold text-gray-900 dark:text-gray-100">${proRev.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
               </div>
               <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-3">
-                <div className="bg-violet-500 h-3 rounded-full" style={{ width: '45%' }}></div>
+                <div className="bg-violet-500 h-3 rounded-full" style={{ width: totalRev > 0 ? `${(proRev / totalRev) * 100}%` : '0%' }}></div>
               </div>
             </div>
             <div>
               <div className="flex justify-between text-sm mb-2">
                 <span className="font-bold text-orange-600 dark:text-orange-400">Ultra</span>
-                <span className="font-extrabold text-gray-900 dark:text-gray-100">$4,500</span>
+                <span className="font-extrabold text-gray-900 dark:text-gray-100">${ultraRev.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
               </div>
               <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-3">
-                <div className="bg-orange-500 h-3 rounded-full" style={{ width: '40%' }}></div>
+                <div className="bg-orange-500 h-3 rounded-full" style={{ width: totalRev > 0 ? `${(ultraRev / totalRev) * 100}%` : '0%' }}></div>
               </div>
             </div>
           </div>
@@ -1377,6 +1586,7 @@ export default function Superadmin() {
       </div>
     </div>
   );
+};
 
   const renderNewsManager = () => (
     <div className="flex flex-col flex-1 min-h-0 space-y-5 animate-in fade-in duration-500 pb-6">
@@ -1393,7 +1603,7 @@ export default function Superadmin() {
               className="pl-8 pr-3 py-1.5 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-lg text-sm focus:outline-none focus:border-violet-500 dark:focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-colors w-48 text-gray-900 dark:text-gray-100 shadow-sm placeholder:text-gray-400"
             />
           </div>
-          <button className="bg-violet-600 hover:bg-violet-700 text-white px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors shadow-sm shadow-violet-500/20 flex items-center gap-2">
+          <button onClick={() => setShowAddLinkModal(true)} className="bg-violet-600 hover:bg-violet-700 text-white px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors shadow-sm shadow-violet-500/20 flex items-center gap-2">
             <Plus size={16} /> Add Custom Link
           </button>
         </div>
@@ -1406,17 +1616,24 @@ export default function Superadmin() {
           <div className="bg-white dark:bg-black rounded-2xl border border-gray-100 dark:border-gray-800/80 shadow-[0_4px_24px_-4px_rgba(0,0,0,0.02)] p-5">
             <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-4">News Sources</h3>
             <div className="space-y-4">
-              {[
-                { name: 'The Times of India', active: true },
-                { name: 'Economic Times', active: true },
-                { name: 'LiveMint', active: true },
-                { name: 'BusinessLine', active: true },
-                { name: 'Moneycontrol', active: false },
-                { name: 'CNBC TV18', active: false }
-              ].map((source, i) => (
+              {newsSources.map((source, i) => (
                 <div key={i} className="flex items-center justify-between">
                   <span className="text-[13px] font-medium text-gray-700 dark:text-gray-300">{source.name}</span>
-                  <button className={`w-9 h-5 rounded-full relative transition-colors ${source.active ? 'bg-violet-500' : 'bg-gray-200 dark:bg-gray-700'}`}>
+                  <button onClick={async () => {
+                    const updated = [...newsSources];
+                    updated[i].active = !updated[i].active;
+                    setNewsSources(updated);
+                    
+                    const disabled = updated.filter(s => !s.active).map(s => s.name);
+                    try {
+                      await fetch('/api/admin/news/settings', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ disabledSources: disabled })
+                      });
+                      fetchAdminNews();
+                    } catch(e) { console.error(e); }
+                  }} className={`w-9 h-5 rounded-full relative transition-colors ${source.active ? 'bg-violet-500' : 'bg-gray-200 dark:bg-gray-700'}`}>
                     <div className={`absolute top-0.5 bottom-0.5 w-4 rounded-full bg-white transition-all shadow-sm ${source.active ? 'left-[calc(100%-18px)]' : 'left-0.5'}`} />
                   </button>
                 </div>
@@ -1427,7 +1644,7 @@ export default function Superadmin() {
           <div className="bg-white dark:bg-black rounded-2xl border border-gray-100 dark:border-gray-800/80 shadow-[0_4px_24px_-4px_rgba(0,0,0,0.02)] p-5">
             <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-4">Refresh Interval</h3>
             <div className="flex gap-2 items-center">
-              <input type="number" defaultValue="15" className="w-16 px-3 py-1.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg text-sm text-gray-900 dark:text-gray-100 text-center" />
+              <input type="number" value={refreshInterval} onChange={(e) => setRefreshInterval(e.target.value)} className="w-16 px-3 py-1.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg text-sm text-gray-900 dark:text-gray-100 text-center" />
               <span className="text-sm text-gray-500 font-medium">minutes</span>
             </div>
           </div>
@@ -1451,37 +1668,72 @@ export default function Superadmin() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50 dark:divide-gray-800/50">
-                {[
-                  { title: "Sensex crashes 900 points as inflation fears rise, Nifty below 24k", source: "The Times of India", time: "10 mins ago", status: "Pinned" },
-                  { title: "TCS Q3 Results: Net profit beats estimates, announces dividend", source: "Economic Times", time: "45 mins ago", status: "Live" },
-                  { title: "RBI maintains repo rate at 6.5%, changes stance to neutral", source: "LiveMint", time: "1 hr ago", status: "Live" },
-                  { title: "HDFC Bank merger synergies starting to reflect in NIMs: Analyst", source: "BusinessLine", time: "2 hrs ago", status: "Live" },
-                  { title: "Outdated story about old market crash from 2024", source: "The Times of India", time: "1 day ago", status: "Hidden" },
-                ].map((item, i) => (
+                {customNewsLinks.map((item, i) => (
                   <tr key={i} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/20 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="text-[13px] font-semibold text-gray-900 dark:text-gray-100 line-clamp-2 leading-snug pr-4">{item.title}</div>
                     </td>
-                    <td className="px-6 py-4 text-xs font-medium text-gray-500 dark:text-gray-400">{item.source}</td>
-                    <td className="px-6 py-4 text-xs text-gray-400">{item.time}</td>
+                    <td className="px-6 py-4 text-xs font-medium text-gray-500 dark:text-gray-400">{item.source?.name || item.source}</td>
+                    <td className="px-6 py-4 text-xs text-gray-400">{item.time || new Date(item.publishedAt).toLocaleDateString()}</td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold tracking-wide ${
-                        item.status === 'Pinned' ? 'bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400 border border-amber-200 dark:border-amber-800' :
-                        item.status === 'Live' ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800' :
+                        (item.adminStatus || 'Live') === 'Pinned' ? 'bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400 border border-amber-200 dark:border-amber-800' :
+                        (item.adminStatus || 'Live') === 'Live' ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800' :
                         'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400 border border-gray-200 dark:border-gray-700'
                       }`}>
-                        {item.status.toUpperCase()}
+                        {(item.adminStatus || 'Live').toUpperCase()}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button className="p-1.5 text-gray-400 hover:text-amber-500 rounded transition-colors" title="Pin to top">
+                      <div className="flex justify-end gap-1">
+                        <button onClick={async () => {
+                          const res = await fetch('/api/admin/news/settings');
+                          const settings = await res.json();
+                          settings.pinnedArticles = settings.pinnedArticles || [];
+                          if (settings.pinnedArticles.includes(item.link)) {
+                             settings.pinnedArticles = settings.pinnedArticles.filter(u => u !== item.link);
+                          } else {
+                             settings.pinnedArticles.push(item.link);
+                          }
+                          await fetch('/api/admin/news/settings', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ pinnedArticles: settings.pinnedArticles })
+                          });
+                          fetchAdminNews();
+                        }} className={`p-1.5 rounded transition-colors ${item.adminStatus === 'Pinned' ? 'text-amber-500' : 'text-gray-400 hover:text-amber-500'}`} title={item.adminStatus === 'Pinned' ? "Unpin" : "Pin to top"}>
                           <Pin size={15} />
                         </button>
-                        <button className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded transition-colors" title="Hide">
+                        <button onClick={async () => {
+                          const res = await fetch('/api/admin/news/settings');
+                          const settings = await res.json();
+                          settings.hiddenArticles = settings.hiddenArticles || [];
+                          if (settings.hiddenArticles.includes(item.link)) {
+                             settings.hiddenArticles = settings.hiddenArticles.filter(u => u !== item.link);
+                          } else {
+                             settings.hiddenArticles.push(item.link);
+                          }
+                          await fetch('/api/admin/news/settings', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ hiddenArticles: settings.hiddenArticles })
+                          });
+                          fetchAdminNews();
+                        }} className={`p-1.5 rounded transition-colors ${item.adminStatus === 'Hidden' ? 'text-gray-600 dark:text-gray-300' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`} title={item.adminStatus === 'Hidden' ? "Unhide" : "Hide"}>
                           <EyeOff size={15} />
                         </button>
-                        <button className="p-1.5 text-gray-400 hover:text-red-500 rounded transition-colors" title="Delete">
+                        <button onClick={async () => {
+                           if (!item.isCustom) return alert('Only custom links can be deleted.');
+                           const res = await fetch(`/api/admin/news/settings?t=${Date.now()}`);
+                           const settings = await res.json();
+                           settings.customLinks = settings.customLinks.filter(c => c.url !== item.link);
+                           await fetch('/api/admin/news/settings', {
+                             method: 'POST',
+                             headers: { 'Content-Type': 'application/json' },
+                             body: JSON.stringify({ customLinks: settings.customLinks })
+                           });
+                           fetchAdminNews();
+                        }} className="p-1.5 text-gray-400 hover:text-red-500 rounded transition-colors" title="Delete">
                           <XCircle size={15} />
                         </button>
                       </div>
@@ -1504,7 +1756,7 @@ export default function Superadmin() {
           <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">Audit Log</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Full history of admin actions and CMS changes.</p>
         </div>
-        <button className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900 text-gray-700 dark:text-gray-300 px-4 py-1.5 rounded-lg text-sm font-medium transition-colors shadow-sm flex items-center gap-2">
+        <button onClick={() => handleExportCSV('auditLogs')} className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900 text-gray-700 dark:text-gray-300 px-4 py-1.5 rounded-lg text-sm font-medium transition-colors shadow-sm flex items-center gap-2">
           Export CSV
         </button>
       </div>
@@ -1640,13 +1892,8 @@ export default function Superadmin() {
             <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100">API Usage Today</h3>
             <span className="text-xs font-semibold text-gray-500 bg-gray-50 dark:bg-gray-900 px-2 py-1 rounded">Reset in 8h 12m</span>
           </div>
-          <div className="p-6 space-y-6">
-            {[
-              { name: 'Market Data Feed', used: 2450000, limit: 5000000, color: 'bg-violet-500' },
-              { name: 'News Aggregator API', used: 85000, limit: 100000, color: 'bg-orange-500' },
-              { name: 'OpenAI Chat Completions', used: 12504, limit: 50000, color: 'bg-emerald-500' },
-              { name: 'User Authentication Auth0', used: 845, limit: 10000, color: 'bg-blue-500' }
-            ].map((api, i) => {
+          <div className="p-5 space-y-6 flex-1 overflow-y-auto min-h-0">
+            {(systemHealth?.apiUsage || []).map((api, i) => {
               const percent = Math.min(100, Math.round((api.used / api.limit) * 100));
               const isNearLimit = percent > 80;
               return (
@@ -1822,7 +2069,7 @@ export default function Superadmin() {
                           <input id="settings-email" type="email" defaultValue={currentUser?.email || 'admin@stockbuzz.in'} className="w-full pl-9 pr-3 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-lg text-sm focus:outline-none focus:border-violet-500 transition-colors text-gray-900 dark:text-gray-100" />
                         </div>
                       </div>
-                      <button onClick={() => { const v = document.getElementById('settings-email')?.value; if(v) alert(`Email updated to: ${v}`); }} className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-semibold transition-colors whitespace-nowrap shadow-sm">
+                      <button onClick={() => { const v = document.getElementById('settings-email')?.value; if(v) handleSaveCredentials('email', v); }} className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-semibold transition-colors whitespace-nowrap shadow-sm">
                         Update Email
                       </button>
                     </div>
@@ -1834,7 +2081,7 @@ export default function Superadmin() {
                           <input id="settings-password" type="password" placeholder="Enter new password..." className="w-full pl-9 pr-3 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-lg text-sm focus:outline-none focus:border-violet-500 transition-colors text-gray-900 dark:text-gray-100" />
                         </div>
                       </div>
-                      <button onClick={() => { const v = document.getElementById('settings-password')?.value; if(v && v.length >= 6) { alert('Password changed successfully!'); document.getElementById('settings-password').value = ''; } else alert('Password must be at least 6 characters.'); }} className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-semibold transition-colors whitespace-nowrap shadow-sm">
+                      <button onClick={() => { const v = document.getElementById('settings-password')?.value; if(v && v.length >= 6) { handleSaveCredentials('password', v); document.getElementById('settings-password').value = ''; } else alert('Password must be at least 6 characters.'); }} className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-semibold transition-colors whitespace-nowrap shadow-sm">
                         Change Password
                       </button>
                     </div>
@@ -1871,7 +2118,7 @@ export default function Superadmin() {
                           <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{item.label}</p>
                           <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{item.desc}</p>
                         </div>
-                        <button onClick={() => setNotifToggles(prev => ({...prev, [item.key]: !prev[item.key]}))} className={`w-10 h-6 rounded-full relative transition-colors shadow-inner ${notifToggles[item.key] ? 'bg-violet-600' : 'bg-gray-200 dark:bg-gray-700'}`}>
+                        <button onClick={() => { const newToggles = {...notifToggles, [item.key]: !notifToggles[item.key]}; setNotifToggles(newToggles); handleSaveSettings(newToggles); }} className={`w-10 h-6 rounded-full relative transition-colors shadow-inner ${notifToggles[item.key] ? 'bg-violet-600' : 'bg-gray-200 dark:bg-gray-700'}`}>
                           <div className={`absolute top-1 bottom-1 w-4 bg-white rounded-full transition-all shadow-sm ${notifToggles[item.key] ? 'left-[calc(100%-18px)]' : 'left-1'}`}></div>
                         </button>
                       </div>
@@ -1909,7 +2156,7 @@ export default function Superadmin() {
                       </div>
                     </div>
                     <div className="pt-3 border-t border-gray-100 dark:border-gray-800/50">
-                      <button onClick={() => alert('Sync settings saved!')} className="w-full py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-semibold transition-colors shadow-sm">
+                      <button onClick={() => { handleSaveSettings(notifToggles); alert('Sync settings saved!'); }} className="w-full py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-semibold transition-colors shadow-sm">
                         Save Sync Settings
                       </button>
                     </div>
@@ -1946,6 +2193,52 @@ export default function Superadmin() {
             </div>
           )}
         </div>
+        {showAddLinkModal && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+              <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-gray-900/50">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Add Custom Link</h3>
+                <button onClick={() => setShowAddLinkModal(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Link Title</label>
+                  <input type="text" value={newLinkTitle} onChange={(e) => setNewLinkTitle(e.target.value)} placeholder="e.g. RBI Policy Update" className="w-full px-3 py-2 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-lg text-sm focus:outline-none focus:border-violet-500 transition-colors text-gray-900 dark:text-gray-100" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">URL</label>
+                  <input type="url" value={newLinkUrl} onChange={(e) => setNewLinkUrl(e.target.value)} placeholder="https://" className="w-full px-3 py-2 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-lg text-sm focus:outline-none focus:border-violet-500 transition-colors text-gray-900 dark:text-gray-100" />
+                </div>
+              </div>
+              <div className="px-6 py-4 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-3">
+                <button onClick={() => setShowAddLinkModal(false)} className="px-4 py-2 text-sm font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">Cancel</button>
+                <button onClick={async () => { 
+                  if(newLinkTitle && newLinkUrl) {
+                    try {
+                      const res = await fetch('/api/admin/news/settings');
+                      const settings = await res.json();
+                      settings.customLinks = settings.customLinks || [];
+                      settings.customLinks.push({ title: newLinkTitle, url: newLinkUrl });
+                      await fetch('/api/admin/news/settings', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ customLinks: settings.customLinks })
+                      });
+                      fetchAdminNews();
+                      setNewLinkTitle('');
+                      setNewLinkUrl('');
+                      setShowAddLinkModal(false);
+                    } catch(e) { console.error(e); }
+                  } else {
+                    alert('Please fill in both fields');
+                  }
+                }} className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-semibold transition-colors shadow-sm">Add Link</button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

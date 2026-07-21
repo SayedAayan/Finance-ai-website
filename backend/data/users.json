@@ -13,5 +13,14 @@
     "plan": "Pro",
     "status": "Active",
     "joinDate": "2026-07-20"
+  },
+  {
+    "id": "usr_1784630343330",
+    "uid": "BqKlh0B7PpbCtWzZcZPF1qKhcvH2",
+    "name": "User",
+    "email": "it@stockbuzz.in",
+    "plan": "Ultra",
+    "status": "Active",
+    "joinDate": "2026-07-21"
   }
 ]

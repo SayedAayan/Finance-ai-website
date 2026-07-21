@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Phone, ArrowRight, ArrowLeft, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { setupRecaptcha } from '../../firebase';
+import { setupRecaptcha, resetRecaptcha } from '../../firebase';
 
 function GoogleIcon() {
   return (
@@ -18,38 +18,55 @@ function GoogleIcon() {
 const COUNTRY_CODE = '+91';
 
 export default function Login() {
-  const { loginWithGoogle, loginWithPhone, loginWithEmail } = useAuth();
+  const { loginWithGoogle, loginWithPhone, loginWithEmail, signUpWithEmail } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const redirectTo = location.state?.from || '/';
 
   const [tab, setTab] = useState('google'); // 'google' | 'phone' | 'email'
-  const [step, setStep] = useState('enter-phone'); // 'enter-phone' | 'enter-otp'
+  const [emailMode, setEmailMode] = useState('signin'); // 'signin' | 'signup'
+  const [step, setStep] = useState('enter-phone');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
   const [otp, setOtp] = useState('');
   const [confirmationResult, setConfirmationResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Map Firebase error codes to friendly messages
+  const friendlyError = (err) => {
+    const code = err?.code || '';
+    if (code === 'auth/user-not-found') return 'No account found with this email. Please sign up first.';
+    if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') return 'Incorrect password. Please try again.';
+    if (code === 'auth/email-already-in-use') return 'An account already exists with this email. Please sign in.';
+    if (code === 'auth/weak-password') return 'Password must be at least 6 characters.';
+    if (code === 'auth/invalid-email') return 'Please enter a valid email address.';
+    if (code === 'auth/too-many-requests') return 'Too many attempts. Please try again later.';
+    return err.message || 'Something went wrong. Please try again.';
+  };
+
   const handleEmailLogin = async (e) => {
     e.preventDefault();
     setError(null);
-    if (!email || !password) {
-      setError('Please enter both email and password.');
-      return;
-    }
+    if (!email || !password) { setError('Please enter both email and password.'); return; }
+    if (emailMode === 'signup' && !fullName.trim()) { setError('Please enter your full name.'); return; }
     setLoading(true);
     try {
-      const user = await loginWithEmail(email, password);
+      let user;
+      if (emailMode === 'signup') {
+        user = await signUpWithEmail(email, password, fullName);
+      } else {
+        user = await loginWithEmail(email, password);
+      }
       if (user?.isSuperadmin) {
         navigate('/superadmin', { replace: true });
       } else {
         navigate(redirectTo, { replace: true });
       }
     } catch (err) {
-      setError(err.message || 'Login failed. Please check your credentials.');
+      setError(friendlyError(err));
     } finally {
       setLoading(false);
     }
@@ -82,6 +99,8 @@ export default function Login() {
       setConfirmationResult(result);
       setStep('enter-otp');
     } catch (err) {
+      // Clear reCAPTCHA so the user can try again
+      resetRecaptcha();
       setError(err.message || 'Could not send OTP. Please try again.');
     } finally {
       setLoading(false);
@@ -111,6 +130,7 @@ export default function Login() {
     setOtp('');
     setConfirmationResult(null);
     setError(null);
+    resetRecaptcha(); // clear so it can be recreated fresh
   };
 
   return (
@@ -191,8 +211,43 @@ export default function Login() {
 
           {tab === 'email' && (
             <form onSubmit={handleEmailLogin}>
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-3)', marginBottom: '8px', display: 'block' }}>Email</label>
+              {/* Sign In / Sign Up toggle */}
+              <div style={{ display: 'flex', gap: '4px', background: 'var(--bg-subtle)', padding: '3px', borderRadius: '8px', marginBottom: '18px' }}>
+                {['signin', 'signup'].map(mode => (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => { setEmailMode(mode); setError(null); }}
+                    style={{
+                      flex: 1, padding: '7px', borderRadius: '6px', border: 'none', cursor: 'pointer',
+                      fontWeight: 700, fontSize: '0.82rem', transition: 'all .15s',
+                      background: emailMode === mode ? 'var(--bg-card)' : 'transparent',
+                      color: emailMode === mode ? 'var(--text-1)' : 'var(--text-3)',
+                      boxShadow: emailMode === mode ? 'var(--shadow-xs)' : 'none',
+                    }}
+                  >
+                    {mode === 'signin' ? 'Sign In' : 'Create Account'}
+                  </button>
+                ))}
+              </div>
+
+              {/* Full name — only shown for sign up */}
+              {emailMode === 'signup' && (
+                <div style={{ marginBottom: '14px' }}>
+                  <label style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-3)', marginBottom: '6px', display: 'block' }}>Full Name</label>
+                  <input
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Your full name"
+                    autoFocus
+                    style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-1)', fontSize: '0.9rem', outline: 'none' }}
+                  />
+                </div>
+              )}
+
+              <div style={{ marginBottom: '14px' }}>
+                <label style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-3)', marginBottom: '6px', display: 'block' }}>Email</label>
                 <input
                   type="email"
                   value={email}
@@ -202,12 +257,12 @@ export default function Login() {
                 />
               </div>
               <div style={{ marginBottom: '20px' }}>
-                <label style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-3)', marginBottom: '8px', display: 'block' }}>Password</label>
+                <label style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-3)', marginBottom: '6px', display: 'block' }}>Password</label>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
+                  placeholder={emailMode === 'signup' ? 'Create a password (min 6 chars)' : 'Enter your password'}
                   style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-1)', fontSize: '0.9rem', outline: 'none' }}
                 />
               </div>
@@ -220,7 +275,9 @@ export default function Login() {
                   opacity: loading ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
                 }}
               >
-                {loading ? <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> : 'Continue with Email'}
+                {loading
+                  ? <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
+                  : (emailMode === 'signup' ? 'Create Account' : 'Sign In')}
               </button>
             </form>
           )}

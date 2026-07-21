@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { TrendingUp, TrendingDown, Info, Sparkles, AlertTriangle, ArrowRight, Home } from 'lucide-react';
+import { TrendingUp, TrendingDown, Info, Sparkles, AlertTriangle, ArrowRight, Home, LineChart as LineChartIcon } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { useCurrency } from '../../context/CurrencyContext';
+import { useAuth } from '../../context/AuthContext';
 const DEFAULT_DATA = {
   price: '...', change: '...', up: true,
   name: 'Loading...', ticker: '...', sector: 'Company',
@@ -21,6 +22,7 @@ const DEFAULT_DATA = {
 export default function StockProfile() {
   const { id } = useParams();
   const { formatPrice } = useCurrency();
+  const { userPlan } = useAuth();
   const [quote, setQuote] = useState(null);
   
   const [range, setRange] = useState('1Y');
@@ -167,7 +169,25 @@ export default function StockProfile() {
                   No price history available for this range.
                 </div>
               ) : (
-                <PriceChart points={history} />
+                <div style={{ position: 'relative', height: '100%' }}>
+                  {userPlan === 'plan_free' && (
+                    <div style={{
+                      position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                      backdropFilter: 'blur(5px)', background: 'rgba(255,255,255,0.2)',
+                      zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: '12px'
+                    }}>
+                      <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', textAlign: 'center', maxWidth: '300px', border: '1px solid var(--border)' }}>
+                        <LineChartIcon size={32} color="var(--violet)" style={{ margin: '0 auto 12px auto' }} />
+                        <h4 style={{ margin: '0 0 8px 0', fontSize: '1.1rem', fontWeight: 800 }}>Advanced Charting</h4>
+                        <p style={{ margin: '0 0 16px 0', fontSize: '0.85rem', color: 'var(--text-3)' }}>Unlock interactive price history charts with Stockbuzz Pro.</p>
+                        <Link to="/settings" className="btn btn-violet shadow-md" style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '10px', borderRadius: '10px', fontWeight: 700, gap: '6px' }}>
+                          <Sparkles size={16} /> Upgrade to Pro
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+                  <PriceChart points={history} />
+                </div>
               )}
             </div>
           </div>

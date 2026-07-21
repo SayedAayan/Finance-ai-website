@@ -3,6 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Send, Plus, Paperclip, FileText, AlertCircle, ArrowRight, Image as ImageIcon, MessageSquare, Trash2, Edit, PanelLeftClose, PanelLeft, ArrowDown, Mic, Volume2, Square, Copy, Check, RotateCcw, TrendingUp, Newspaper, HelpCircle, LineChart } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useAuth } from '../../context/AuthContext';
+import { Link } from 'react-router-dom';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '/api/chat';
 const API_URL = import.meta.env.VITE_API_URL || '/api';
@@ -13,6 +15,21 @@ export default function Chat() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const { userPlan } = useAuth();
+  
+  // Track daily limits for free plan
+  const [dailyChatsCount, setDailyChatsCount] = useState(() => {
+    const today = new Date().toLocaleDateString();
+    const storedDate = localStorage.getItem('chatLimitDate');
+    if (storedDate !== today) {
+      localStorage.setItem('chatLimitDate', today);
+      localStorage.setItem('chatCount', '0');
+      return 0;
+    }
+    return parseInt(localStorage.getItem('chatCount') || '0', 10);
+  });
+  const FREE_DAILY_LIMIT = 5;
+  const isLimitReached = userPlan === 'plan_free' && dailyChatsCount >= FREE_DAILY_LIMIT;
 
   // Chat History State
   const [chatHistory, setChatHistory] = useState([]);
@@ -242,6 +259,18 @@ export default function Chat() {
   const sendContextualMessage = async (textToSend, viaVoice = false, onReply = null) => {
     const q = textToSend || input;
     if (!q.trim() && !selectedFile) return;
+
+    if (userPlan === 'plan_free' && dailyChatsCount >= FREE_DAILY_LIMIT) {
+      alert("You have reached your daily limit of 5 chats. Upgrade to Pro for unlimited AI chats.");
+      return;
+    }
+    
+    // Increment chat count for free users
+    if (userPlan === 'plan_free') {
+      const newCount = dailyChatsCount + 1;
+      setDailyChatsCount(newCount);
+      localStorage.setItem('chatCount', newCount.toString());
+    }
 
     const messageId = Date.now();
     let attachedFileInfo = null;
@@ -629,55 +658,65 @@ export default function Chat() {
                 </button>
               </div>
             )}
-            <div className="chat-input-bar relative flex items-center rounded-full px-4 h-[56px] transition-all">
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                className="hidden"
-                accept="image/*,application/pdf"
-              />
-              {cmsConfig?.pages?.chat?.features?.allowFileUpload && (
-                <button
-                  onClick={triggerFileUpload}
-                  className="p-2.5 text-gray-400 dark:text-gray-500 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-500/10 rounded-full transition-colors mr-2"
-                  title="Add attachment"
-                >
-                  <Plus size={22} />
-                </button>
-              )}
-              <textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendContextualMessage();
-                  }
-                }}
-                placeholder={isListening ? 'Listening…' : 'Message Stockbuzz AI...'}
-                className="flex-1 bg-transparent border-none outline-none text-[15px] text-gray-800 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 resize-none py-3"
-                rows={1}
-                style={{ maxHeight: '120px', minHeight: '44px' }}
-              />
-              {speechSupported && cmsConfig?.pages?.chat?.features?.allowVoiceInput && (
-                <button
-                  onClick={toggleListening}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center mr-1 transition-all ${isListening ? 'bg-red-500 text-white animate-pulse' : 'text-gray-400 dark:text-gray-500 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-500/10'}`}
-                  title={isListening ? 'Stop listening' : 'Speak your question'}
-                >
-                  <Mic size={18} />
-                </button>
-              )}
+            {isLimitReached ? (
+              <div className="chat-input-bar relative flex flex-col items-center justify-center rounded-2xl px-6 py-4 bg-violet-50 dark:bg-violet-900/20 border border-violet-100 dark:border-violet-500/30 text-center">
+                <div style={{ fontWeight: 700, color: 'var(--violet)', marginBottom: '8px' }}>Daily Limit Reached</div>
+                <div className="text-sm text-gray-600 dark:text-gray-300 mb-3">You've used all {FREE_DAILY_LIMIT} free AI chats for today. Upgrade to Pro for unlimited AI access.</div>
+                <Link to="/settings" className="btn btn-violet shadow-md px-6 py-2 rounded-full font-bold text-sm flex items-center gap-2">
+                  <Sparkles size={14} /> Upgrade to Pro
+                </Link>
+              </div>
+            ) : (
+              <div className="chat-input-bar relative flex items-center rounded-full px-4 h-[56px] transition-all">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  className="hidden"
+                  accept="image/*,application/pdf"
+                />
+                {cmsConfig?.pages?.chat?.features?.allowFileUpload && (
+                  <button
+                    onClick={triggerFileUpload}
+                    className="p-2.5 text-gray-400 dark:text-gray-500 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-500/10 rounded-full transition-colors mr-2"
+                    title="Add attachment"
+                  >
+                    <Plus size={22} />
+                  </button>
+                )}
+                <textarea
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      sendContextualMessage();
+                    }
+                  }}
+                  placeholder={isListening ? 'Listening…' : 'Message Stockbuzz AI...'}
+                  className="flex-1 bg-transparent border-none outline-none text-[15px] text-gray-800 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 resize-none py-3"
+                  rows={1}
+                  style={{ maxHeight: '120px', minHeight: '44px' }}
+                />
+                {speechSupported && cmsConfig?.pages?.chat?.features?.allowVoiceInput && (
+                  <button
+                    onClick={toggleListening}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center mr-1 transition-all ${isListening ? 'bg-red-500 text-white animate-pulse' : 'text-gray-400 dark:text-gray-500 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-500/10'}`}
+                    title={isListening ? 'Stop listening' : 'Speak your question'}
+                  >
+                    <Mic size={18} />
+                  </button>
+                )}
 
-              <button
-                onClick={() => sendContextualMessage()}
-                disabled={!input.trim() && !selectedFile}
-                className="w-10 h-10 rounded-full flex items-center justify-center ml-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-violet-600 text-white hover:bg-violet-700 hover:shadow-md"
-              >
-                <Send size={16} className="ml-0.5" />
-              </button>
-            </div>
+                <button
+                  onClick={() => sendContextualMessage()}
+                  disabled={!input.trim() && !selectedFile}
+                  className="w-10 h-10 rounded-full flex items-center justify-center ml-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-violet-600 text-white hover:bg-violet-700 hover:shadow-md"
+                >
+                  <Send size={16} className="ml-0.5" />
+                </button>
+              </div>
+            )}
             <div className="text-center mt-2.5 text-xs text-gray-400 dark:text-gray-500">
               Stockbuzz AI can make mistakes. Consider verifying important information.
             </div>

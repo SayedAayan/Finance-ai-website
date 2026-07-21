@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Line, LineChart, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
 import { BarChart2, TrendingUp, Sparkles, AlertCircle, ArrowRight, Search, Loader2, Plus, X, LineChart as LineChartIcon, SlidersHorizontal } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useCurrency } from '../../context/CurrencyContext';
+import { useAuth } from '../../context/AuthContext';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -292,6 +293,7 @@ export default function Compare() {
   const [mode, setMode] = useState('funds'); // 'funds' or 'stocks'
   const navigate = useNavigate();
   const { formatPrice } = useCurrency();
+  const { userPlan } = useAuth();
 
   const [leftAsset, setLeftAsset] = useState(null);
   const [rightAsset, setRightAsset] = useState(null);
@@ -586,26 +588,41 @@ export default function Compare() {
               % change over {rangeDef.label || rangeDef.key}, normalized to a common start date
             </div>
             {chartData.length > 1 ? (
-              <ResponsiveContainer width="100%" height={320}>
-                <LineChart data={chartData} margin={{ top: 4, right: 12, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--neutral-200)" vertical={false} />
-                  <XAxis dataKey="time" tick={{ fontSize: 11 }} minTickGap={60} axisLine={false} tickLine={false}
-                    tickFormatter={v => new Date(v).toLocaleDateString('en-IN', chartRange === '1D' ? { hour: '2-digit', minute: '2-digit' } : { month: 'short', day: 'numeric', year: rangeDef.days > 400 ? '2-digit' : undefined })} />
-                  <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={50}
-                    tickFormatter={v => `${v}%`} />
-                  <Tooltip
-                    contentStyle={{ borderRadius: 10, fontSize: 12, border: '1px solid var(--neutral-200)', background: 'var(--bg-card)' }}
-                    labelFormatter={v => new Date(v).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    formatter={(v, name) => [`${v >= 0 ? '+' : ''}${v}%`, name === 'left' ? left.name : right.name]}
-                  />
-                  <Legend
-                    formatter={(value) => value === 'left' ? left.name : right.name}
-                    wrapperStyle={{ fontSize: '0.8rem', fontWeight: 600 }}
-                  />
-                  <Line type="monotone" dataKey="left" name="left" stroke="#1A56DB" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
-                  <Line type="monotone" dataKey="right" name="right" stroke="#8b5cf6" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
-                </LineChart>
-              </ResponsiveContainer>
+              <div style={{ position: 'relative' }}>
+                {userPlan === 'plan_free' && (
+                  <div style={{
+                    position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                    backdropFilter: 'blur(5px)', background: 'rgba(255,255,255,0.2)',
+                    zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: '12px'
+                  }}>
+                    <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', textAlign: 'center', maxWidth: '300px', border: '1px solid var(--border)' }}>
+                      <LineChartIcon size={32} color="var(--violet)" style={{ margin: '0 auto 12px auto' }} />
+                      <h4 style={{ margin: '0 0 8px 0', fontSize: '1.1rem', fontWeight: 800 }}>Advanced Charting</h4>
+                      <p style={{ margin: '0 0 16px 0', fontSize: '0.85rem', color: 'var(--text-3)' }}>Unlock interactive performance comparison charts with Stockbuzz Pro.</p>
+                      <Link to="/settings" className="btn btn-violet shadow-md" style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '10px', borderRadius: '10px', fontWeight: 700, gap: '6px' }}>
+                        <Sparkles size={16} /> Upgrade to Pro
+                      </Link>
+                    </div>
+                  </div>
+                )}
+                <ResponsiveContainer width="100%" height={320}>
+                  <LineChart data={chartData} margin={{ top: 4, right: 12, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--neutral-200)" vertical={false} />
+                    <XAxis dataKey="time" tick={{ fontSize: 11 }} minTickGap={60} axisLine={false} tickLine={false}
+                      tickFormatter={v => new Date(v).toLocaleDateString('en-IN', chartRange === '1D' ? { hour: '2-digit', minute: '2-digit' } : { month: 'short', day: 'numeric', year: rangeDef.days > 400 ? '2-digit' : undefined })} />
+                    <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={50}
+                      tickFormatter={v => `${v}%`} />
+                    <Tooltip
+                      contentStyle={{ borderRadius: 10, fontSize: 12, border: '1px solid var(--neutral-200)', background: 'var(--bg-card)' }}
+                      labelFormatter={v => new Date(v).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      formatter={(v, name) => [`${v >= 0 ? '+' : ''}${v}%`, name === 'left' ? left.name : right.name]}
+                    />
+                    <Legend iconType="circle" wrapperStyle={{ fontSize: 12, fontWeight: 600, marginTop: 10 }} />
+                    <Line type="monotone" dataKey="left" name="left" stroke="var(--violet)" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="right" name="right" stroke="var(--blue)" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             ) : (
               <div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-3)', fontSize: '0.85rem' }}>
                 Not enough overlapping history for this range.

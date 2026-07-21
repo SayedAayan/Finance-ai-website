@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings as SettingsIcon, Shield, Bell, CreditCard, ExternalLink, Sparkles, Check, CheckCircle2, Upload, AlertCircle, FileText, Mail, TrendingUp } from 'lucide-react';
+import { Settings as SettingsIcon, Shield, Bell, CreditCard, ExternalLink, Sparkles, Check, CheckCircle2, Upload, AlertCircle, FileText, Mail, TrendingUp, X, Lock } from 'lucide-react';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useCms } from '../../context/CmsContext';
 import { useAuth } from '../../context/AuthContext';
@@ -7,10 +7,26 @@ import { useAuth } from '../../context/AuthContext';
 export default function Settings() {
   const { formatPrice } = useCurrency();
   const { cmsConfig } = useCms();
-  const { currentUser } = useAuth();
+  const { currentUser, userPlan, updateUserPlan } = useAuth();
   
-  // Simulated state for demonstration purposes. In reality, this would be tied to a billing portal/backend.
-  const [activePlanId, setActivePlanId] = useState(currentUser?.isPro ? 'plan_pro' : 'plan_free');
+  // Use global userPlan instead of local state
+  const activePlanId = userPlan || 'plan_free';
+  
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showBillingModal, setShowBillingModal] = useState(false);
+  const [selectedPlanToUpgrade, setSelectedPlanToUpgrade] = useState(null);
+
+  const handleUpgradeClick = (plan) => {
+    setSelectedPlanToUpgrade(plan);
+    setShowPaymentModal(true);
+  };
+  
+  const handlePaymentSuccess = () => {
+    updateUserPlan(selectedPlanToUpgrade.id);
+    setShowPaymentModal(false);
+    setSelectedPlanToUpgrade(null);
+    alert('Payment successful! Your plan has been upgraded.');
+  };
   
   const [notifications, setNotifications] = useState({
     emailAlerts: true,
@@ -134,13 +150,23 @@ export default function Settings() {
                     </div>
 
                     {!isActive ? (
-                      <button 
-                        onClick={() => setActivePlanId(plan.id)}
-                        className="btn btn-violet shadow-sm hover:shadow-md transition-all flex items-center justify-center hover:-translate-y-0.5" 
-                        style={{ width: '100%', gap: '6px', borderRadius: '10px', padding: '10px', fontWeight: 700 }}
-                      >
-                        <Sparkles size={16} /> {plan.id === 'plan_free' ? 'Downgrade to Basic' : plan.buttonLabel || `Upgrade to ${plan.name}`}
-                      </button>
+                      plan.id !== 'plan_free' ? (
+                        <button 
+                          onClick={() => handleUpgradeClick(plan)}
+                          className="btn btn-violet shadow-sm hover:shadow-md transition-all flex items-center justify-center hover:-translate-y-0.5" 
+                          style={{ width: '100%', gap: '6px', borderRadius: '10px', padding: '10px', fontWeight: 700 }}
+                        >
+                          <Sparkles size={16} /> {plan.buttonLabel || `Upgrade to ${plan.name}`}
+                        </button>
+                      ) : (
+                        <button 
+                          className="btn flex items-center justify-center" 
+                          disabled
+                          style={{ width: '100%', borderRadius: '10px', padding: '10px', background: 'var(--bg-subtle)', border: '1px solid var(--border)', color: 'var(--text-3)', cursor: 'default', fontWeight: 600 }}
+                        >
+                          Included in your plan
+                        </button>
+                      )
                     ) : (
                       plan.id === 'plan_free' ? (
                         <button 
@@ -152,11 +178,11 @@ export default function Settings() {
                         </button>
                       ) : (
                         <button 
-                          onClick={() => setActivePlanId('plan_free')}
-                          className="btn btn-outline flex items-center justify-center transition-all hover:bg-red-50" 
-                          style={{ width: '100%', borderRadius: '10px', padding: '10px', borderColor: 'rgba(239, 68, 68, 0.3)', color: 'var(--red)', fontWeight: 700 }}
+                          onClick={() => setShowBillingModal(true)}
+                          className="btn flex items-center justify-center transition-all" 
+                          style={{ width: '100%', borderRadius: '10px', padding: '10px', background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-1)', fontWeight: 700 }}
                         >
-                          Cancel Subscription
+                          Manage Subscription
                         </button>
                       )
                     )}
@@ -231,6 +257,118 @@ export default function Settings() {
           </div>
         </div>
       </div>
+
+      {/* Payment Modal */}
+      {showPaymentModal && selectedPlanToUpgrade && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.6)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="glass-panel" style={{ background: 'var(--bg-card)', padding: '2rem', borderRadius: '20px', width: '90%', maxWidth: '420px', position: 'relative', border: '1px solid var(--border)', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
+            <button 
+              onClick={() => setShowPaymentModal(false)}
+              style={{ position: 'absolute', top: '1.25rem', right: '1.25rem', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-3)', padding: '4px' }}
+            >
+              <X size={24} />
+            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '0.5rem' }}>
+              <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '8px', borderRadius: '12px' }}>
+                <Lock size={20} color="var(--violet)" />
+              </div>
+              <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>Secure Checkout</h2>
+            </div>
+            
+            <p style={{ color: 'var(--text-2)', marginBottom: '1.5rem', fontSize: '0.95rem', lineHeight: '1.5' }}>
+              Upgrade to <strong style={{ color: 'var(--text-1)' }}>{siteName} {selectedPlanToUpgrade.name}</strong> for {formatPrice(Number(selectedPlanToUpgrade.price))} / {selectedPlanToUpgrade.billingCycle === 'Monthly' ? 'month' : 'year'}.
+            </p>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '8px', color: 'var(--text-3)' }}>Card Number</label>
+                <input type="text" placeholder="0000 0000 0000 0000" style={{ width: '100%', padding: '12px 14px', borderRadius: '12px', border: '1px solid var(--border)', background: 'var(--bg-subtle)', color: 'var(--text-1)', outline: 'none' }} />
+              </div>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '8px', color: 'var(--text-3)' }}>Expiry Date</label>
+                  <input type="text" placeholder="MM/YY" style={{ width: '100%', padding: '12px 14px', borderRadius: '12px', border: '1px solid var(--border)', background: 'var(--bg-subtle)', color: 'var(--text-1)', outline: 'none' }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '8px', color: 'var(--text-3)' }}>CVC / CVV</label>
+                  <input type="password" placeholder="***" style={{ width: '100%', padding: '12px 14px', borderRadius: '12px', border: '1px solid var(--border)', background: 'var(--bg-subtle)', color: 'var(--text-1)', outline: 'none' }} />
+                </div>
+              </div>
+              <button 
+                onClick={handlePaymentSuccess}
+                className="btn btn-violet"
+                style={{ width: '100%', padding: '14px', borderRadius: '12px', fontWeight: 800, marginTop: '0.5rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', fontSize: '1rem' }}
+              >
+                Pay {formatPrice(Number(selectedPlanToUpgrade.price))}
+              </button>
+            </div>
+            
+            <div style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.75rem', color: 'var(--text-3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+              <Shield size={12} /> Payments are secure and encrypted.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Billing Portal Modal */}
+      {showBillingModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.6)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="glass-panel" style={{ background: 'var(--bg-card)', padding: '2rem', borderRadius: '20px', width: '90%', maxWidth: '420px', position: 'relative', border: '1px solid var(--border)', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
+            <button 
+              onClick={() => setShowBillingModal(false)}
+              style={{ position: 'absolute', top: '1.25rem', right: '1.25rem', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-3)', padding: '4px' }}
+            >
+              <X size={24} />
+            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.5rem' }}>
+              <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '8px', borderRadius: '12px' }}>
+                <CreditCard size={20} color="var(--violet)" />
+              </div>
+              <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>Billing Portal</h2>
+            </div>
+            
+            <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'var(--bg-subtle)', borderRadius: '12px', border: '1px solid var(--border)' }}>
+              <h3 style={{ margin: '0 0 8px 0', fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-1)' }}>Current Plan: {activePlan.name}</h3>
+              <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-3)' }}>Your next billing date is {new Date(Date.now() + 30*24*60*60*1000).toLocaleDateString()}.</p>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <button 
+                onClick={() => alert("Simulating redirect to Stripe to update payment method...")}
+                className="btn btn-outline flex items-center justify-between" 
+                style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-1)', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CreditCard size={18} /> Update Payment Method</div>
+                <ExternalLink size={16} color="var(--text-3)" />
+              </button>
+              
+              <button 
+                onClick={() => alert("Simulating downloading last invoice...")}
+                className="btn btn-outline flex items-center justify-between" 
+                style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-1)', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><FileText size={18} /> Download Last Invoice</div>
+                <ExternalLink size={16} color="var(--text-3)" />
+              </button>
+              
+              <div style={{ borderTop: '1px solid var(--border)', margin: '0.5rem 0' }}></div>
+              
+              <button 
+                onClick={() => {
+                  if (window.confirm("Are you sure you want to cancel your subscription? You will lose access to Pro features at the end of your billing period.")) {
+                    updateUserPlan('plan_free');
+                    setShowBillingModal(false);
+                  }
+                }}
+                className="btn flex items-center justify-center transition-all hover:bg-red-50" 
+                style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid rgba(239, 68, 68, 0.3)', background: 'transparent', color: 'var(--red)', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer' }}
+              >
+                Cancel Subscription
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

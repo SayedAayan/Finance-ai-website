@@ -1,0 +1,7 @@
+{
+  "notifToggles": {
+    "proAlerts": true,
+    "apiWarnings": true,
+    "weeklySummary": false
+  }
+}
