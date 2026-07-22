@@ -14,6 +14,8 @@ const __dirname = dirname(__filename);
 dotenv.config({ path: join(__dirname, '.env') });
 
 const app = express();
+app.use(cors());
+app.use(express.json());
 const PORT = Number(process.env.PORT) || 3001;
 
 const AI_PROVIDERS = [
@@ -71,6 +73,43 @@ async function yfQuoteRaw(symbol) {
     source: 'yahoo'
   };
 }
+
+// ─── Local Dev Phone OTP Store ──────────────────────────────────────────────
+const localOtpStore = new Map();
+
+app.use(express.json());
+
+app.post('/api/auth/send-otp', (req, res) => {
+  const { phone } = req.body;
+  if (!phone || phone.length < 10) {
+    return res.status(400).json({ error: 'Enter a valid 10-digit mobile number' });
+  }
+  const otp = '123456'; // Standard testing OTP for local dev
+  localOtpStore.set(phone, { otp, expiresAt: Date.now() + 10 * 60 * 1000 });
+  
+  console.log(`\n========================================`);
+  console.log(`📱 [LOCAL OTP] Sent to ${phone} -> OTP: ${otp}`);
+  console.log(`========================================\n`);
+  
+  res.json({ success: true, message: 'OTP sent! Use 123456 for testing.' });
+});
+
+app.post('/api/auth/verify-otp', (req, res) => {
+  const { phone, otp } = req.body;
+  const record = localOtpStore.get(phone);
+  if (!record) return res.status(400).json({ error: 'No OTP found for this number' });
+  if (record.otp !== otp && otp !== '123456') return res.status(400).json({ error: 'Invalid OTP code' });
+  
+  localOtpStore.delete(phone);
+  res.json({
+    success: true,
+    user: {
+      uid: `phone_${phone}`,
+      phoneNumber: `+91${phone}`,
+      displayName: `User ${phone.slice(-4)}`
+    }
+  });
+});
 
 // ─── Finnhub fallback (US/global tickers; limited Indian coverage) ──────────
 const FINNHUB_KEY = process.env.FINNHUB_API_KEY;

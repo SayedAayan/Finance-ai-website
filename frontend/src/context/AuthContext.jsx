@@ -56,9 +56,23 @@ export function AuthProvider({ children }) {
     return result;
   };
 
-  // Phone OTP Login
+  // Phone OTP Login (Firebase or Local Fallback)
   const loginWithPhone = (phoneNumber, appVerifier) => {
     return signInWithPhoneNumber(auth, phoneNumber, appVerifier);
+  };
+
+  const loginWithLocalPhone = async (phone, otp) => {
+    const res = await fetch('http://127.0.0.1:3001/api/auth/verify-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, otp })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to verify OTP');
+    
+    sessionStorage.setItem('mockUser', JSON.stringify(data.user));
+    setCurrentUser(data.user);
+    return data.user;
   };
 
   // Email/Password Login
@@ -168,6 +182,7 @@ export function AuthProvider({ children }) {
     currentUser,
     loginWithGoogle,
     loginWithPhone,
+    loginWithLocalPhone,
     loginWithEmail,
     signUpWithEmail,
     logout,
