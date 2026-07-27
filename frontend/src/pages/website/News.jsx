@@ -123,7 +123,7 @@ Please structure your response into the following sections:
   const hasMore = visibleCount < rest.length;
 
   return (
-    <div className="news-page-root">
+    <div className="news-page-root bg-[#F5F7FA] dark:bg-gray-950">
 
 
       {/* ── Header ── */}
@@ -281,8 +281,6 @@ Please structure your response into the following sections:
 
         /* ── Solid Background Layer ── */
         .news-page-root {
-          background: #F1F5F9;
-          background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%);
           position: relative;
           min-height: 100vh;
           overflow-x: hidden; /* Changed from overflow: hidden so you can scroll vertically */

@@ -26,13 +26,23 @@ const AMC_DOMAINS = {
   'Quant Mutual Fund': 'quantmutual.com'
 };
 
+const TICKER_TO_DOMAIN = {
+  // 'AARTISURF': 'aarti-surfactants.com' // logo.dev returns a black box for this
+};
+
+const FORCE_FALLBACK = ['AARTISURF'];
+
 const Logo = ({ type, identifier, fallbackLetter, fallbackColorClass, onError }) => {
   const [error, setError] = useState(false);
   const token = import.meta.env.VITE_LOGO_DEV_KEY;
   
+  const cleanId = identifier ? identifier.split('.')[0] : '';
+  
   let src = '';
-  if (token && !error && identifier) {
-    if (type === 'ticker') {
+  if (token && !error && identifier && !FORCE_FALLBACK.includes(cleanId)) {
+    if (type === 'ticker' && TICKER_TO_DOMAIN[cleanId]) {
+      src = `https://img.logo.dev/${TICKER_TO_DOMAIN[cleanId]}?token=${token}&size=60&retina=true`;
+    } else if (type === 'ticker') {
       src = `https://img.logo.dev/ticker/${identifier}?token=${token}&size=60&retina=true`;
     } else if (type === 'domain') {
       src = `https://img.logo.dev/${identifier}?token=${token}&size=60&retina=true`;
@@ -53,7 +63,7 @@ const Logo = ({ type, identifier, fallbackLetter, fallbackColorClass, onError })
   };
 
   return (
-    <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shrink-0 shadow-sm p-1.5 flex items-center justify-center">
+    <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-100 dark:border-gray-800 bg-white shrink-0 shadow-sm p-1.5 flex items-center justify-center">
       <img src={src} alt="logo" className="w-full h-full object-contain" onError={handleError} />
     </div>
   );

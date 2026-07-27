@@ -19,6 +19,7 @@ const COMPANY_DOMAINS = {
   'SUNPHARMA': 'sunpharma.com',
   'INFY': 'infosys.com',
   'TATAMOTORS': 'tatamotors.com',
+  'AARTISURF': 'aarti-surfactants.com',
 };
 
 const COMPANY_LOGOS = {
@@ -31,15 +32,18 @@ const COMPANY_LOGOS = {
   'TATAMOTORS': { bg: 'bg-gradient-to-br from-slate-600 to-slate-800', label: 'TM' },
 };
 console.log('LOGO KEY:', import.meta.env.VITE_LOGO_DEV_KEY);
+const FORCE_FALLBACK = ['AARTISURF'];
+
 const CompanyLogo = ({ ticker, size = 40 }) => {
   const [imgFailed, setImgFailed] = useState(false);
-  const domain = COMPANY_DOMAINS[ticker];
-  const { bg, label } = COMPANY_LOGOS[ticker] || { bg: 'bg-gradient-to-br from-gray-400 to-gray-600', label: ticker?.[0] || '?' };
+  const cleanTicker = ticker ? ticker.split('.')[0] : '';
+  const domain = COMPANY_DOMAINS[cleanTicker];
+  const { bg, label } = COMPANY_LOGOS[cleanTicker] || { bg: 'bg-gradient-to-br from-gray-400 to-gray-600', label: cleanTicker?.[0] || '?' };
   const fontSize = label.length > 2 ? size * 0.24 : label.length === 2 ? size * 0.32 : size * 0.42;
 
   const logoDevKey = import.meta.env.VITE_LOGO_DEV_KEY;
 
-  if (domain && logoDevKey && !imgFailed) {
+  if (domain && logoDevKey && !imgFailed && !FORCE_FALLBACK.includes(cleanTicker)) {
     return (
       <img
         src={`https://img.logo.dev/${domain}?token=${logoDevKey}&size=${size * 3}&retina=true`}
@@ -47,7 +51,7 @@ const CompanyLogo = ({ ticker, size = 40 }) => {
         width={size}
         height={size}
         onError={() => setImgFailed(true)}
-        className="rounded-full object-contain bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 flex-shrink-0 shadow-sm p-1.5"
+        className="rounded-full object-contain bg-white border border-gray-100 dark:border-gray-800 flex-shrink-0 shadow-sm p-1.5"
         style={{ width: size, height: size }}
       />
     );

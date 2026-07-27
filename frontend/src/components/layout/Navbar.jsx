@@ -211,7 +211,7 @@ export default function Navbar({ onToggleAIChat }) {
             <img
               src={siteLogo}
               alt={`${siteName} — Logo`}
-              className="h-12 w-auto group-hover:scale-105 transition-transform duration-300"
+              className="w-[140px] md:w-[180px] h-auto object-contain group-hover:scale-105 transition-transform duration-300"
             />
           </Link>
 
