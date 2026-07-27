@@ -3,33 +3,33 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'rec
 import { LineChart as LineChartIcon, ChevronDown, ChevronRight, TrendingUp, TrendingDown } from 'lucide-react';
 
 const NIFTY_INDICES = [
-  { label: 'NIFTY 50',          symbol: '^NSEI' },
-  { label: 'NIFTY Bank',        symbol: '^NSEBANK' },
-  { label: 'NIFTY IT',          symbol: '^CNXIT' },
-  { label: 'NIFTY Midcap 100',  symbol: 'NIFTY_MIDCAP_100.NS' },
+  { label: 'NIFTY 50', symbol: '^NSEI' },
+  { label: 'NIFTY Bank', symbol: '^NSEBANK' },
+  { label: 'NIFTY IT', symbol: '^CNXIT' },
+  { label: 'NIFTY Midcap 100', symbol: 'NIFTY_MIDCAP_100.NS' },
   { label: 'NIFTY Smallcap 50', symbol: '^CNXSC' },
-  { label: 'NIFTY Midcap 50',   symbol: '^NSEMDCP50' },
-  { label: 'NIFTY Pharma',      symbol: '^CNXPHARMA' },
-  { label: 'NIFTY Auto',        symbol: '^CNXAUTO' },
-  { label: 'NIFTY FMCG',        symbol: '^CNXFMCG' },
-  { label: 'NIFTY Metal',       symbol: '^CNXMETAL' },
-  { label: 'NIFTY Realty',      symbol: '^CNXREALTY' },
-  { label: 'NIFTY Energy',      symbol: '^CNXENERGY' },
+  { label: 'NIFTY Midcap 50', symbol: '^NSEMDCP50' },
+  { label: 'NIFTY Pharma', symbol: '^CNXPHARMA' },
+  { label: 'NIFTY Auto', symbol: '^CNXAUTO' },
+  { label: 'NIFTY FMCG', symbol: '^CNXFMCG' },
+  { label: 'NIFTY Metal', symbol: '^CNXMETAL' },
+  { label: 'NIFTY Realty', symbol: '^CNXREALTY' },
+  { label: 'NIFTY Energy', symbol: '^CNXENERGY' },
 ];
 
 const SENSEX_INDICES = [
-  { label: 'SENSEX',            symbol: '^BSESN' },
-  { label: 'BSE 100',           symbol: 'BSE-100.BO' },
-  { label: 'BSE 200',           symbol: 'BSE-200.BO' },
-  { label: 'BSE 500',           symbol: 'BSE-500.BO' },
-  { label: 'BSE Bankex',        symbol: 'BSE-BANK.BO' },
-  { label: 'BSE Consumer',      symbol: 'BSE-CD.BO' },
-  { label: 'BSE Healthcare',    symbol: 'BSE-HC.BO' },
-  { label: 'BSE IT',            symbol: 'BSE-IT.BO' },
-  { label: 'BSE FMCG',          symbol: 'BSE-FMCG.BO' },
-  { label: 'BSE Metal',         symbol: 'BSE-METAL.BO' },
-  { label: 'BSE Auto',          symbol: 'BSE-AUTO.BO' },
-  { label: 'BSE Realty',        symbol: 'BSE-REALTY.BO' },
+  { label: 'SENSEX', symbol: '^BSESN' },
+  { label: 'BSE 100', symbol: 'BSE-100.BO' },
+  { label: 'BSE 200', symbol: 'BSE-200.BO' },
+  { label: 'BSE 500', symbol: 'BSE-500.BO' },
+  { label: 'BSE Bankex', symbol: 'BSE-BANK.BO' },
+  { label: 'BSE Consumer', symbol: 'BSE-CD.BO' },
+  { label: 'BSE Healthcare', symbol: 'BSE-HC.BO' },
+  { label: 'BSE IT', symbol: 'BSE-IT.BO' },
+  { label: 'BSE FMCG', symbol: 'BSE-FMCG.BO' },
+  { label: 'BSE Metal', symbol: 'BSE-METAL.BO' },
+  { label: 'BSE Auto', symbol: 'BSE-AUTO.BO' },
+  { label: 'BSE Realty', symbol: 'BSE-REALTY.BO' },
 ];
 
 const RANGES = ['1D', '1W', '1M', '1Y', '5Y', 'MAX'];
@@ -56,7 +56,7 @@ function MiniChart({ symbol, range }) {
           setChange(((last - first) / first * 100).toFixed(2));
         }
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [symbol, range]);

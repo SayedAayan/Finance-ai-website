@@ -15,9 +15,9 @@ export default function Footer() {
   const copyright = footerConfig.copyright || '© 2026 StockBuzz Technologies Pvt. Ltd. All rights reserved. Data sourced from NSE, BSE, AMFI, and public regulatory filings.';
 
   const columns = footerConfig.columns || [
-    { id: 'c1', title: 'Research', links: [ { id: 'l1', label: 'Stocks', path: '/' }, { id: 'l2', label: 'Mutual Funds', path: '/' }, { id: 'l3', label: 'Compare', path: '/compare' }, { id: 'l4', label: 'Watchlist', path: '/watchlist' } ] },
-    { id: 'c2', title: 'Learn', links: [ { id: 'l5', label: 'What is P/E Ratio?', path: '#' }, { id: 'l6', label: 'Direct vs Regular Plans', path: '#' }, { id: 'l7', label: 'Understanding Risk', path: '#' }, { id: 'l8', label: 'Expense Ratio Explained', path: '#' } ] },
-    { id: 'c3', title: 'Company', links: [ { id: 'l9', label: 'About', path: '#' }, { id: 'l10', label: 'Compliance Center', path: '#' }, { id: 'l11', label: 'Privacy Policy', path: '#' }, { id: 'l12', label: 'Terms of Use', path: '#' } ] }
+    { id: 'c1', title: 'Research', links: [{ id: 'l1', label: 'Stocks', path: '/' }, { id: 'l2', label: 'Mutual Funds', path: '/' }, { id: 'l3', label: 'Compare', path: '/compare' }, { id: 'l4', label: 'Watchlist', path: '/watchlist' }] },
+    { id: 'c2', title: 'Learn', links: [{ id: 'l5', label: 'What is P/E Ratio?', path: '#' }, { id: 'l6', label: 'Direct vs Regular Plans', path: '#' }, { id: 'l7', label: 'Understanding Risk', path: '#' }, { id: 'l8', label: 'Expense Ratio Explained', path: '#' }] },
+    { id: 'c3', title: 'Company', links: [{ id: 'l9', label: 'About', path: '#' }, { id: 'l10', label: 'Compliance Center', path: '#' }, { id: 'l11', label: 'Privacy Policy', path: '#' }, { id: 'l12', label: 'Terms of Use', path: '#' }] }
   ];
 
   return (
@@ -30,18 +30,18 @@ export default function Footer() {
             </div>
             <p className="footer-desc">{tagline}</p>
           </div>
-          
+
           {columns.map(col => (
             <div key={col.id}>
               <div className="footer-heading">{col.title}</div>
               {col.links.map(link => (
-                link.path.startsWith('/') 
+                link.path.startsWith('/')
                   ? <Link key={link.id} to={link.path} className="footer-link">{link.label}</Link>
                   : <a key={link.id} href={link.path} className="footer-link">{link.label}</a>
               ))}
             </div>
           ))}
-          
+
         </div>
 
         <div className="footer-bottom">

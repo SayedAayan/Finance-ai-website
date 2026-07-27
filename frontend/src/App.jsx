@@ -51,13 +51,16 @@ function Layout() {
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <Routes>
           <Route path="/" element={<Home onOpenAIChat={() => setIsAIChatOpen(true)} />} />
+          <Route path="/stock" element={<StockProfile />} />
           <Route path="/stock/:id" element={<StockProfile />} />
+          <Route path="/fund" element={<MutualFundProfile />} />
           <Route path="/fund/:id" element={<MutualFundProfile />} />
           <Route path="/compare" element={<Compare />} />
           <Route path="/watchlist" element={<Watchlist />} />
           <Route path="/markets" element={<Markets />} />
           <Route path="/wealth" element={<WealthBucket />} />
           <Route path="/amcs" element={<AmcDatabase />} />
+          <Route path="/mutual-funds" element={<AmcDatabase />} />
           <Route path="/news" element={<News />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/chat" element={<Chat />} />

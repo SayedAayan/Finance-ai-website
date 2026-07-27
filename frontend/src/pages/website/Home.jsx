@@ -96,7 +96,7 @@ export default function Home({ onOpenAIChat }) {
       fetch('/api/trending?limit=4')
         .then(r => r.json())
         .then(data => { if (!cancelled) setTrending(data.trending || []); })
-        .catch(() => {});
+        .catch(() => { });
     };
     loadTrending();
     const iv = setInterval(loadTrending, 5 * 60 * 1000);
@@ -149,17 +149,17 @@ export default function Home({ onOpenAIChat }) {
         const articles = data.articles || [];
         const today = new Date().toDateString();
         let cached = {};
-        try { cached = JSON.parse(localStorage.getItem('sb_featured_news') || '{}'); } catch {}
+        try { cached = JSON.parse(localStorage.getItem('sb_featured_news') || '{}'); } catch { }
         let pick = null;
         if (cached.date === today && articles.find(a => a.link === cached.link)) {
           pick = articles.find(a => a.link === cached.link);
         } else {
           pick = articles.find(a => a.image) || articles[0];
-          if (pick) { try { localStorage.setItem('sb_featured_news', JSON.stringify({ date: today, link: pick.link })); } catch {} }
+          if (pick) { try { localStorage.setItem('sb_featured_news', JSON.stringify({ date: today, link: pick.link })); } catch { } }
         }
         setFeaturedNews(pick || null);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const handleFileChange = (e) => {
@@ -240,10 +240,10 @@ export default function Home({ onOpenAIChat }) {
                 )}
               </div>
               <h1 className="text-[32px] md:text-[42px] font-bold text-textMain dark:text-gray-100 tracking-tight mb-3 leading-tight font-sans">
-                {cmsConfig?.home?.hero?.heading || "What do you want to research?"}
+                {cmsConfig?.pages?.home?.hero?.heading || "What do you want to research?"}
               </h1>
               <p className="text-[17px] leading-[1.5] text-gray-500 dark:text-gray-400 max-w-[700px] mx-auto">
-                {cmsConfig?.home?.hero?.subheading || "Stockbuzz AI helps you analyze stocks, mutual funds, and market trends with real-time data and smart insights."}
+                {cmsConfig?.pages?.home?.hero?.subheading || "Stockbuzz AI helps you analyze stocks, mutual funds, and market trends with real-time data and smart insights."}
               </p>
             </motion.div>
 
@@ -252,7 +252,7 @@ export default function Home({ onOpenAIChat }) {
                 <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*,application/pdf" className="hidden" />
                 <button onClick={() => fileInputRef.current?.click()} className="p-3 text-textMuted hover:text-primary transition-colors hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-full ml-1"><Plus size={24} /></button>
 
-                <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAsk()} placeholder={isListening ? 'Listening…' : (cmsConfig?.home?.hero?.searchPlaceholder || 'Ask Stockbuzz AI about stocks, mutual funds, or finance...')} className="flex-1 bg-transparent border-none outline-none text-base text-textMain px-2 h-full placeholder:text-gray-400 dark:placeholder:text-gray-500" />
+                <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAsk()} placeholder={isListening ? 'Listening…' : (cmsConfig?.pages?.home?.hero?.searchPlaceholder || 'Ask Stockbuzz AI about stocks, mutual funds, or finance...')} className="flex-1 bg-transparent border-none outline-none text-base text-textMain px-2 h-full placeholder:text-gray-400 dark:placeholder:text-gray-500" />
                 {speechSupported && (
                   <button
                     onClick={toggleListening}

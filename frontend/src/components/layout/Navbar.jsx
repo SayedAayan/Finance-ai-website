@@ -13,12 +13,12 @@ export default function Navbar({ onToggleAIChat }) {
   const navigate = useNavigate();
   const { cmsConfig } = useCms();
   const active = (p) => loc.pathname === p;
-  
+
   const navItems = cmsConfig?.navbar?.navItems || [];
   const mainLinks = navItems.filter(item => !item.subItems);
   const otherLinksData = navItems.find(item => item.subItems);
   const OTHER_LINKS = otherLinksData ? otherLinksData.subItems : [];
-  
+
   const isOtherActive = OTHER_LINKS.some(item => active(item.path));
 
   // Search State
@@ -170,21 +170,21 @@ export default function Navbar({ onToggleAIChat }) {
         <div className="bg-gray-900 text-white text-[12px] font-medium py-1.5 overflow-hidden flex whitespace-nowrap border-b border-gray-800">
           <div className="container overflow-hidden flex">
             <div className="flex gap-8 animate-[marquee_70s_linear_infinite]">
-            {Array(8).fill(marketData).flat().map((idx, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <span className="text-gray-400">{idx.label || idx.symbol}</span>
-                {idx.error ? (
-                  <span className="text-gray-500">N/A</span>
-                ) : (
-                  <>
-                    <span className="font-semibold">{Number(idx.value || idx.currentPrice).toFixed(2)}</span>
-                    <span className={Number(idx.changePercent) >= 0 ? 'text-green-400' : 'text-red-400'}>
-                      {Number(idx.changePercent) >= 0 ? '+' : ''}{Number(idx.changePercent).toFixed(2)}%
-                    </span>
-                  </>
-                )}
-              </div>
-            ))}
+              {Array(8).fill(marketData).flat().map((idx, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <span className="text-gray-400">{idx.label || idx.symbol}</span>
+                  {idx.error ? (
+                    <span className="text-gray-500">N/A</span>
+                  ) : (
+                    <>
+                      <span className="font-semibold">{Number(idx.value || idx.currentPrice).toFixed(2)}</span>
+                      <span className={Number(idx.changePercent) >= 0 ? 'text-green-400' : 'text-red-400'}>
+                        {Number(idx.changePercent) >= 0 ? '+' : ''}{Number(idx.changePercent).toFixed(2)}%
+                      </span>
+                    </>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -283,7 +283,7 @@ export default function Navbar({ onToggleAIChat }) {
                   value={searchQuery}
                   onChange={handleSearchChange}
                   onFocus={() => searchQuery.trim() && setShowSuggestions(true)}
-                  placeholder="Search stocks, funds…"
+                  placeholder="Search stocks, Mutual funds..."
                   className="bg-transparent border-none outline-none text-sm text-textMain dark:text-gray-100 placeholder-textMuted dark:placeholder-gray-500 w-full"
                 />
                 {searchQuery && (

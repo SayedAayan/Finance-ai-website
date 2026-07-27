@@ -1,12 +1,78 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { TrendingUp, TrendingDown, Activity, Globe, DollarSign, Clock, Sparkles, ArrowRight } from 'lucide-react';
+import { useCurrency } from '../../context/CurrencyContext';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
+
+const AMC_DOMAINS = {
+  'Axis Mutual Fund': 'axismf.com',
+  'Invesco Mutual Fund': 'invescomutualfund.com',
+  'HDFC Mutual Fund': 'hdfcfund.com',
+  'SBI Mutual Fund': 'sbimf.com',
+  'ICICI Prudential Mutual Fund': 'icicipruamc.com',
+  'Nippon India Mutual Fund': 'nipponindiamf.com',
+  'Kotak Mahindra Mutual Fund': 'kotakmf.com',
+  'Aditya Birla Sun Life Mutual Fund': 'mutualfund.adityabirlacapital.com',
+  'UTI Mutual Fund': 'utimf.com',
+  'Bandhan Mutual Fund': 'bandhanmutual.com',
+  'DSP Mutual Fund': 'dspim.com',
+  'Mirae Asset Mutual Fund': 'miraeassetmf.co.in',
+  'Tata Mutual Fund': 'tatamutualfund.com',
+  'Edelweiss Mutual Fund': 'edelweissmf.com',
+  'Canara Robeco Mutual Fund': 'canararobeco.com',
+  'Motilal Oswal Mutual Fund': 'motilaloswalmf.com',
+  'Navi Mutual Fund': 'navi.com',
+  'Quant Mutual Fund': 'quantmutual.com'
+};
+
+const Logo = ({ type, identifier, fallbackLetter, fallbackColorClass, onError }) => {
+  const [error, setError] = useState(false);
+  const token = import.meta.env.VITE_LOGO_DEV_KEY;
+  
+  let src = '';
+  if (token && !error && identifier) {
+    if (type === 'ticker') {
+      src = `https://img.logo.dev/ticker/${identifier}?token=${token}&size=60&retina=true`;
+    } else if (type === 'domain') {
+      src = `https://img.logo.dev/${identifier}?token=${token}&size=60&retina=true`;
+    }
+  }
+
+  if (!token || error || !src) {
+    return (
+      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold shrink-0 ${fallbackColorClass}`}>
+        {fallbackLetter}
+      </div>
+    );
+  }
+
+  const handleError = () => {
+    setError(true);
+    if (onError) onError();
+  };
+
+  return (
+    <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shrink-0 shadow-sm p-1.5 flex items-center justify-center">
+      <img src={src} alt="logo" className="w-full h-full object-contain" onError={handleError} />
+    </div>
+  );
+};
 
 export default function Markets() {
   const [indices, setIndices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [gainersPool, setGainersPool] = useState([]);
+  const [losersPool, setLosersPool] = useState([]);
+  const [topFunds, setTopFunds] = useState([]);
+  const [failedLogos, setFailedLogos] = useState([]);
+  const { formatPrice } = useCurrency();
+  const navigate = useNavigate();
+
+  const handleLogoError = (ticker) => {
+    setFailedLogos(prev => [...prev, ticker]);
+  };
 
   const defaultCms = {
     pages: { markets: { features: { showSectorPerformance: true, showTopGainers: true, showGlobalIndices: true } } }
@@ -31,9 +97,31 @@ export default function Markets() {
         setIndices(data.indices || []);
       } catch (err) {
         setError(err.message);
-      } finally {
-        setLoading(false);
       }
+
+      try {
+        const compRes = await fetch(`${API_URL}/companies?live=true&limit=100`);
+        if (compRes.ok) {
+           const compData = await compRes.json();
+           const validCompanies = (compData.companies || []).filter(c => typeof c.changePercent === 'number' || !isNaN(parseFloat(c.changePercent)));
+           const sortedGainers = [...validCompanies].sort((a,b) => parseFloat(b.changePercent) - parseFloat(a.changePercent));
+           const sortedLosers = [...validCompanies].sort((a,b) => parseFloat(a.changePercent) - parseFloat(b.changePercent));
+           setGainersPool(sortedGainers);
+           setLosersPool(sortedLosers);
+        }
+      } catch(err) { console.error('Failed to fetch top companies', err); }
+
+      try {
+        const schemeRes = await fetch(`${API_URL}/schemes?limit=100`);
+        if (schemeRes.ok) {
+           const schemeData = await schemeRes.json();
+           const funds = schemeData.schemes || [];
+           const top = [...funds].sort((a,b) => parseFloat(b.nav) - parseFloat(a.nav)).slice(0, 5);
+           setTopFunds(top);
+        }
+      } catch (err) { console.error('Failed to fetch schemes', err); }
+
+      setLoading(false);
     };
 
     fetchMarkets();
@@ -61,6 +149,9 @@ export default function Markets() {
       </div>
     );
   }
+
+  const displayGainers = gainersPool.filter(c => !failedLogos.includes(c.ticker)).slice(0, 5);
+  const displayLosers = losersPool.filter(c => !failedLogos.includes(c.ticker)).slice(0, 5);
 
   return (
     <div className="flex-1 bg-[#F8FAFC] dark:bg-gray-950">
@@ -130,33 +221,122 @@ export default function Markets() {
         )}
 
         {/* Additional Markets Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
-          <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl shadow-sm border border-gray-200 dark:border-gray-800">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-                <Activity size={20} />
+          {/* Top Gainers */}
+          <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl shadow-sm border border-gray-200 dark:border-gray-800">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-green-50 dark:bg-green-500/10 rounded-xl flex items-center justify-center text-green-600 dark:text-green-400">
+                  <TrendingUp size={20} />
+                </div>
+                <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Top Gainers</h2>
               </div>
-              <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Global Markets (Coming Soon)</h2>
             </div>
-            <p className="text-gray-500 dark:text-gray-400 leading-relaxed">
-              Global market data integration is currently being mapped. Soon you will be able to track major global indices like the S&P 500, NASDAQ, FTSE 100, and Nikkei 225 directly from this dashboard.
-            </p>
+            <div className="flex flex-col gap-3">
+              {displayGainers.map((stock, i) => (
+                <div 
+                  key={i} 
+                  onClick={() => navigate(`/stock/${stock.ticker}`)}
+                  className="flex items-center justify-between p-2 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Logo 
+                      type="ticker" 
+                      identifier={stock.ticker} 
+                      fallbackLetter={stock.symbol?.[0] || stock.ticker?.[0] || '?'} 
+                      fallbackColorClass="bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/40 dark:to-green-800/40 text-green-700 dark:text-green-400"
+                      onError={() => handleLogoError(stock.ticker)}
+                    />
+                    <div className="min-w-0">
+                      <div className="font-semibold text-gray-900 dark:text-gray-100 truncate text-[13px]">{stock.name}</div>
+                      <div className="text-[11px] text-gray-500 truncate">{stock.symbol || stock.ticker}</div>
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0 ml-2">
+                    <div className="font-bold text-gray-900 dark:text-gray-100 text-[13px]">{formatPrice(stock.price)}</div>
+                    <div className="text-[11px] font-semibold text-green-600 dark:text-green-400">+{stock.changePercent}%</div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div className="bg-gradient-to-br from-violet-600 to-indigo-700 p-8 rounded-3xl shadow-lg text-white">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                <Sparkles size={20} />
+          {/* Top Losers */}
+          <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl shadow-sm border border-gray-200 dark:border-gray-800">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-red-50 dark:bg-red-500/10 rounded-xl flex items-center justify-center text-red-600 dark:text-red-400">
+                  <TrendingDown size={20} />
+                </div>
+                <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Top Losers</h2>
               </div>
-              <h2 className="text-xl font-bold">Ask Stockbuzz AI</h2>
             </div>
-            <p className="text-violet-100 leading-relaxed mb-6">
-              Want deeper insights? Our AI can analyze market trends, compare indices, and pull the latest financial news for you in real-time.
-            </p>
-            <a href="/chat" className="inline-flex items-center gap-2 bg-white text-violet-700 px-6 py-3 rounded-full font-bold hover:bg-violet-50 transition-colors shadow-sm">
-              Start Research <ArrowRight size={16} />
-            </a>
+            <div className="flex flex-col gap-3">
+              {displayLosers.map((stock, i) => (
+                <div 
+                  key={i} 
+                  onClick={() => navigate(`/stock/${stock.ticker}`)}
+                  className="flex items-center justify-between p-2 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Logo 
+                      type="ticker" 
+                      identifier={stock.ticker} 
+                      fallbackLetter={stock.symbol?.[0] || stock.ticker?.[0] || '?'} 
+                      fallbackColorClass="bg-gradient-to-br from-red-100 to-red-200 dark:from-red-900/40 dark:to-red-800/40 text-red-700 dark:text-red-400"
+                      onError={() => handleLogoError(stock.ticker)}
+                    />
+                    <div className="min-w-0">
+                      <div className="font-semibold text-gray-900 dark:text-gray-100 truncate text-[13px]">{stock.name}</div>
+                      <div className="text-[11px] text-gray-500 truncate">{stock.symbol || stock.ticker}</div>
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0 ml-2">
+                    <div className="font-bold text-gray-900 dark:text-gray-100 text-[13px]">{formatPrice(stock.price)}</div>
+                    <div className="text-[11px] font-semibold text-red-600 dark:text-red-400">{stock.changePercent}%</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Top Mutual Funds */}
+          <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl shadow-sm border border-gray-200 dark:border-gray-800">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-50 dark:bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-400">
+                  <Activity size={20} />
+                </div>
+                <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Top Mutual Funds</h2>
+              </div>
+            </div>
+            <div className="flex flex-col gap-3">
+              {topFunds.map((fund, i) => (
+                <div 
+                  key={i} 
+                  onClick={() => navigate(`/fund/${fund.id}`)}
+                  className="flex items-center justify-between p-2 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Logo 
+                      type="domain" 
+                      identifier={AMC_DOMAINS[fund.amc]} 
+                      fallbackLetter={fund.amc?.[0] || 'M'} 
+                      fallbackColorClass="bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/40 dark:to-blue-800/40 text-blue-700 dark:text-blue-400"
+                    />
+                    <div className="min-w-0">
+                      <div className="font-semibold text-gray-900 dark:text-gray-100 truncate text-[12px]">{fund.name}</div>
+                      <div className="text-[10px] text-gray-500 truncate">{fund.amc}</div>
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0 ml-2">
+                    <div className="font-bold text-gray-900 dark:text-gray-100 text-[13px]">{formatPrice(fund.nav)}</div>
+                    <div className="text-[10px] font-semibold text-gray-400 uppercase">NAV</div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
         </div>

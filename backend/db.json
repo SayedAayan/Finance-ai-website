@@ -1717,69 +1717,119 @@
       ],
       "createdAt": "2026-07-20T10:54:51.478Z",
       "updatedAt": "2026-07-20T10:54:59.125Z"
+    },
+    "1784869584371": {
+      "id": "1784869584371",
+      "title": "What is P/E ratio?",
+      "messages": [
+        {
+          "id": 1784869584109,
+          "type": "user",
+          "text": "What is P/E ratio?",
+          "file": null
+        },
+        {
+          "id": 1784869584443,
+          "type": "ai",
+          "text": "**P/E Ratio (Price-to-Earnings)** tells you how much investors are paying for every ₹1 of a company's earnings.\n\n**Formula:**\n> P/E = Current Stock Price ÷ Earnings Per Share (EPS)\n\n**What it means:**\n- 📊 **Low P/E (< 15)** – Stock may be undervalued or the company is growing slowly\n- 📈 **High P/E (> 30)** – Investors expect strong future growth (common in IT stocks)\n- ⚠️ **Negative P/E** – Company is making a loss\n\n**Indian market context:**\n- Nifty 50 average P/E is typically between 20–25\n- FMCG, IT companies often trade at higher P/E (25–40)\n- PSU banks, commodity stocks often trade at lower P/E (8–15)\n\n**Note:** \"PE\" can also mean **Put Option** in F&O trading. Context determines which meaning applies.\n\nWant me to fetch the live P/E ratio of a specific stock?",
+          "source": "Stockbuzz AI"
+        }
+      ],
+      "createdAt": "2026-07-24T05:06:24.371Z",
+      "updatedAt": "2026-07-24T05:06:24.507Z"
+    },
+    "1784872483700": {
+      "id": "1784872483700",
+      "title": "Tell me about Reliance",
+      "messages": [
+        {
+          "id": 1784872483358,
+          "type": "user",
+          "text": "Tell me about Reliance",
+          "file": null
+        },
+        {
+          "id": 1784872503774,
+          "type": "ai",
+          "text": "### Connection Error\nI'm unable to reach the backend AI providers.\n\nRegarding your query \"Tell me about Reliance\":\n- StockBuzz live data confirms active research is available for Reliance, TCS, HDFC, and PPFAS.\n- Please consult scheme related documents or a SEBI registered advisor.",
+          "source": "Stockbuzz AI Local Fallback"
+        }
+      ],
+      "createdAt": "2026-07-24T05:54:43.700Z",
+      "updatedAt": "2026-07-24T05:55:04.664Z"
+    },
+    "1784873818622": {
+      "id": "1784873818622",
+      "title": "Tell me about Reliance",
+      "messages": [
+        {
+          "id": 1784873818197,
+          "type": "user",
+          "text": "Tell me about Reliance",
+          "file": null
+        },
+        {
+          "id": 1784873827387,
+          "type": "ai",
+          "text": "### Connection Error\nI'm unable to reach the backend AI providers.\n\nRegarding your query \"Tell me about Reliance\":\n- StockBuzz live data confirms active research is available for Reliance, TCS, HDFC, and PPFAS.\n- Please consult scheme related documents or a SEBI registered advisor.",
+          "source": "Stockbuzz AI Local Fallback"
+        }
+      ],
+      "createdAt": "2026-07-24T06:16:58.622Z",
+      "updatedAt": "2026-07-24T06:17:07.505Z"
+    },
+    "1785133908552": {
+      "id": "1785133908552",
+      "title": "Kotak Flexicap Fund",
+      "messages": [
+        {
+          "id": 1785133908466,
+          "type": "user",
+          "text": "Kotak Flexicap Fund",
+          "file": null
+        },
+        {
+          "id": 1785133935317,
+          "type": "ai",
+          "text": "The Kotak Flexicap Fund's current NAV is ₹43.361 as of 28 Feb 2024. The fund has given 1-year returns of 12.55% and 5-year returns of 12.35%. **Disclaimer: I am an AI. You should verify the information or consult a certified financial advisor before investing.**",
+          "source": "Stockbuzz AI"
+        }
+      ],
+      "createdAt": "2026-07-27T06:31:48.552Z",
+      "updatedAt": "2026-07-27T06:32:15.325Z"
     }
   },
   "watchlist": [],
   "trending": {
-    "2026-07-15": {
+    "2026-07-27": {
+      "Coca-Cola Company (The) Common Stock": {
+        "label": "Coca-Cola Company (The) Common Stock",
+        "type": "stock",
+        "route": "/stock/NYSE:KO",
+        "count": 3
+      },
+      "Kokuyo Camlin Limited": {
+        "label": "Kokuyo Camlin Limited",
+        "type": "stock",
+        "route": "/stock/NSE:KOKUYOCMLN",
+        "count": 1
+      },
+      "Kotak Mahindra Bank Limited": {
+        "label": "Kotak Mahindra Bank Limited",
+        "type": "stock",
+        "route": "/stock/NSE:KOTAKBANK",
+        "count": 7
+      },
+      "Kotak Flexicap Fund - Growth": {
+        "label": "Kotak Flexicap Fund - Growth",
+        "type": "fund",
+        "route": "/fund/MF:112090",
+        "count": 3
+      },
       "Reliance Industries Limited": {
         "label": "Reliance Industries Limited",
         "type": "stock",
         "route": "/stock/NSE:RELIANCE",
-        "count": 3
-      },
-      "HDFC Flexi Cap Fund - Growth Plan": {
-        "label": "HDFC Flexi Cap Fund - Growth Plan",
-        "type": "fund",
-        "route": "/fund/MF:101762",
-        "count": 1
-      },
-      "Balaji Telefilms Limited": {
-        "label": "Balaji Telefilms Limited",
-        "type": "stock",
-        "route": "/stock/NSE:BALAJITELE",
-        "count": 1
-      },
-      "Jio Financial Services Limited": {
-        "label": "Jio Financial Services Limited",
-        "type": "stock",
-        "route": "/stock/NSE:JIOFIN",
-        "count": 1
-      },
-      "Acutaas Chemicals Limited": {
-        "label": "Acutaas Chemicals Limited",
-        "type": "stock",
-        "route": "/stock/NSE:ACUTAAS",
-        "count": 1
-      },
-      "Universal Technical Institute Inc Common Stock": {
-        "label": "Universal Technical Institute Inc Common Stock",
-        "type": "stock",
-        "route": "/stock/NYSE:UTI",
-        "count": 2
-      },
-      "Avanti Feeds Limited": {
-        "label": "Avanti Feeds Limited",
-        "type": "stock",
-        "route": "/stock/NSE:AVANTIFEED",
-        "count": 1
-      },
-      "BF Utilities Limited": {
-        "label": "BF Utilities Limited",
-        "type": "stock",
-        "route": "/stock/NSE:BFUTILITIE",
-        "count": 1
-      },
-      "Abacus Flexible Bond Leaders ETF": {
-        "label": "Abacus Flexible Bond Leaders ETF",
-        "type": "stock",
-        "route": "/stock/CboeBZX:ABXB",
-        "count": 3
-      },
-      "UTI Flexi Cap Fund - Direct Plan - IDCW": {
-        "label": "UTI Flexi Cap Fund - Direct Plan - IDCW",
-        "type": "fund",
-        "route": "/fund/MF:120663",
         "count": 1
       }
     }
@@ -2096,6 +2146,14 @@
             "Advanced charting",
             "Priority support",
             "1-on-1 advisor calls",
+            "Direct API access"
+          ],
+          "buttonLabel": "Upgrade to Ultra"
+        }
+      ]
+    }
+  }
+}lls",
             "Direct API access"
           ],
           "buttonLabel": "Upgrade to Ultra"

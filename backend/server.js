@@ -19,11 +19,11 @@ app.use(express.json());
 const PORT = Number(process.env.PORT) || 3001;
 
 const AI_PROVIDERS = [
-  { name: 'Groq', url: 'https://api.groq.com/openai/v1/chat/completions', key: process.env.GROQ_API_KEY, model: 'meta-llama/llama-4-scout-17b-16e-instruct' },
-  { name: 'OpenRouter', url: 'https://openrouter.ai/api/v1/chat/completions', key: process.env.OPENROUTER_API_KEY, model: 'google/gemini-2.5-pro' },
-  { name: 'xAI', url: 'https://api.x.ai/v1/chat/completions', key: process.env.XAI_API_KEY, model: 'grok-4-fast-non-reasoning' },
+  { name: 'Groq', url: 'https://api.groq.com/openai/v1/chat/completions', key: process.env.GROQ_API_KEY, model: 'llama-3.3-70b-versatile' },
+  { name: 'OpenRouter', url: 'https://openrouter.ai/api/v1/chat/completions', key: process.env.OPENROUTER_API_KEY, model: 'google/gemini-2.0-flash-lite-preview-02-05:free' },
+  { name: 'xAI', url: 'https://api.x.ai/v1/chat/completions', key: process.env.XAI_API_KEY, model: 'grok-2' },
   { name: 'DeepSeek', url: 'https://api.deepseek.com/chat/completions', key: process.env.DEEPSEEK_API_KEY, model: 'deepseek-chat' },
-  { name: 'OpenAI', url: 'https://api.openai.com/v1/chat/completions', key: process.env.OPENAI_API_KEY, model: 'gpt-4o' }
+  { name: 'OpenAI', url: 'https://api.openai.com/v1/chat/completions', key: process.env.OPENAI_API_KEY, model: 'gpt-3.5-turbo' }
 ].filter(p => p.key);
 
 // ─── Yahoo Finance v8 chart API ───────────────────────────────────────────────
@@ -84,22 +84,22 @@ app.post('/api/auth/send-otp', (req, res) => {
   if (!phone || phone.length < 10) {
     return res.status(400).json({ error: 'Enter a valid 10-digit mobile number' });
   }
-  const otp = '123456'; // Standard testing OTP for local dev
+  const otp = '24680'; // Standard testing OTP for local dev
   localOtpStore.set(phone, { otp, expiresAt: Date.now() + 10 * 60 * 1000 });
-  
+
   console.log(`\n========================================`);
   console.log(`📱 [LOCAL OTP] Sent to ${phone} -> OTP: ${otp}`);
   console.log(`========================================\n`);
-  
-  res.json({ success: true, message: 'OTP sent! Use 123456 for testing.' });
+
+  res.json({ success: true, message: 'OTP sent! Use 24680 for testing.' });
 });
 
 app.post('/api/auth/verify-otp', (req, res) => {
   const { phone, otp } = req.body;
   const record = localOtpStore.get(phone);
   if (!record) return res.status(400).json({ error: 'No OTP found for this number' });
-  if (record.otp !== otp && otp !== '123456') return res.status(400).json({ error: 'Invalid OTP code' });
-  
+  if (record.otp !== otp && otp !== '24680') return res.status(400).json({ error: 'Invalid OTP code' });
+
   localOtpStore.delete(phone);
   res.json({
     success: true,
@@ -342,22 +342,22 @@ async function getTopNews() {
     }
   }
 
-async function isArticleReadable(url) {
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2000);
-    const response = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: controller.signal });
-    clearTimeout(timeoutId);
-    if (!response.ok) return false;
-    const html = await response.text();
-    const doc = new JSDOM(html, { url });
-    const reader = new Readability(doc.window.document);
-    const article = reader.parse();
-    return !!(article && (article.content || article.textContent));
-  } catch (e) {
-    return false;
+  async function isArticleReadable(url) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      const response = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: controller.signal });
+      clearTimeout(timeoutId);
+      if (!response.ok) return false;
+      const html = await response.text();
+      const doc = new JSDOM(html, { url });
+      const reader = new Readability(doc.window.document);
+      const article = reader.parse();
+      return !!(article && (article.content || article.textContent));
+    } catch (e) {
+      return false;
+    }
   }
-}
 
   // Sort by date descending
   uniqueArticles.sort((a, b) => b.publishedMs - a.publishedMs);
@@ -729,7 +729,7 @@ async function callAIWithFallback(apiMessages, providerIndex = 0, retriesLeft = 
         model: provider.model,
         messages: apiMessages,
         temperature: 0.1,
-        max_tokens: 4096,
+        max_tokens: 2048,
         tools,
         tool_choice: 'auto'
       })
@@ -1395,7 +1395,7 @@ const getNewsSettings = async () => {
   try {
     const data = await fs.readFile(NEWS_SETTINGS_PATH, 'utf-8');
     return JSON.parse(data);
-  } catch(e) {
+  } catch (e) {
     return { customLinks: [], hiddenArticles: [], pinnedArticles: [], disabledSources: [], refreshInterval: 15 };
   }
 };
@@ -1409,17 +1409,17 @@ app.get('/api/news', async (req, res) => {
   try {
     const { articles, fetchedAt } = await getTopNews();
     const settings = await getNewsSettings();
-    
+
     let finalArticles = [...articles];
-    
+
     if (settings.disabledSources && settings.disabledSources.length > 0) {
       finalArticles = finalArticles.filter(a => !settings.disabledSources.includes(a.source));
     }
-    
+
     if (settings.hiddenArticles && settings.hiddenArticles.length > 0) {
       finalArticles = finalArticles.filter(a => !settings.hiddenArticles.includes(a.link) && !settings.hiddenArticles.includes(a.title));
     }
-    
+
     if (settings.customLinks && settings.customLinks.length > 0) {
       const customs = settings.customLinks.map(c => ({
         title: c.title,
@@ -1431,13 +1431,13 @@ app.get('/api/news', async (req, res) => {
       }));
       finalArticles = [...customs, ...finalArticles];
     }
-    
+
     if (settings.pinnedArticles && settings.pinnedArticles.length > 0) {
       const pinned = finalArticles.filter(a => settings.pinnedArticles.includes(a.link) || settings.pinnedArticles.includes(a.title));
       const rest = finalArticles.filter(a => !settings.pinnedArticles.includes(a.link) && !settings.pinnedArticles.includes(a.title));
       finalArticles = [...pinned, ...rest];
     }
-    
+
     res.json({ articles: finalArticles, count: finalArticles.length, fetchedAt: new Date(fetchedAt).toISOString() });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -1448,9 +1448,9 @@ app.get('/api/admin/news', async (req, res) => {
   try {
     const { articles, fetchedAt } = await getTopNews();
     const settings = await getNewsSettings();
-    
+
     let finalArticles = [...articles];
-    
+
     if (settings.customLinks && settings.customLinks.length > 0) {
       const customs = settings.customLinks.map(c => ({
         title: c.title,
@@ -1461,7 +1461,7 @@ app.get('/api/admin/news', async (req, res) => {
       }));
       finalArticles = [...customs, ...finalArticles];
     }
-    
+
     const adminView = finalArticles.map((a, idx) => {
       let status = 'Live';
       if (settings.hiddenArticles && (settings.hiddenArticles.includes(a.link) || settings.hiddenArticles.includes(a.title))) status = 'Hidden';
@@ -1469,10 +1469,10 @@ app.get('/api/admin/news', async (req, res) => {
       if (idx === 0) console.log('DEBUG a.link:', a.link, 'Includes:', settings.pinnedArticles?.includes(a.link), 'Status:', status);
       return { ...a, adminStatus: status };
     });
-    
+
     const pinned = adminView.filter(a => a.adminStatus === 'Pinned');
     const rest = adminView.filter(a => a.adminStatus !== 'Pinned');
-    
+
     res.json({ articles: [...pinned, ...rest], count: adminView.length, fetchedAt: new Date(fetchedAt).toISOString() });
   } catch (err) {
     res.status(500).json({ error: err.message });

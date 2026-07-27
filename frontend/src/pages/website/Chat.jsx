@@ -16,7 +16,7 @@ export default function Chat() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const { userPlan } = useAuth();
-  
+
   // Track daily limits for free plan
   const [dailyChatsCount, setDailyChatsCount] = useState(() => {
     const today = new Date().toLocaleDateString();
@@ -264,7 +264,7 @@ export default function Chat() {
       alert("You have reached your daily limit of 5 chats. Upgrade to Pro for unlimited AI chats.");
       return;
     }
-    
+
     // Increment chat count for free users
     if (userPlan === 'plan_free') {
       const newCount = dailyChatsCount + 1;
@@ -533,9 +533,9 @@ export default function Chat() {
             </div>
           </div>
         ) : (
-        /* Messages */
-        <div className="flex-1 overflow-y-auto p-8" ref={chatContainerRef} onScroll={handleScroll}>
-          <div className="max-w-4xl mx-auto flex flex-col gap-6 relative">
+          /* Messages */
+          <div className="flex-1 overflow-y-auto p-8" ref={chatContainerRef} onScroll={handleScroll}>
+            <div className="max-w-4xl mx-auto flex flex-col gap-6 relative">
               {messages.map((m, idx) => (
                 <div
                   key={m.id}

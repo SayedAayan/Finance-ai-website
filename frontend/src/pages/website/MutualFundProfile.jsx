@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { ShieldAlert, TrendingUp, Sparkles, ArrowRight, Info, Home } from 'lucide-react';
 import { useCurrency } from '../../context/CurrencyContext';
+import SearchBar from '../../components/ui/SearchBar';
 
 const DATA = {
   navValue: 1642.50,
@@ -20,7 +21,8 @@ const DATA = {
 };
 
 export default function MutualFundProfile() {
-  const { id } = useParams();
+  const { id: routeId } = useParams();
+  const id = routeId || '120503';
   const { formatPrice } = useCurrency();
   const d = {
     ...DATA,
@@ -40,8 +42,13 @@ export default function MutualFundProfile() {
       {/* Header Area */}
       <div className="profile-top">
         <div className="container">
-          <div className="profile-breadcrumb">
-            <Link to="/"><Home size={13} /></Link> / <Link to="/">Mutual Funds</Link> / <span>{id}</span>
+          <div className="profile-breadcrumb" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+            <div>
+              <Link to="/"><Home size={13} style={{ display: 'inline' }} /></Link> / <Link to="/">Mutual Funds</Link> / <span>{id}</span>
+            </div>
+            <div className="w-full sm:w-[250px]">
+              <SearchBar />
+            </div>
           </div>
 
           <div className="profile-name-row">

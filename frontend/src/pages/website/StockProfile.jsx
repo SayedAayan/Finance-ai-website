@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { TrendingUp, TrendingDown, Info, Sparkles, AlertTriangle, ArrowRight, Home, LineChart as LineChartIcon } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import SearchBar from '../../components/ui/SearchBar';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useAuth } from '../../context/AuthContext';
 const DEFAULT_DATA = {
@@ -20,7 +21,8 @@ const DEFAULT_DATA = {
 };
 
 export default function StockProfile() {
-  const { id } = useParams();
+  const { id: routeId } = useParams();
+  const id = routeId || 'RELIANCE';
   const { formatPrice } = useCurrency();
   const { userPlan } = useAuth();
   const [quote, setQuote] = useState(null);
@@ -33,8 +35,10 @@ export default function StockProfile() {
     let cancelled = false;
     setHistoryLoading(true);
 
+    const fetchId = id.includes('.') ? id : `${id}.NS`;
+
     // Fetch live quote
-    fetch(`/api/quotes?symbols=${id}`)
+    fetch(`/api/quotes?symbols=${fetchId}`)
       .then(r => r.json())
       .then(data => {
         if (!cancelled && data.quotes && data.quotes[0] && !data.quotes[0].error) {
@@ -44,7 +48,7 @@ export default function StockProfile() {
       .catch(console.error);
 
     // Fetch history
-    fetch(`/api/history?symbol=${id}&range=${range}`)
+    fetch(`/api/history?symbol=${fetchId}&range=${range}`)
       .then(r => r.json())
       .then((data) => {
         if (cancelled) return;
@@ -59,9 +63,10 @@ export default function StockProfile() {
   }, [id, range]);
 
   const formatChange = (c, cp) => {
-    if (c == null || cp == null) return '-';
-    const sign = c >= 0 ? '+' : '';
-    return `${sign}${c.toFixed(2)} (${sign}${cp}%)`;
+    const numC = Number(c);
+    if (c == null || cp == null || isNaN(numC)) return '-';
+    const sign = numC >= 0 ? '+' : '';
+    return `${sign}${numC.toFixed(2)} (${sign}${cp}%)`;
   };
 
   const d = {
@@ -71,10 +76,11 @@ export default function StockProfile() {
     price: quote ? formatPrice(quote.currentPrice, {}, quote.currency === 'USD' ? 'USD' : 'INR') : '...',
     change: quote ? formatChange(quote.change, quote.changePercent) : '...',
     up: quote ? quote.change >= 0 : true,
+    metrics: JSON.parse(JSON.stringify(DEFAULT_DATA.metrics))
   };
   if (quote) {
-    d.metrics[6].val = formatPrice(quote.fiftyTwoWeekHigh, {}, quote.currency === 'USD' ? 'USD' : 'INR');
-    d.metrics[7].val = formatPrice(quote.fiftyTwoWeekLow, {}, quote.currency === 'USD' ? 'USD' : 'INR');
+    d.metrics[6].val = quote.fiftyTwoWeekHigh ? formatPrice(quote.fiftyTwoWeekHigh, {}, quote.currency === 'USD' ? 'USD' : 'INR') : '-';
+    d.metrics[7].val = quote.fiftyTwoWeekLow ? formatPrice(quote.fiftyTwoWeekLow, {}, quote.currency === 'USD' ? 'USD' : 'INR') : '-';
     if (quote.volume) {
       d.metrics[0].label = 'Volume';
       d.metrics[0].val = quote.volume.toLocaleString('en-IN');
@@ -86,8 +92,13 @@ export default function StockProfile() {
       {/* Header Area */}
       <div className="profile-top">
         <div className="container">
-          <div className="profile-breadcrumb">
-            <Link to="/"><Home size={13} /></Link> / <Link to="/">Stocks</Link> / <span>{id}</span>
+          <div className="profile-breadcrumb" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+            <div>
+              <Link to="/"><Home size={13} style={{ display: 'inline' }} /></Link> / <Link to="/">Stocks</Link> / <span>{id}</span>
+            </div>
+            <div className="w-full sm:w-[250px]">
+              <SearchBar />
+            </div>
           </div>
           
           <div className="profile-name-row">

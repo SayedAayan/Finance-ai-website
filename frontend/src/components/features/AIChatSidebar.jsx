@@ -112,10 +112,10 @@ export default function AIChatSidebar({ isOpen, onClose }) {
         if (!isOpen) {
           // Wait briefly for drawer to open before sending
           setTimeout(() => {
-            sendContextualMessage(e.detail.message);
+            sendContextualMessage(e.detail.message, e.detail.hiddenPrompt);
           }, 300);
         } else {
-          sendContextualMessage(e.detail.message);
+          sendContextualMessage(e.detail.message, e.detail.hiddenPrompt);
         }
       }
     };
@@ -189,7 +189,7 @@ export default function AIChatSidebar({ isOpen, onClose }) {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const sendContextualMessage = async (textToSend) => {
+  const sendContextualMessage = async (textToSend, hiddenPrompt) => {
     const q = textToSend || input;
     if (!q.trim() && !selectedFile) return;
 
@@ -220,10 +220,11 @@ export default function AIChatSidebar({ isOpen, onClose }) {
     setLoading(true);
 
     try {
-      // Build prompt incorporating page context
+      // Build prompt incorporating page context & hidden system guidelines
+      const finalPrompt = hiddenPrompt || q;
       const contextualQuery = `[Context: User is on page "${context.name}" (${context.type}) with data: "${context.data}"]\n` + 
                               (attachedFileInfo ? `[Attached File: ${attachedFileInfo.name} (${attachedFileInfo.type})]\n` : '') +
-                              q;
+                              finalPrompt;
 
       // Construct message history for API — cap history to keep token usage bounded
       const HISTORY_LIMIT = 6;
