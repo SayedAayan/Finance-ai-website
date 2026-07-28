@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function SearchBar({ className = '' }) {
+export default function SearchBar({ className = '', placeholder = "Search stocks, Mutual funds..." }) {
   const navigate = useNavigate();
   const searchRef = useRef(null);
   const searchDebounceRef = useRef(null);
@@ -86,7 +86,7 @@ export default function SearchBar({ className = '' }) {
         <Search size={16} className="text-gray-400 flex-shrink-0" />
         <input
           type="text"
-          placeholder="Search stocks, Mutual funds..."
+          placeholder={placeholder}
           value={searchQuery}
           onChange={handleSearchChange}
           onFocus={() => { if (searchQuery.length >= 2) setShowSuggestions(true); }}

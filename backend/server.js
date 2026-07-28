@@ -19,8 +19,9 @@ app.use(express.json());
 const PORT = Number(process.env.PORT) || 3001;
 
 const AI_PROVIDERS = [
-  { name: 'Groq', url: 'https://api.groq.com/openai/v1/chat/completions', key: process.env.GROQ_API_KEY, model: 'llama-3.3-70b-versatile' },
-  { name: 'OpenRouter', url: 'https://openrouter.ai/api/v1/chat/completions', key: process.env.OPENROUTER_API_KEY, model: 'google/gemini-2.0-flash-lite-preview-02-05:free' },
+  { name: 'Groq', url: 'https://api.groq.com/openai/v1/chat/completions', key: process.env.GROQ_API_KEY, model: 'qwen/qwen3.6-27b' },
+  { name: 'OpenRouter', url: 'https://openrouter.ai/api/v1/chat/completions', key: process.env.OPENROUTER_API_KEY, model: 'google/gemma-4-31b-it:free' },
+  { name: 'Gemini (Direct)', url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', key: process.env.GEMINI_API_KEY, model: 'gemini-2.0-flash' },
   { name: 'xAI', url: 'https://api.x.ai/v1/chat/completions', key: process.env.XAI_API_KEY, model: 'grok-2' },
   { name: 'DeepSeek', url: 'https://api.deepseek.com/chat/completions', key: process.env.DEEPSEEK_API_KEY, model: 'deepseek-chat' },
   { name: 'OpenAI', url: 'https://api.openai.com/v1/chat/completions', key: process.env.OPENAI_API_KEY, model: 'gpt-3.5-turbo' }
@@ -396,8 +397,9 @@ COMMUNICATION STYLE & TONE
 - Be extremely beginner-friendly. Explain things simply and avoid overwhelming jargon.
 - NEVER mention internal tool names (like \`search_ticker\`, \`get_stock_data\`, \`get_market_overview\`, \`get_financial_news\`) in your responses. Users don't need to know how you fetch data.
 - Never tell the user "I will use a tool" or "Use the search_ticker function". Just fetch the data silently and present the results in simple terms.
-- **IMPORTANT**: Whenever a user asks for investment advice, stock recommendations, or where to invest their money (e.g., SIP goals, investing a certain amount like "1 lakh"), you MUST append this exact line at the very end of your response in bold:
-  "**Disclaimer: I am an AI. You should verify the information or consult a certified financial advisor before investing.**"
+- **IMPORTANT (SEBI COMPLIANCE)**: Whenever a user asks for investment advice, stock recommendations, or where to invest their money (e.g., SIP goals, investing a certain amount like "1 lakh"), you MUST NOT give direct stock recommendations. Instead, answer smartly by explaining educational frameworks (like asset allocation, diversification, and risk profiling), and suggest categories of assets (e.g., large-cap mutual funds, index funds, bonds) based on common goals. You MUST append this exact line at the very end of your response in bold:
+  "**Disclaimer: I am an AI. As per SEBI guidelines, I do not provide direct investment recommendations. Please consult a SEBI-registered investment advisor before investing.**"
+  CRITICAL: DO NOT add any of your own natural conversational disclaimers (like "It's always a good idea to consult a financial advisor..."). The EXACT bold string above is the ONLY disclaimer you should include.
 
 ════════════════════════════════════════
 NEWS RULES — BE HONEST ABOUT FRESHNESS
@@ -761,12 +763,13 @@ const RAW_TOOL_PATTERN = /\b(search_ticker|get_stock_data|get_market_overview|ge
 
 function parseRawToolCalls(text) {
   const calls = [];
+  
+  // 1. Standard parenthesis format: name(args)
+  const stdPattern = /\b(search_ticker|get_stock_data|get_market_overview|get_financial_news)\s*\(([^)]*)\)/g;
   let match;
-  RAW_TOOL_PATTERN.lastIndex = 0;
-  while ((match = RAW_TOOL_PATTERN.exec(text)) !== null) {
+  while ((match = stdPattern.exec(text)) !== null) {
     const name = match[1];
     const argsRaw = match[2].trim();
-    // Parse key="value" or key='value' pairs
     const args = {};
     const kvPattern = /(\w+)\s*=\s*(?:"([^"]*)"|'([^']*)'|(\S+))/g;
     let kv;
@@ -775,6 +778,21 @@ function parseRawToolCalls(text) {
     }
     calls.push({ id: `raw-${Date.now()}-${calls.length}`, function: { name, arguments: JSON.stringify(args) } });
   }
+
+  // 2. Groq XML format: <function=name{"key": "value"}</function>
+  const groqPattern = /<function=([^>{]+)({[^}]+})<\/function>/g;
+  while ((match = groqPattern.exec(text)) !== null) {
+    const name = match[1].trim();
+    const argsRaw = match[2].trim();
+    try {
+      // Just parse the JSON directly
+      JSON.parse(argsRaw); // validate
+      calls.push({ id: `raw-${Date.now()}-${calls.length}`, function: { name, arguments: argsRaw } });
+    } catch(e) {
+      // fallback
+    }
+  }
+
   return calls;
 }
 
@@ -785,7 +803,15 @@ async function runAgentLoop(apiMessages) {
     const { data, providerIndex } = await callAIWithFallback(apiMessages, currentProviderIndex);
     currentProviderIndex = providerIndex;
     const message = data.choices?.[0]?.message;
-    if (!message) throw new Error('No message in response');
+    if (!message) {
+      if (currentProviderIndex + 1 < AI_PROVIDERS.length) {
+        console.log(`  🔄 No message in response. Falling back to next provider...`);
+        currentProviderIndex++;
+        i--;
+        continue;
+      }
+      throw new Error('No message in response');
+    }
 
     // Structured tool calls (standard OpenAI-compatible providers)
     if (message.tool_calls && message.tool_calls.length > 0) {
@@ -835,7 +861,13 @@ async function runAgentLoop(apiMessages) {
       return message.content;
     }
 
-    throw new Error('Empty Groq response');
+    if (currentProviderIndex + 1 < AI_PROVIDERS.length) {
+      console.log(`  🔄 Empty response detected. Falling back to next provider...`);
+      currentProviderIndex++;
+      i--;
+      continue;
+    }
+    throw new Error('Empty AI response');
   }
 
   throw new Error('Max iterations reached');

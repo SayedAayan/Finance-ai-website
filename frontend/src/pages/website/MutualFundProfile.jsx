@@ -46,8 +46,8 @@ export default function MutualFundProfile() {
             <div>
               <Link to="/"><Home size={13} style={{ display: 'inline' }} /></Link> / <Link to="/">Mutual Funds</Link> / <span>{id}</span>
             </div>
-            <div className="w-full sm:w-[250px]">
-              <SearchBar />
+            <div className="w-full sm:w-[200px]">
+              <SearchBar placeholder="Search mutual funds..." />
             </div>
           </div>
 

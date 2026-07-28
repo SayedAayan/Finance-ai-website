@@ -41,6 +41,10 @@ export default function News() {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [fullscreen, setFullscreen] = useState(false);
 
+  useEffect(() => {
+    document.body.style.overflow = modal ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [modal]);
   const defaultCms = {
     pages: { news: { features: { showGlobalNews: true, showMarketMovers: true, allowSearch: true } } }
   };
@@ -105,7 +109,10 @@ Please structure your response into the following sections:
       if (!r.ok || d.error) throw new Error('err');
       const raw = d.article && (d.article.content || d.article.textContent);
       if (!raw) throw new Error('empty');
-      if (d.article.content) { setBody(d.article.content); }
+      if (d.article.content) {
+        let cleaned = d.article.content.replace(/&lt;br\s*\/?[^&]*&gt;/gi, '<br>');
+        setBody(cleaned);
+      }
       else {
         const p = d.article.textContent.split(/\n\n+/).filter(t => t.trim().length > 40);
         setBody(p.map(t => '<p>' + t.trim() + '</p>').join(''));

@@ -79,7 +79,18 @@ export default function Login() {
   // Helper to initiate display name step or redirect
   const handleAuthSuccess = (user) => {
     setAuthenticatedUser(user);
-    setFormStep('set-name');
+    if (authIntent === 'signup') {
+      setFormStep('set-name');
+    } else {
+      if (user) {
+        sessionStorage.setItem('mockUser', JSON.stringify(user));
+      }
+      if (user?.isSuperadmin) {
+        navigate('/superadmin', { replace: true });
+      } else {
+        navigate(redirectTo, { replace: true });
+      }
+    }
   };
 
   const handleEmailSubmit = async (e) => {

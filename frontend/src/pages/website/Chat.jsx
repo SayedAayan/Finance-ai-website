@@ -42,7 +42,7 @@ export default function Chat() {
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
   const initialMessageSentRef = useRef(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
   const [regeneratingId, setRegeneratingId] = useState(null);
@@ -308,9 +308,11 @@ export default function Chat() {
           body: JSON.stringify({ title, messages: updatedMessages })
         });
         const data = await res.json();
-        currentChatId = data.chat.id;
-        setActiveChatId(currentChatId);
-        fetchChats();
+        currentChatId = data.chat?.id;
+        if (currentChatId) {
+          setActiveChatId(currentChatId);
+          fetchChats();
+        }
       } else {
         await fetch(`${API_URL}/chats/${currentChatId}`, {
           method: 'PUT',
@@ -380,7 +382,7 @@ export default function Chat() {
       if (attachedFileInfo) {
         fallbackText += `I received your uploaded document: **${attachedFileInfo.name}**. Since the live API is unreachable, here is a local analysis of your Demat verification request:\n\n- **File Verified:** ${attachedFileInfo.name}\n- **Integrity Status:** High Trust\n- **Suggested Action:** Compare holdings on the Compare tool.`;
       } else {
-        fallbackText += `Regarding your query "${q}":\n- StockBuzz live data confirms active research is available for Reliance, TCS, HDFC, and PPFAS.\n- Please consult scheme related documents or a SEBI registered advisor.`;
+        fallbackText += `Regarding your query "${q}":\n\nI am currently operating in offline fallback mode. For educational purposes, remember that investing requires proper asset allocation and risk profiling based on your individual goals.\n\n**Disclaimer: I am an AI. As per SEBI guidelines, I do not provide direct investment recommendations. Please consult a SEBI-registered investment advisor before investing.**`;
       }
 
       const aiMessage = {

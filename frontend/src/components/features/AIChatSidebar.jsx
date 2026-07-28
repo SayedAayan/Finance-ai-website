@@ -272,7 +272,7 @@ export default function AIChatSidebar({ isOpen, onClose }) {
       if (attachedFileInfo) {
         fallbackText += `I received your uploaded document: **${attachedFileInfo.name}**. Since the live Grok API is currently unreachable, here is a local analysis of your Demat verification request:\n\n- **File Verified:** ${attachedFileInfo.name}\n- **Integrity Status:** High Trust\n- **Suggested Action:** Compare holdings on the Compare tool.`;
       } else {
-        fallbackText += `Regarding your query "${q}":\n- StockBuzz live data confirms active research is available for Reliance, TCS, HDFC, and PPFAS.\n- Please consult scheme related documents or a SEBI registered advisor.`;
+        fallbackText += `Regarding your query "${q}":\n\nI am currently operating in offline fallback mode. For educational purposes, remember that investing requires proper asset allocation and risk profiling based on your individual goals.\n\n**Disclaimer: I am an AI. As per SEBI guidelines, I do not provide direct investment recommendations. Please consult a SEBI-registered investment advisor before investing.**`;
       }
 
       setMessages(prev => [...prev, {

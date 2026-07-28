@@ -26,7 +26,7 @@ export default function Footer() {
         <div className="footer-grid">
           <div>
             <div className="footer-logo">
-              <img src={footerLogo} alt="StockBuzz" style={{ width: '160px', height: 'auto', objectFit: 'contain' }} />
+              <img src={footerLogo} alt="StockBuzz" style={{ width: '220px', height: 'auto', objectFit: 'contain', margin: '-60px 0 -60px -15px' }} />
             </div>
             <p className="footer-desc">{tagline}</p>
           </div>

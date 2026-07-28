@@ -96,8 +96,8 @@ export default function StockProfile() {
             <div>
               <Link to="/"><Home size={13} style={{ display: 'inline' }} /></Link> / <Link to="/">Stocks</Link> / <span>{id}</span>
             </div>
-            <div className="w-full sm:w-[250px]">
-              <SearchBar />
+            <div className="w-full sm:w-[200px]">
+              <SearchBar placeholder="Search stocks..." />
             </div>
           </div>
           
