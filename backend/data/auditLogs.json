@@ -1,5 +1,149 @@
 [
   {
+    "id": "log_1785237236141",
+    "time": "Jul 28, 2026, 16:43:56",
+    "admin": "admin@stockbuzz.in",
+    "section": "Website CMS",
+    "action": "Updated Configuration",
+    "details": "Global CMS Settings modified",
+    "actionColor": "text-violet-600 dark:text-violet-400"
+  },
+  {
+    "id": "log_1785237213893",
+    "time": "Jul 28, 2026, 16:43:33",
+    "admin": "admin@stockbuzz.in",
+    "section": "Website CMS",
+    "action": "Updated Configuration",
+    "details": "Global CMS Settings modified",
+    "actionColor": "text-violet-600 dark:text-violet-400"
+  },
+  {
+    "id": "log_1785236785514",
+    "time": "Jul 28, 2026, 16:36:25",
+    "admin": "admin@stockbuzz.in",
+    "section": "Website CMS",
+    "action": "Updated Configuration",
+    "details": "Global CMS Settings modified",
+    "actionColor": "text-violet-600 dark:text-violet-400"
+  },
+  {
+    "id": "log_1785236667642",
+    "time": "Jul 28, 2026, 16:34:27",
+    "admin": "admin@stockbuzz.in",
+    "section": "Website CMS",
+    "action": "Updated Configuration",
+    "details": "Global CMS Settings modified",
+    "actionColor": "text-violet-600 dark:text-violet-400"
+  },
+  {
+    "id": "log_1785236607375",
+    "time": "Jul 28, 2026, 16:33:27",
+    "admin": "admin@stockbuzz.in",
+    "section": "Website CMS",
+    "action": "Updated Configuration",
+    "details": "Global CMS Settings modified",
+    "actionColor": "text-violet-600 dark:text-violet-400"
+  },
+  {
+    "id": "log_1785236490313",
+    "time": "Jul 28, 2026, 16:31:30",
+    "admin": "admin@stockbuzz.in",
+    "section": "Website CMS",
+    "action": "Updated Configuration",
+    "details": "Global CMS Settings modified",
+    "actionColor": "text-violet-600 dark:text-violet-400"
+  },
+  {
+    "id": "log_1785236182958",
+    "time": "Jul 28, 2026, 16:26:22",
+    "admin": "admin@stockbuzz.in",
+    "section": "Users",
+    "action": "Updated User",
+    "details": "Updated user: john@gmauil,0cm`",
+    "actionColor": "text-blue-600 dark:text-blue-400"
+  },
+  {
+    "id": "log_1785236173480",
+    "time": "Jul 28, 2026, 16:26:13",
+    "admin": "admin@stockbuzz.in",
+    "section": "Website CMS",
+    "action": "Updated Configuration",
+    "details": "Global CMS Settings modified",
+    "actionColor": "text-violet-600 dark:text-violet-400"
+  },
+  {
+    "id": "log_1785236148208",
+    "time": "Jul 28, 2026, 16:25:48",
+    "admin": "admin@stockbuzz.in",
+    "section": "Users",
+    "action": "Updated User",
+    "details": "Updated user: john@gmauil,0cm`",
+    "actionColor": "text-blue-600 dark:text-blue-400"
+  },
+  {
+    "id": "log_1785236140996",
+    "time": "Jul 28, 2026, 16:25:40",
+    "admin": "admin@stockbuzz.in",
+    "section": "Website CMS",
+    "action": "Updated Configuration",
+    "details": "Global CMS Settings modified",
+    "actionColor": "text-violet-600 dark:text-violet-400"
+  },
+  {
+    "id": "log_1785236120091",
+    "time": "Jul 28, 2026, 16:25:20",
+    "admin": "admin@stockbuzz.in",
+    "section": "Users",
+    "action": "Updated User",
+    "details": "Updated user: john@gmauil,0cm`",
+    "actionColor": "text-blue-600 dark:text-blue-400"
+  },
+  {
+    "id": "log_1785235995613",
+    "time": "Jul 28, 2026, 16:23:15",
+    "admin": "admin@stockbuzz.in",
+    "section": "Website CMS",
+    "action": "Updated Configuration",
+    "details": "Global CMS Settings modified",
+    "actionColor": "text-violet-600 dark:text-violet-400"
+  },
+  {
+    "id": "log_1785235963539",
+    "time": "Jul 28, 2026, 16:22:43",
+    "admin": "admin@stockbuzz.in",
+    "section": "Website CMS",
+    "action": "Updated Configuration",
+    "details": "Global CMS Settings modified",
+    "actionColor": "text-violet-600 dark:text-violet-400"
+  },
+  {
+    "id": "log_1785235808258",
+    "time": "Jul 28, 2026, 16:20:08",
+    "admin": "admin@stockbuzz.in",
+    "section": "Users",
+    "action": "Created User",
+    "details": "New user: john@gmauil,0cm` (Free)",
+    "actionColor": "text-blue-600 dark:text-blue-400"
+  },
+  {
+    "id": "log_1785235731224",
+    "time": "Jul 28, 2026, 16:18:51",
+    "admin": "admin@stockbuzz.in",
+    "section": "Website CMS",
+    "action": "Updated Configuration",
+    "details": "Global CMS Settings modified",
+    "actionColor": "text-violet-600 dark:text-violet-400"
+  },
+  {
+    "id": "log_1785235682146",
+    "time": "Jul 28, 2026, 16:18:02",
+    "admin": "admin@stockbuzz.in",
+    "section": "Website CMS",
+    "action": "Updated Configuration",
+    "details": "Global CMS Settings modified",
+    "actionColor": "text-violet-600 dark:text-violet-400"
+  },
+  {
     "id": "log_1784632277133",
     "time": "Jul 21, 2026, 16:41:17",
     "admin": "admin@stockbuzz.in",

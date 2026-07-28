@@ -41,11 +41,11 @@ export default function Settings() {
 
   // Extract pricing info from CMS
   const plans = cmsConfig?.pricing?.plans || [];
-  const freePlan = plans.find(p => p.id === 'plan_free') || { name: 'Basic', features: [] };
-  const premiumPlans = plans.filter(p => p.id !== 'plan_free');
+  const freePlan = plans.find(p => p.type === 'free' || p.id === 'plan_free') || { name: 'Basic', features: [] };
+  const premiumPlans = plans.filter(p => p.type !== 'free' && p.id !== 'plan_free');
   
   const activePlan = plans.find(p => p.id === activePlanId) || freePlan;
-  const isPremium = activePlanId !== 'plan_free';
+  const isPremium = activePlanId !== 'plan_free' && activePlan.type !== 'free';
 
   const siteName = cmsConfig?.global?.siteName || 'StockBuzz';
 
@@ -101,8 +101,10 @@ export default function Settings() {
               </div>
             )}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '1rem' }}>
-              {[freePlan, ...premiumPlans].map(plan => {
-                const isActive = activePlanId === plan.id;
+              {plans.map((plan, planIndex) => {
+                const activePlanIndex = plans.findIndex(p => p.id === activePlan.id);
+                const isActive = activePlan.id === plan.id;
+                const isDowngrade = planIndex < activePlanIndex;
                 const billingCycleLabel = plan.billingCycle === 'Monthly' ? 'month' : plan.billingCycle === 'Yearly' ? 'year' : plan.billingCycle.toLowerCase();
                 return (
                   <div key={plan.id} style={{ 
@@ -126,7 +128,7 @@ export default function Settings() {
                       <h4 style={{ margin: '0 0 2px 0', fontWeight: 800, color: isActive ? 'var(--violet)' : 'var(--text-1)', fontSize: '1.1rem' }}>
                         {siteName} {plan.name}
                       </h4>
-                      {plan.id === 'plan_free' ? (
+                      {plan.type === 'free' || plan.id === 'plan_free' ? (
                         <div style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-1)', display: 'flex', alignItems: 'baseline', gap: '4px' }}>
                           Free
                         </div>
@@ -149,26 +151,8 @@ export default function Settings() {
                       ))}
                     </div>
 
-                    {!isActive ? (
-                      plan.id !== 'plan_free' ? (
-                        <button 
-                          onClick={() => handleUpgradeClick(plan)}
-                          className="btn btn-violet shadow-sm hover:shadow-md transition-all flex items-center justify-center hover:-translate-y-0.5" 
-                          style={{ width: '100%', gap: '6px', borderRadius: '10px', padding: '10px', fontWeight: 700 }}
-                        >
-                          <Sparkles size={16} /> {plan.buttonLabel || `Upgrade to ${plan.name}`}
-                        </button>
-                      ) : (
-                        <button 
-                          className="btn flex items-center justify-center" 
-                          disabled
-                          style={{ width: '100%', borderRadius: '10px', padding: '10px', background: 'var(--bg-subtle)', border: '1px solid var(--border)', color: 'var(--text-3)', cursor: 'default', fontWeight: 600 }}
-                        >
-                          Included in your plan
-                        </button>
-                      )
-                    ) : (
-                      plan.id === 'plan_free' ? (
+                    {isActive ? (
+                      (plan.type === 'free' || plan.id === 'plan_free') ? (
                         <button 
                           className="btn flex items-center justify-center" 
                           disabled
@@ -185,6 +169,22 @@ export default function Settings() {
                           Manage Subscription
                         </button>
                       )
+                    ) : isDowngrade ? (
+                        <button 
+                          className="btn flex items-center justify-center" 
+                          disabled
+                          style={{ width: '100%', borderRadius: '10px', padding: '10px', background: 'var(--bg-subtle)', border: '1px solid var(--border)', color: 'var(--text-3)', cursor: 'default', fontWeight: 600 }}
+                        >
+                          Included in your plan
+                        </button>
+                    ) : (
+                        <button 
+                          onClick={() => handleUpgradeClick(plan)}
+                          className="btn btn-violet shadow-sm hover:shadow-md transition-all flex items-center justify-center hover:-translate-y-0.5" 
+                          style={{ width: '100%', gap: '6px', borderRadius: '10px', padding: '10px', fontWeight: 700 }}
+                        >
+                          {plan.buttonLabel || `Upgrade to ${plan.name}`}
+                        </button>
                     )}
                   </div>
                 );

@@ -22,5 +22,13 @@
     "plan": "Ultra",
     "status": "Active",
     "joinDate": "2026-07-21"
+  },
+  {
+    "id": "usr_1785235808244",
+    "name": "John ",
+    "email": "john@gmauil,0cm`",
+    "status": "Active",
+    "joinDate": "2026-07-28",
+    "plan": "Base Plan"
   }
 ]

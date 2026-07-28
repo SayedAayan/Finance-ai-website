@@ -3,7 +3,7 @@ import { Navigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useCms, defaultCmsConfig } from '../../context/CmsContext';
-import { LayoutDashboard, Users, FileEdit, Settings, Search, Edit2, Trash2, Shield, Activity, TrendingUp, ChevronDown, Home, LogOut, Sun, Moon, Image as ImageIcon, RotateCcw, AlertCircle, CheckCircle2, MessageSquare, Plus, BarChart3, DollarSign, Newspaper, ScrollText, Database, ArrowRight, LineChart, ArrowUpRight, ArrowDownRight, Eye, Filter, MousePointerClick, UserPlus, CreditCard, Crown, Star, RefreshCcw, Ticket, Tag, Check, X, Pin, EyeOff, XCircle, Clock, Link as LinkIcon, CalendarDays, Server, Globe, Cpu, Zap, Network, User, Bell, Key, Smartphone, Mail } from 'lucide-react';
+import { LayoutDashboard, Users, FileEdit, Settings, Search, Edit2, Trash2, Shield, Activity, TrendingUp, ChevronDown, Home, LogOut, Sun, Moon, Image as ImageIcon, RotateCcw, AlertCircle, CheckCircle2, MessageSquare, Plus, BarChart3, DollarSign, Newspaper, ScrollText, Database, ArrowRight, LineChart, ArrowUpRight, ArrowDownRight, ArrowUp, ArrowDown, Eye, Filter, MousePointerClick, UserPlus, CreditCard, Crown, Star, RefreshCcw, Ticket, Tag, Check, X, Pin, EyeOff, XCircle, Clock, Link as LinkIcon, CalendarDays, Server, Globe, Cpu, Zap, Network, User, Bell, Key, Smartphone, Mail } from 'lucide-react';
 
 const ImageUploadField = ({ label, value, onChange, variant = 'rectangular', caption }) => {
   const fileInputRef = useRef(null);
@@ -251,6 +251,12 @@ export default function Superadmin() {
     fetchSystemHealth();
     fetchSettings();
     fetchAdminNews();
+
+    const healthInterval = setInterval(() => {
+      fetchSystemHealth();
+    }, 5000); // poll for live api usage every 5s
+
+    return () => clearInterval(healthInterval);
   }, []);
 
   const fetchAdminNews = () => {
@@ -456,9 +462,14 @@ export default function Superadmin() {
 
   const updateNestedConfig = (section, path, value) => {
     setCmsConfig(prev => {
-      const newConfig = { ...prev };
+      const newConfig = JSON.parse(JSON.stringify(prev));
       let current = newConfig[section];
+      if (!current) {
+        current = {};
+        newConfig[section] = current;
+      }
       for (let i = 0; i < path.length - 1; i++) {
+        if (!current[path[i]]) current[path[i]] = {};
         current = current[path[i]];
       }
       current[path[path.length - 1]] = value;
@@ -911,9 +922,9 @@ export default function Superadmin() {
               <div>
                 <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Assign Plan</label>
                 <select value={editingUser?.plan || 'Free'} onChange={e => setEditingUser(prev => ({...prev, plan: e.target.value}))} className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg text-sm focus:outline-none focus:border-violet-500 transition-colors text-gray-900 dark:text-gray-100">
-                  <option>Free</option>
-                  <option>Pro</option>
-                  <option>Ultra</option>
+                  {(cmsConfig?.pricing?.plans || [{ name: 'Free' }, { name: 'Pro' }, { name: 'Ultra' }]).map(plan => (
+                    <option key={plan.id || plan.name} value={plan.name}>{plan.name}</option>
+                  ))}
                 </select>
               </div>
               <div>
@@ -1121,33 +1132,103 @@ export default function Superadmin() {
 
         <SectionAccordion id="pricing" title="Pricing Plans" expandedSection={expandedSection} setExpandedSection={setExpandedSection}>
           <div className="space-y-6">
-            {(cmsConfig.pricing?.plans || []).map((plan, index) => (
+            <div className="flex justify-end">
+              <button type="button" onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const newPlans = [...(cmsConfig.pricing?.plans || [])];
+                newPlans.splice(1, 0, {
+                  id: 'plan_' + Math.random().toString(36).substr(2, 6),
+                  name: 'New Plan',
+                  price: '0',
+                  billingCycle: 'Monthly',
+                  buttonLabel: 'Select Plan',
+                  features: ['New Feature']
+                });
+                updateNestedConfig('pricing', ['plans'], newPlans);
+              }} className="bg-violet-100 hover:bg-violet-200 text-violet-700 dark:bg-violet-900/30 dark:hover:bg-violet-900/50 dark:text-violet-300 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
+                <Plus size={16} /> Add Plan
+              </button>
+            </div>
+            {(cmsConfig.pricing?.plans || []).map((plan) => {
+              const originalIndex = cmsConfig.pricing.plans.findIndex(p => p.id === plan.id);
+              return (
               <div key={plan.id} className="p-4 border border-violet-100/60 dark:border-violet-900/30 rounded-xl bg-violet-50/20 dark:bg-violet-900/10 space-y-4 shadow-[0_2px_8px_rgba(124,58,237,0.02)]">
                 <div className="flex items-center justify-between border-b border-violet-100/50 dark:border-violet-900/30 pb-3">
-                  <h4 className="text-sm font-semibold text-violet-900 dark:text-violet-100">{plan.name} Plan</h4>
-                  <span className="text-xs font-medium text-violet-400 dark:text-violet-500 uppercase tracking-wider">{plan.id}</span>
+                  <div className="flex items-center gap-3">
+                    <h4 className="text-sm font-semibold text-violet-900 dark:text-violet-100">{plan.name} Plan</h4>
+                    <span className="text-xs font-medium text-violet-400 dark:text-violet-500 uppercase tracking-wider">{plan.id}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button type="button" onClick={(e) => {
+                      e.preventDefault(); e.stopPropagation();
+                      if (originalIndex > 1) { // >1 to not swap with plan_free which is usually at index 0
+                        const newPlans = [...cmsConfig.pricing.plans];
+                        [newPlans[originalIndex - 1], newPlans[originalIndex]] = [newPlans[originalIndex], newPlans[originalIndex - 1]];
+                        updateNestedConfig('pricing', ['plans'], newPlans);
+                      }
+                    }} className="text-gray-400 hover:text-violet-600 p-1.5 rounded-md hover:bg-violet-50 dark:hover:bg-violet-900/30 transition-colors" title="Move Up">
+                      <ArrowUp size={16} />
+                    </button>
+                    <button type="button" onClick={(e) => {
+                      e.preventDefault(); e.stopPropagation();
+                      if (originalIndex < cmsConfig.pricing.plans.length - 1) {
+                        const newPlans = [...cmsConfig.pricing.plans];
+                        [newPlans[originalIndex + 1], newPlans[originalIndex]] = [newPlans[originalIndex], newPlans[originalIndex + 1]];
+                        updateNestedConfig('pricing', ['plans'], newPlans);
+                      }
+                    }} className="text-gray-400 hover:text-violet-600 p-1.5 rounded-md hover:bg-violet-50 dark:hover:bg-violet-900/30 transition-colors" title="Move Down">
+                      <ArrowDown size={16} />
+                    </button>
+                    <button type="button" onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const newPlans = cmsConfig.pricing.plans.filter((_, i) => i !== originalIndex);
+                      updateNestedConfig('pricing', ['plans'], newPlans);
+                    }} className="text-red-500 hover:text-red-600 p-1.5 rounded-md hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors" title="Remove Plan">
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <InputGroup label="Name" value={plan.name} onChange={e => {
                     const newPlans = [...cmsConfig.pricing.plans];
-                    newPlans[index].name = e.target.value;
+                    newPlans[originalIndex].name = e.target.value;
                     updateNestedConfig('pricing', ['plans'], newPlans);
                   }} />
                   <InputGroup label="Price" value={plan.price} type="number" onChange={e => {
                     const newPlans = [...cmsConfig.pricing.plans];
-                    newPlans[index].price = e.target.value;
+                    newPlans[originalIndex].price = e.target.value;
                     updateNestedConfig('pricing', ['plans'], newPlans);
                   }} />
                   <InputGroup label="Billing Cycle" value={plan.billingCycle} onChange={e => {
                     const newPlans = [...cmsConfig.pricing.plans];
-                    newPlans[index].billingCycle = e.target.value;
+                    newPlans[originalIndex].billingCycle = e.target.value;
                     updateNestedConfig('pricing', ['plans'], newPlans);
                   }} />
                   <InputGroup label="Button Label" value={plan.buttonLabel} onChange={e => {
                     const newPlans = [...cmsConfig.pricing.plans];
-                    newPlans[index].buttonLabel = e.target.value;
+                    newPlans[originalIndex].buttonLabel = e.target.value;
                     updateNestedConfig('pricing', ['plans'], newPlans);
                   }} />
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Plan Type</label>
+                    <select
+                      value={plan.type === 'free' || plan.id === 'plan_free' ? 'free' : 'paid'}
+                      onChange={e => {
+                        const newPlans = [...cmsConfig.pricing.plans];
+                        newPlans[originalIndex].type = e.target.value;
+                        if (e.target.value === 'free') {
+                          newPlans[originalIndex].price = '0';
+                        }
+                        updateNestedConfig('pricing', ['plans'], newPlans);
+                      }}
+                      className="w-full px-3 py-2 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500 dark:focus:ring-violet-400 dark:focus:border-violet-400 text-gray-900 dark:text-gray-100 transition-shadow shadow-sm"
+                    >
+                      <option value="free">Free</option>
+                      <option value="paid">Paid</option>
+                    </select>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Features (one per line)</label>
@@ -1156,7 +1237,7 @@ export default function Superadmin() {
                     value={plan.features.join('\n')}
                     onChange={e => {
                       const newPlans = [...cmsConfig.pricing.plans];
-                      newPlans[index].features = e.target.value.split('\n');
+                      newPlans[originalIndex].features = e.target.value.split('\n');
                       updateNestedConfig('pricing', ['plans'], newPlans);
                     }}
                     placeholder="Enter feature..."
@@ -1164,7 +1245,8 @@ export default function Superadmin() {
                   />
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </SectionAccordion>
 
@@ -1851,16 +1933,18 @@ export default function Superadmin() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 shrink-0">
-        {[
-          { name: 'NSE Real-time', status: 'Operational', uptime: '99.98%', latency: '42ms', requests: '1.2M/day', icon: Server, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/30' },
-          { name: 'BSE Market Data', status: 'Operational', uptime: '99.95%', latency: '58ms', requests: '850K/day', icon: Globe, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/30' },
-          { name: 'AMFI Mutual Funds', status: 'Degraded', uptime: '98.40%', latency: '450ms', requests: '420K/day', icon: Database, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/30' }
-        ].map((provider, i) => (
+        {(systemHealth?.providers || [
+          { name: 'NSE Real-time', status: 'Operational', uptime: '99.98%', latency: '42ms', colorClass: 'text-emerald-600', bgClass: 'bg-emerald-50 dark:bg-emerald-900/30' },
+          { name: 'BSE Market Data', status: 'Operational', uptime: '99.95%', latency: '58ms', colorClass: 'text-emerald-600', bgClass: 'bg-emerald-50 dark:bg-emerald-900/30' },
+          { name: 'AMFI Mutual Funds', status: 'Degraded', uptime: '98.40%', latency: '450ms', colorClass: 'text-amber-600', bgClass: 'bg-amber-50 dark:bg-amber-900/30' }
+        ]).map((provider, i) => {
+          const Icon = provider.name.includes('NSE') ? Server : provider.name.includes('BSE') ? Globe : Database;
+          return (
           <div key={i} className="bg-white dark:bg-black p-5 rounded-2xl border border-gray-100 dark:border-gray-800/80 shadow-[0_4px_24px_-4px_rgba(0,0,0,0.02)] flex flex-col relative overflow-hidden group hover:border-violet-200 dark:hover:border-violet-900/50 transition-colors cursor-pointer">
             <div className="flex items-start justify-between relative z-10 mb-4">
               <div className="flex items-center gap-3">
-                <div className={`p-2.5 rounded-xl ${provider.bg} flex items-center justify-center`}>
-                  <provider.icon className={provider.color} size={18} strokeWidth={2.5} />
+                <div className={`p-2.5 rounded-xl ${provider.bgClass} flex items-center justify-center`}>
+                  <Icon className={provider.colorClass} size={18} strokeWidth={2.5} />
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100">{provider.name}</h3>
@@ -1883,7 +1967,7 @@ export default function Superadmin() {
               </div>
             </div>
           </div>
-        ))}
+        )})}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 shrink-0">

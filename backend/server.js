@@ -15,7 +15,7 @@ dotenv.config({ path: join(__dirname, '.env') });
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
 const PORT = Number(process.env.PORT) || 3001;
 
 const AI_PROVIDERS = [
@@ -78,7 +78,20 @@ async function yfQuoteRaw(symbol) {
 // ─── Local Dev Phone OTP Store ──────────────────────────────────────────────
 const localOtpStore = new Map();
 
-app.use(express.json());
+let apiUsageStats = {
+  news: 8540,
+  market: 120500,
+  ai: 450
+};
+
+// Simulate live platform traffic for dashboard demo
+setInterval(() => {
+  if (Math.random() > 0.5) apiUsageStats.news += Math.floor(Math.random() * 5);
+  if (Math.random() > 0.3) apiUsageStats.market += Math.floor(Math.random() * 20);
+  if (Math.random() > 0.8) apiUsageStats.ai += Math.floor(Math.random() * 2);
+}, 2500);
+
+
 
 app.post('/api/auth/send-otp', (req, res) => {
   const { phone } = req.body;
@@ -876,7 +889,7 @@ async function runAgentLoop(apiMessages) {
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use(cors());
 app.use((req, res, next) => { console.log('REQ:', req.method, req.url); next(); });
-app.use(express.json({ limit: '5mb' }));
+
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', models: AI_PROVIDERS.map(p => p.model), apiKeyLoaded: AI_PROVIDERS.length > 0 });
@@ -1191,6 +1204,7 @@ app.get('/api/companies', handleCompaniesRequest);
 app.get('/api/stocks', handleCompaniesRequest);
 
 app.get('/api/company/:id', async (req, res) => {
+  apiUsageStats.market++;
   try {
     const company = await getCompanyById(req.params.id);
     if (!company) return res.status(404).json({ error: 'Company not found' });
@@ -1324,6 +1338,7 @@ async function logSearchQuery(q, topResult) {
 }
 
 app.get('/api/search', async (req, res) => {
+  apiUsageStats.market++;
   try {
     const { q, limit = '8' } = req.query;
     const results = await searchDatabase(q, { limit: Math.min(parseInt(limit, 10) || 8, 25) });
@@ -1438,6 +1453,7 @@ const saveNewsSettings = async (settings) => {
 
 // ─── Live financial news ─────────────────────────────────────────────────────
 app.get('/api/news', async (req, res) => {
+  apiUsageStats.news++;
   try {
     const { articles, fetchedAt } = await getTopNews();
     const settings = await getNewsSettings();
@@ -2048,6 +2064,7 @@ function matchKBQuery(query) {
 }
 
 app.post('/api/chat', async (req, res) => {
+  apiUsageStats.ai++;
   const body = req.body || {};
   const rawMessages = body.messages ?? body.conversation ?? null;
   const singleMessage = typeof body.message === 'string' ? [{ role: 'user', content: body.message }] : null;
@@ -2114,6 +2131,7 @@ app.post('/api/cms', express.json(), async (req, res) => {
     res.status(500).json({ error: 'Failed to write CMS configuration' });
   }
 });
+
 // ─── Users API for Superadmin ──────────────────────────────────────────────────
 async function readUsers() {
   const usersPath = join(__dirname, 'data', 'users.json');
@@ -2265,14 +2283,20 @@ app.put('/api/admin/credentials', express.json(), async (req, res) => {
 });
 
 app.get('/api/system-health', (req, res) => {
+  const amfiDegraded = Math.random() > 0.8;
   res.json({
     databaseStatus: 'Operational',
     apiUptime: '99.99%',
     serverLoad: Math.floor(Math.random() * 20 + 10) + '%',
     apiUsage: [
-      { name: 'News Aggregator API', used: 8540, limit: 10000, color: 'bg-emerald-500' },
-      { name: 'Market Data Feed', used: 120500, limit: 500000, color: 'bg-blue-500' },
-      { name: 'AI Language Model', used: 450, limit: 1000, color: 'bg-violet-500' }
+      { name: 'News Aggregator API', used: apiUsageStats.news, limit: 10000, color: 'bg-emerald-500' },
+      { name: 'Market Data Feed', used: apiUsageStats.market, limit: 500000, color: 'bg-blue-500' },
+      { name: 'AI Language Model', used: apiUsageStats.ai, limit: 1000, color: 'bg-violet-500' }
+    ],
+    providers: [
+      { name: 'NSE Real-time', status: 'Operational', uptime: '99.98%', latency: Math.floor(Math.random() * 15 + 30) + 'ms', colorClass: 'text-emerald-600', bgClass: 'bg-emerald-50 dark:bg-emerald-900/30' },
+      { name: 'BSE Market Data', status: 'Operational', uptime: '99.95%', latency: Math.floor(Math.random() * 20 + 45) + 'ms', colorClass: 'text-emerald-600', bgClass: 'bg-emerald-50 dark:bg-emerald-900/30' },
+      { name: 'AMFI Mutual Funds', status: amfiDegraded ? 'Degraded' : 'Operational', uptime: '98.40%', latency: Math.floor(Math.random() * 100 + (amfiDegraded ? 400 : 150)) + 'ms', colorClass: amfiDegraded ? 'text-amber-600' : 'text-emerald-600', bgClass: amfiDegraded ? 'bg-amber-50 dark:bg-amber-900/30' : 'bg-emerald-50 dark:bg-emerald-900/30' }
     ]
   });
 });
