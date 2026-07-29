@@ -1,5 +1,66 @@
 {
-  "chats": {},
+  "chats": {
+    "1785322822393": {
+      "id": "1785322822393",
+      "title": "Compare TCS vs Reliance",
+      "messages": [
+        {
+          "id": 1785322822341,
+          "type": "user",
+          "text": "Compare TCS vs Reliance",
+          "file": null
+        },
+        {
+          "id": 1785322894852,
+          "type": "ai",
+          "text": "Here is a live comparison between **Tata Consultancy Services (TCS)** and **Reliance Industries** based on today's market data:\n\n### 📊 Live Price Comparison (NSE)\n\n| Feature | **TCS (Tata Consultancy Services)** | **Reliance Industries** |\n| :--- | :--- | :--- |\n| **Current Price** | ₹2,446.60 | ₹1,275.90 |\n| **Today's Change** | +₹48.60 (**+2.03%**) 🟢 | +₹8.20 (**+0.65%**) 🟢 |\n| **Today's Range** | ₹2,415.10 – ₹2,475.50 | ₹1,268.70 – ₹1,282.40 |\n| **52-Week High** | ₹3,350.00 | ₹1,611.80 |\n| **52-Week Low** | ₹1,976.80 | ₹1,249.80 |\n| **Trading Volume** | ~71.7 Lakhs shares | ~94.5 Lakhs shares |\n\n### 🔍 Key Differences & Context\n\n* **Sector & Business Model:** \n  * **TCS** is India's largest IT services company. Its performance is heavily tied to global tech spending, especially from the US and Europe.\n  * **Reliance** is a massive conglomerate. It operates across energy (oil & gas), petrochemicals, telecom (Jio), and retail (Reliance Retail). It is more diversified and heavily influenced by domestic Indian consumption and crude oil prices.\n* **Price Movement Today:** Both stocks are trading in the green today, but **TCS is showing stronger momentum** with a 2% gain compared to Reliance's steady 0.65% rise.\n* **Volatility & Range:** \n  * TCS is currently trading closer to its 52-week low, meaning it has corrected significantly from its yearly high of ₹3,350.\n  * Reliance is also trading near its 52-week low (₹1,249.80), showing it has faced similar downward pressure over the past year.\n* **Liquidity:** Reliance has a higher trading volume today, meaning more shares are being bought and sold, which usually makes it easier for large investors to enter or exit positions quickly.\n\n### 💡 What should you consider?\n* If you are looking for **global tech exposure** and believe the IT sector is recovering, TCS is the classic large-cap play.\n* If you prefer a **diversified Indian giant** that benefits from domestic retail growth, telecom expansion, and energy, Reliance is the go-to stock.\n\nBoth are \"blue-chip\" stocks (highly liquid, market-leading companies) and are commonly found in most large-cap mutual funds and index portfolios. Let me know if you want to see their recent news or financial ratios!",
+          "source": "Stockbuzz AI"
+        }
+      ],
+      "createdAt": "2026-07-29T11:00:22.393Z",
+      "updatedAt": "2026-07-29T11:01:34.859Z"
+    },
+    "1785323129862": {
+      "id": "1785323129862",
+      "title": "Compare TCS vs Reliance",
+      "messages": [
+        {
+          "id": 1785323150926,
+          "type": "user",
+          "text": "HDFC Flexi Cap Fund",
+          "file": null
+        },
+        {
+          "id": 1785323208954,
+          "type": "ai",
+          "text": "### Connection Error\nI'm unable to reach the backend AI providers.\n\nRegarding your query \"HDFC Flexi Cap Fund\":\n\nI am currently operating in offline fallback mode. For educational purposes, remember that investing requires proper asset allocation and risk profiling based on your individual goals.\n\n**Disclaimer: I am an AI. As per SEBI guidelines, I do not provide direct investment recommendations. Please consult a SEBI-registered investment advisor before investing.**",
+          "source": "Stockbuzz AI Local Fallback"
+        }
+      ],
+      "createdAt": "2026-07-29T11:05:29.862Z",
+      "updatedAt": "2026-07-29T11:06:48.970Z"
+    },
+    "1785323157166": {
+      "id": "1785323157166",
+      "title": "Tell me about Reliance",
+      "messages": [
+        {
+          "id": 1785323361244,
+          "type": "user",
+          "text": "Tell me about Reliance",
+          "file": null
+        },
+        {
+          "id": 1785323410165,
+          "type": "ai",
+          "text": "Here is a quick overview of **Reliance Industries Limited (RIL)**, along with its live market data.\n\n### 🏢 About the Company\nReliance Industries is India's largest private-sector company and a global conglomerate. It is primarily driven by three massive business verticals:\n*   **Oil-to-Chemicals (O2C):** It operates one of the world's largest refining and petrochemical complexes.\n*   **Telecom (Jio Platforms):** India's largest mobile network operator, which has been a major driver of the country's digital revolution.\n*   **Retail:** One of the largest retail networks in India, selling everything from groceries and fashion to electronics.\n\n### 📈 Live Stock Data (NSE)\n*   **Current Price:** ₹1,275.90\n*   **Today's Change:** +₹8.20 (**+0.65%**)\n*   **Day's Range:** ₹1,268.70 – ₹1,282.40\n*   **52-Week Range:** ₹1,249.80 – ₹1,611.80\n*   **Volume:** ~9.4 Million shares traded today\n\n### 📰 Latest News\nThere are no major breaking news headlines specifically for Reliance Industries in the current market feed today. The stock is currently trading slightly higher, hovering near its 52-week low of ₹1,249.",
+          "source": "Stockbuzz AI"
+        }
+      ],
+      "createdAt": "2026-07-29T11:05:57.166Z",
+      "updatedAt": "2026-07-29T11:10:10.169Z"
+    }
+  },
   "watchlist": [],
   "trending": {},
   "cms": {
@@ -332,7 +393,7 @@
         {
           "id": "plan_pro",
           "name": "Pro",
-          "price": "499",
+          "price": "999",
           "billingCycle": "Monthly",
           "features": [
             "Real-time NSE/BSE data",
@@ -345,7 +406,7 @@
         {
           "id": "plan_ultra_pro",
           "name": "Premium",
-          "price": "999",
+          "price": "9999",
           "billingCycle": "Monthly",
           "features": [
             "Real-time NSE/BSE data",

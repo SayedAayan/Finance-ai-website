@@ -1,0 +1,23 @@
+[
+  {
+    "code": "EARLYBIRD",
+    "discount": "20% OFF",
+    "usage": "142 / 500",
+    "expiry": "Dec 31, 2026",
+    "status": "Active"
+  },
+  {
+    "code": "STUDENT",
+    "discount": "$5 OFF / mo",
+    "usage": "34 / ∞",
+    "expiry": "Never",
+    "status": "Active"
+  },
+  {
+    "code": "LAUNCH",
+    "discount": "50% OFF",
+    "usage": "0 / ∞",
+    "expiry": "Never",
+    "status": "Active"
+  }
+]

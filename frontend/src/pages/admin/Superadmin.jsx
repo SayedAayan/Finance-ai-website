@@ -241,6 +241,11 @@ export default function Superadmin() {
     { title: "Outdated story about old market crash from 2024", source: "The Times of India", time: "1 day ago", status: "Hidden" },
   ]);
 
+  const [promoCodes, setPromoCodes] = useState([]);
+  const [showAddPromoModal, setShowAddPromoModal] = useState(false);
+  const [newPromo, setNewPromo] = useState({ code: '', discount: '', usage: '0 / ∞', expiry: 'Never', status: 'Active' });
+  const [editingPromoOriginal, setEditingPromoOriginal] = useState(null);
+
   useEffect(() => {
     if (remoteCms) setCmsConfig(remoteCms);
   }, [remoteCms]);
@@ -251,6 +256,7 @@ export default function Superadmin() {
     fetchSystemHealth();
     fetchSettings();
     fetchAdminNews();
+    fetchPromoCodes();
 
     const healthInterval = setInterval(() => {
       fetchSystemHealth();
@@ -299,6 +305,13 @@ export default function Superadmin() {
     fetch('/api/users')
       .then(res => res.json())
       .then(data => setUsers(data))
+      .catch(console.error);
+  };
+
+  const fetchPromoCodes = () => {
+    fetch('/api/promo-codes')
+      .then(res => res.json())
+      .then(data => setPromoCodes(data))
       .catch(console.error);
   };
 
@@ -365,6 +378,46 @@ export default function Superadmin() {
     } catch (err) {
       console.error(err);
       alert('Failed to save user');
+    }
+  };
+
+  const handleSavePromo = async () => {
+    if (!newPromo.code || !newPromo.discount) return alert('Code and Discount are required');
+    try {
+      if (editingPromoOriginal) {
+        await fetch(`/api/promo-codes/${editingPromoOriginal}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newPromo)
+        });
+        await logAuditAction('System', 'Updated Promo Code', `Updated promo code: ${newPromo.code}`, 'text-blue-600 dark:text-blue-400');
+      } else {
+        await fetch('/api/promo-codes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newPromo)
+        });
+        await logAuditAction('System', 'Added Promo Code', `Added new promo code: ${newPromo.code}`, 'text-emerald-600 dark:text-emerald-400');
+      }
+      setShowAddPromoModal(false);
+      setNewPromo({ code: '', discount: '', usage: '0 / ∞', expiry: 'Never', status: 'Active' });
+      setEditingPromoOriginal(null);
+      fetchPromoCodes();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to save promo code');
+    }
+  };
+
+  const handleDeletePromo = async (code) => {
+    if (!confirm('Are you sure you want to delete this promo code?')) return;
+    try {
+      await fetch(`/api/promo-codes/${code}`, { method: 'DELETE' });
+      await logAuditAction('System', 'Deleted Promo Code', `Deleted promo code: ${code}`, 'text-red-600 dark:text-red-400');
+      fetchPromoCodes();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to delete promo code');
     }
   };
 
@@ -1250,6 +1303,53 @@ export default function Superadmin() {
           </div>
         </SectionAccordion>
 
+        <SectionAccordion id="promo-codes" title="Active Promo Codes" expandedSection={expandedSection} setExpandedSection={setExpandedSection}>
+          <div className="bg-white dark:bg-black rounded-2xl border border-gray-100 dark:border-gray-800/80 shadow-[0_4px_24px_-4px_rgba(0,0,0,0.02)] flex flex-col">
+            <div className="px-6 py-4 border-b border-gray-50 dark:border-gray-800/50 flex justify-between items-center shrink-0">
+              <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100">Promo Codes</h3>
+              <button onClick={() => { setEditingPromoOriginal(null); setNewPromo({ code: '', discount: '', usage: '0 / ∞', expiry: 'Never', status: 'Active' }); setShowAddPromoModal(true); }} className="bg-violet-50 hover:bg-violet-100 text-violet-700 dark:bg-violet-500/10 dark:text-violet-400 dark:hover:bg-violet-500/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5">
+                <Plus size={14} /> Add Code
+              </button>
+            </div>
+            <div className="p-0 flex-1 overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[500px]">
+                <thead>
+                  <tr className="bg-gray-50/50 dark:bg-gray-900/30 border-b border-gray-100 dark:border-gray-800">
+                    <th className="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400">Code</th>
+                    <th className="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400">Discount</th>
+                    <th className="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400">Usage</th>
+                    <th className="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400">Expiry</th>
+                    <th className="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 text-right">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50 dark:divide-gray-800/50">
+                  {promoCodes.map((item, i) => (
+                    <tr key={i} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/20 transition-colors">
+                      <td className="px-6 py-3 font-bold text-gray-900 dark:text-gray-100 text-sm tracking-wide">{item.code}</td>
+                      <td className="px-6 py-3 text-sm text-gray-600 dark:text-gray-300 font-medium">{item.discount}</td>
+                      <td className="px-6 py-3 text-sm text-gray-500 dark:text-gray-400">{item.usage}</td>
+                      <td className="px-6 py-3 text-sm text-gray-500 dark:text-gray-400">{item.expiry}</td>
+                      <td className="px-6 py-3 text-right">
+                        <div className="flex items-center justify-end gap-3">
+                          <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-bold tracking-wide bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                            {item.status ? item.status.toUpperCase() : 'ACTIVE'}
+                          </span>
+                          <button onClick={() => { setNewPromo(item); setEditingPromoOriginal(item.code); setShowAddPromoModal(true); }} className="p-1 text-gray-400 hover:text-violet-500 rounded transition-colors" title="Edit Promo">
+                            <Edit2 size={14} />
+                          </button>
+                          <button onClick={() => handleDeletePromo(item.code)} className="p-1 text-gray-400 hover:text-red-500 rounded transition-colors" title="Delete Promo">
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </SectionAccordion>
+
         <SectionAccordion id="navbar" title="Navigation" expandedSection={expandedSection} setExpandedSection={setExpandedSection}>
           <div className="grid grid-cols-2 gap-4 mb-2">
             <InputGroup label="CTA Button Label" value={cmsConfig.navbar?.askAiLabel || ''} onChange={e => updateNestedConfig('navbar', ['askAiLabel'], e.target.value)} />
@@ -1575,48 +1675,6 @@ export default function Superadmin() {
                 <div className="bg-orange-500 h-3 rounded-full" style={{ width: totalRev > 0 ? `${(ultraRev / totalRev) * 100}%` : '0%' }}></div>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Promo Codes */}
-        <div className="lg:col-span-2 bg-white dark:bg-black rounded-2xl border border-gray-100 dark:border-gray-800/80 shadow-[0_4px_24px_-4px_rgba(0,0,0,0.02)] flex flex-col">
-          <div className="px-6 py-4 border-b border-gray-50 dark:border-gray-800/50 flex justify-between items-center shrink-0">
-            <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100">Active Promo Codes</h3>
-            <button className="bg-violet-50 hover:bg-violet-100 text-violet-700 dark:bg-violet-500/10 dark:text-violet-400 dark:hover:bg-violet-500/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5">
-              <Plus size={14} /> Add Code
-            </button>
-          </div>
-          <div className="p-0 flex-1 overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[500px]">
-              <thead>
-                <tr className="bg-gray-50/50 dark:bg-gray-900/30 border-b border-gray-100 dark:border-gray-800">
-                  <th className="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400">Code</th>
-                  <th className="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400">Discount</th>
-                  <th className="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400">Usage</th>
-                  <th className="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400">Expiry</th>
-                  <th className="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 text-right">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50 dark:divide-gray-800/50">
-                {[
-                  { code: 'EARLYBIRD', discount: '20% OFF', usage: '142 / 500', expiry: 'Dec 31, 2026', status: 'Active' },
-                  { code: 'DIWALI50', discount: '50% OFF', usage: '89 / 100', expiry: 'Oct 30, 2026', status: 'Active' },
-                  { code: 'STUDENT', discount: '$5 OFF / mo', usage: '34 / ∞', expiry: 'Never', status: 'Active' }
-                ].map((item, i) => (
-                  <tr key={i} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/20 transition-colors">
-                    <td className="px-6 py-3 font-bold text-gray-900 dark:text-gray-100 text-sm tracking-wide">{item.code}</td>
-                    <td className="px-6 py-3 text-sm text-gray-600 dark:text-gray-300 font-medium">{item.discount}</td>
-                    <td className="px-6 py-3 text-sm text-gray-500 dark:text-gray-400">{item.usage}</td>
-                    <td className="px-6 py-3 text-sm text-gray-500 dark:text-gray-400">{item.expiry}</td>
-                    <td className="px-6 py-3 text-right">
-                      <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-bold tracking-wide bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
-                        ACTIVE
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
           </div>
         </div>
       </div>
@@ -2319,6 +2377,29 @@ export default function Superadmin() {
                     alert('Please fill in both fields');
                   }
                 }} className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-semibold transition-colors shadow-sm">Add Link</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Add Promo Modal */}
+        {showAddPromoModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowAddPromoModal(false)}></div>
+            <div className="relative w-full max-w-md bg-white dark:bg-[#0a0a0a] rounded-2xl shadow-2xl animate-in zoom-in-95 duration-200">
+              <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">{editingPromoOriginal ? 'Edit Promo Code' : 'Add Promo Code'}</h3>
+                <button onClick={() => setShowAddPromoModal(false)} className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"><X size={20} /></button>
+              </div>
+              <div className="p-6 space-y-4">
+                <InputGroup label="Promo Code" value={newPromo.code} onChange={e => setNewPromo({...newPromo, code: e.target.value.toUpperCase()})} placeholder="e.g. EARLYBIRD" />
+                <InputGroup label="Discount Description" value={newPromo.discount} onChange={e => setNewPromo({...newPromo, discount: e.target.value})} placeholder="e.g. 20% OFF" />
+                <InputGroup label="Usage" value={newPromo.usage} onChange={e => setNewPromo({...newPromo, usage: e.target.value})} placeholder="e.g. 0 / 100" />
+                <InputGroup label="Expiry Date" value={newPromo.expiry} onChange={e => setNewPromo({...newPromo, expiry: e.target.value})} placeholder="e.g. Dec 31, 2026" />
+              </div>
+              <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-3 bg-gray-50/50 dark:bg-gray-900/30 rounded-b-2xl">
+                <button onClick={() => setShowAddPromoModal(false)} className="px-4 py-2 text-sm font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">Cancel</button>
+                <button onClick={handleSavePromo} className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-semibold transition-colors shadow-sm">{editingPromoOriginal ? 'Save Changes' : 'Add Code'}</button>
               </div>
             </div>
           </div>

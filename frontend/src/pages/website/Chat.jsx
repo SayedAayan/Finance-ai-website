@@ -33,7 +33,9 @@ export default function Chat() {
 
   // Chat History State
   const [chatHistory, setChatHistory] = useState([]);
-  const [activeChatId, setActiveChatId] = useState(null);
+  const [activeChatId, setActiveChatId] = useState(() => {
+    return localStorage.getItem('activeChatId') || null;
+  });
 
   // File Upload State
   const [selectedFile, setSelectedFile] = useState(null);
@@ -42,7 +44,7 @@ export default function Chat() {
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
   const initialMessageSentRef = useRef(false);
-  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
   const [regeneratingId, setRegeneratingId] = useState(null);
@@ -141,6 +143,10 @@ export default function Chat() {
 
   useEffect(() => {
     fetchChats();
+    const savedId = localStorage.getItem('activeChatId');
+    if (savedId) {
+      loadChat(savedId);
+    }
   }, []);
 
   const fetchChats = async () => {
@@ -159,6 +165,7 @@ export default function Chat() {
       const data = await res.json();
       if (data.chat) {
         setActiveChatId(id);
+        localStorage.setItem('activeChatId', id);
         setMessages(data.chat.messages || []);
       }
     } catch (err) {
@@ -172,6 +179,7 @@ export default function Chat() {
       await fetch(`${API_URL}/chats/${id}`, { method: 'DELETE' });
       if (activeChatId === id) {
         setActiveChatId(null);
+        localStorage.removeItem('activeChatId');
         setMessages([]);
       }
       fetchChats();
@@ -182,6 +190,7 @@ export default function Chat() {
 
   const createNewChat = () => {
     setActiveChatId(null);
+    localStorage.removeItem('activeChatId');
     setMessages([]);
   };
 
@@ -311,6 +320,7 @@ export default function Chat() {
         currentChatId = data.chat?.id;
         if (currentChatId) {
           setActiveChatId(currentChatId);
+          localStorage.setItem('activeChatId', currentChatId);
           fetchChats();
         }
       } else {

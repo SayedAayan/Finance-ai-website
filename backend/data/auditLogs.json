@@ -1,5 +1,50 @@
 [
   {
+    "id": "log_1785316319382",
+    "time": "Jul 29, 2026, 14:41:59",
+    "admin": "admin@stockbuzz.in",
+    "section": "Website CMS",
+    "action": "Updated Configuration",
+    "details": "Global CMS Settings modified",
+    "actionColor": "text-violet-600 dark:text-violet-400"
+  },
+  {
+    "id": "log_1785301845088",
+    "time": "Jul 29, 2026, 10:40:45",
+    "admin": "admin@stockbuzz.in",
+    "section": "System",
+    "action": "Updated Promo Code",
+    "details": "Updated promo code: LAUNCH",
+    "actionColor": "text-blue-600 dark:text-blue-400"
+  },
+  {
+    "id": "log_1785301836833",
+    "time": "Jul 29, 2026, 10:40:36",
+    "admin": "admin@stockbuzz.in",
+    "section": "System",
+    "action": "Updated Promo Code",
+    "details": "Updated promo code: LAUNCH",
+    "actionColor": "text-blue-600 dark:text-blue-400"
+  },
+  {
+    "id": "log_1785301596778",
+    "time": "Jul 29, 2026, 10:36:36",
+    "admin": "admin@stockbuzz.in",
+    "section": "System",
+    "action": "Added Promo Code",
+    "details": "Added new promo code: LAUNCH",
+    "actionColor": "text-emerald-600 dark:text-emerald-400"
+  },
+  {
+    "id": "log_1785301559043",
+    "time": "Jul 29, 2026, 10:35:59",
+    "admin": "admin@stockbuzz.in",
+    "section": "System",
+    "action": "Deleted Promo Code",
+    "details": "Deleted promo code: DIWALI50",
+    "actionColor": "text-red-600 dark:text-red-400"
+  },
+  {
     "id": "log_1785237236141",
     "time": "Jul 28, 2026, 16:43:56",
     "admin": "admin@stockbuzz.in",

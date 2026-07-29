@@ -16,11 +16,13 @@ import WealthBucket from './pages/website/WealthBucket';
 import AmcDatabase from './pages/website/AmcDatabase';
 import Login from './pages/website/Login';
 import Superadmin from './pages/admin/Superadmin';
+import Checkout from './pages/website/Checkout';
 import AIChatSidebar from './components/features/AIChatSidebar';
 
 function Layout() {
   const loc = useLocation();
   const isLogin = loc.pathname === '/login';
+  const isCheckout = loc.pathname === '/checkout';
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
 
   useEffect(() => {
@@ -35,11 +37,12 @@ function Layout() {
 
   const isSuperadminRoute = loc.pathname === '/superadmin';
 
-  if (isLogin || isSuperadminRoute) {
+  if (isLogin || isSuperadminRoute || isCheckout) {
     return (
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/superadmin" element={<Superadmin />} />
+        <Route path="/checkout" element={<Checkout />} />
       </Routes>
     );
   }

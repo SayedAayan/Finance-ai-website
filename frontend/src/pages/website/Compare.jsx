@@ -615,11 +615,11 @@ export default function Compare() {
                     <Tooltip
                       contentStyle={{ borderRadius: 10, fontSize: 12, border: '1px solid var(--neutral-200)', background: 'var(--bg-card)' }}
                       labelFormatter={v => new Date(v).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                      formatter={(v, name) => [`${v >= 0 ? '+' : ''}${v}%`, name === 'left' ? left.name : right.name]}
+                      formatter={(v, name) => [`${v >= 0 ? '+' : ''}${v}%`, name]}
                     />
                     <Legend iconType="circle" wrapperStyle={{ fontSize: 12, fontWeight: 600, marginTop: 10 }} />
-                    <Line type="monotone" dataKey="left" name="left" stroke="var(--violet)" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
-                    <Line type="monotone" dataKey="right" name="right" stroke="var(--blue)" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="left" name={left?.name || 'Asset 1'} stroke="var(--violet)" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="right" name={right?.name || 'Asset 2'} stroke="var(--blue)" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>

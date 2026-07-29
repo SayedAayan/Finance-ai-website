@@ -2195,6 +2195,70 @@ app.delete('/api/users/:id', async (req, res) => {
   }
 });
 
+// ─── Promo Codes API for Superadmin ───────────────────────────────────────────────
+async function readPromoCodes() {
+  const codesPath = join(__dirname, 'data', 'promoCodes.json');
+  try {
+    const data = await fs.readFile(codesPath, 'utf-8');
+    return JSON.parse(data);
+  } catch (err) {
+    if (err.code === 'ENOENT') return [];
+    throw err;
+  }
+}
+
+async function writePromoCodes(codes) {
+  const codesPath = join(__dirname, 'data', 'promoCodes.json');
+  await fs.mkdir(join(__dirname, 'data'), { recursive: true });
+  await fs.writeFile(codesPath, JSON.stringify(codes, null, 2));
+}
+
+app.get('/api/promo-codes', async (req, res) => {
+  try {
+    const codes = await readPromoCodes();
+    res.json(codes);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to read promo codes' });
+  }
+});
+
+app.post('/api/promo-codes', express.json(), async (req, res) => {
+  try {
+    const codes = await readPromoCodes();
+    const newCode = req.body;
+    codes.push(newCode);
+    await writePromoCodes(codes);
+    res.json(newCode);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to add promo code' });
+  }
+});
+
+app.put('/api/promo-codes/:code', express.json(), async (req, res) => {
+  try {
+    let codes = await readPromoCodes();
+    const index = codes.findIndex(c => c.code === req.params.code);
+    if (index === -1) return res.status(404).json({ error: 'Promo code not found' });
+    
+    codes[index] = req.body;
+    await writePromoCodes(codes);
+    res.json(codes[index]);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update promo code' });
+  }
+});
+
+app.delete('/api/promo-codes/:code', async (req, res) => {
+  try {
+    let codes = await readPromoCodes();
+    codes = codes.filter(c => c.code !== req.params.code);
+    await writePromoCodes(codes);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete promo code' });
+  }
+});
+
 
 // ─── Audit Logs API for Superadmin ──────────────────────────────────────────────────
 async function readAuditLogs() {

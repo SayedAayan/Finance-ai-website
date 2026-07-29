@@ -200,7 +200,7 @@ export default function Navbar({ onToggleAIChat }) {
           {/* Left: Logo */}
           <Link
             to="/"
-            className="flex items-center group -ml-6 shrink-0"
+            className="flex items-center group -ml-6 shrink-0 h-[80px] overflow-hidden"
             onClick={(e) => {
               if (loc.pathname === '/') {
                 e.preventDefault();
