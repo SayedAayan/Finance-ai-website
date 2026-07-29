@@ -47,9 +47,11 @@ function Layout() {
     );
   }
 
+  const isChat = loc.pathname === '/chat';
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative' }}>
-      <Navbar onToggleAIChat={() => setIsAIChatOpen(true)} />
+      {!isChat && <Navbar onToggleAIChat={() => setIsAIChatOpen(true)} />}
 
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <Routes>

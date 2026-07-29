@@ -449,23 +449,29 @@ export default function Chat() {
   ];
 
   return (
-    <div className="chat-page-bg fixed top-[102px] bottom-0 left-0 right-0 flex z-50">
+    <div className="chat-page-bg fixed top-0 bottom-0 left-0 right-0 flex z-50">
       {/* Sidebar for Chat History */}
       {sidebarOpen ? (
         <div className="w-[280px] bg-gray-50 dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 flex flex-col h-full flex-shrink-0">
-          <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
+          <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <Link to="/" className="flex items-center gap-2 font-bold text-gray-800 dark:text-gray-100 hover:text-violet-600 dark:hover:text-violet-400 transition-colors">
+                <img src="/favicon.png" alt="Stockbuzz" className="w-6 h-6 object-contain" />
+                <span className="text-base font-bold tracking-tight">Stockbuzz</span>
+              </Link>
+              <button
+                onClick={() => setSidebarOpen(false)}
+                className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                title="Hide recent chats"
+              >
+                <PanelLeftClose size={18} />
+              </button>
+            </div>
             <button
               onClick={createNewChat}
-              className="flex-1 flex items-center justify-center gap-2 bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-500/20 px-4 py-2.5 rounded-lg font-medium transition-colors border border-violet-100 dark:border-violet-500/20"
+              className="w-full flex items-center justify-center gap-2 bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-500/20 px-4 py-2.5 rounded-lg font-medium transition-colors border border-violet-100 dark:border-violet-500/20"
             >
               <Edit size={16} /> New Chat
-            </button>
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="p-2.5 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors flex-shrink-0"
-              title="Hide recent chats"
-            >
-              <PanelLeftClose size={18} />
             </button>
           </div>
           <div className="flex-1 overflow-y-auto p-3">
@@ -497,6 +503,13 @@ export default function Chat() {
         </div>
       ) : (
         <div className="w-[56px] bg-gray-50 dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 flex flex-col items-center h-full flex-shrink-0 py-4 gap-3">
+          <Link
+            to="/"
+            className="p-2 text-gray-400 dark:text-gray-500 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors mb-1"
+            title="Go to Homepage"
+          >
+            <img src="/favicon.png" alt="Stockbuzz" className="w-5 h-5 object-contain" />
+          </Link>
           <button
             onClick={() => setSidebarOpen(true)}
             className="p-2.5 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
@@ -583,7 +596,7 @@ export default function Chat() {
                         <img src="/favicon.png" alt="Stockbuzz AI" className="w-full h-full object-contain" />
                       </div>
                       <div className="flex flex-col gap-1.5 group/msg">
-                        <div className={`ai-reply-card px-6 py-4 rounded-2xl rounded-tl-sm prose prose-sm dark:prose-invert max-w-none text-gray-800 dark:text-gray-100 transition-opacity ${regeneratingId === m.id ? 'opacity-40' : ''}`}>
+                        <div className={`ai-reply-card py-2 prose prose-sm dark:prose-invert max-w-none text-gray-800 dark:text-gray-100 transition-opacity ${regeneratingId === m.id ? 'opacity-40' : ''}`}>
                           <ReactMarkdown remarkPlugins={[remarkGfm]}>
                             {m.text}
                           </ReactMarkdown>
@@ -631,7 +644,7 @@ export default function Chat() {
                   <div className="w-8 h-8 rounded-full bg-white dark:bg-gray-900 shadow-sm border border-violet-100 dark:border-violet-500/20 flex items-center justify-center flex-shrink-0 mt-1 p-1.5 animate-pulse">
                     <img src="/favicon.png" alt="Stockbuzz AI" className="w-full h-full object-contain" />
                   </div>
-                  <div className="ai-reply-card px-5 py-4 rounded-2xl rounded-tl-sm flex flex-col gap-2 min-w-[180px]">
+                  <div className="ai-reply-card py-2 flex flex-col gap-2 min-w-[180px]">
                     <div className="text-xs font-semibold text-violet-600 dark:text-violet-400">Thinking…</div>
                     <div className="flex flex-col gap-1.5">
                       <span className="chat-shimmer h-2 w-40 rounded-full"></span>
