@@ -138,6 +138,28 @@ export default function Login() {
       return;
     }
     setLoading(true);
+    // Always use local mock OTP in localhost to prevent Recaptcha / API Key block issues
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      try {
+        const res = await fetch('http://127.0.0.1:3001/api/auth/send-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: phoneNumber })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        setIsLocalOtp(true);
+        setPhoneStep('enter-otp');
+        return;
+      } catch (localErr) {
+        setError(localErr.message || 'Failed to send local OTP.');
+        return;
+      } finally {
+        setLoading(false);
+      }
+    }
+
     try {
       const verifier = setupRecaptcha('recaptcha-container');
       const result = await loginWithPhone(`${COUNTRY_CODE}${phoneNumber}`, verifier);
@@ -146,7 +168,7 @@ export default function Login() {
       setPhoneStep('enter-otp');
     } catch (err) {
       resetRecaptcha();
-      if (err?.code === 'auth/billing-not-enabled' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      if (err?.code === 'auth/billing-not-enabled') {
         try {
           const res = await fetch('http://127.0.0.1:3001/api/auth/send-otp', {
             method: 'POST',

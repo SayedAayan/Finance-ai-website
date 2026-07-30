@@ -1980,16 +1980,26 @@
 .compare-row:last-child .compare-label-cell {
   border-bottom-left-radius: 18px;
 }
+/* AI Chat Reply Markdown Horizontal Rules */
+.prose hr, .ai-reply-card hr {
+  border: 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  margin: 1.5rem 0;
+}
+
+html.dark .prose hr, html.dark .ai-reply-card hr {
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
 
 /* AI Chat Reply Markdown Tables */
 .prose table, .ai-reply-card table {
   width: 100%;
   margin-top: 1.25rem;
   margin-bottom: 1.25rem;
-  border-collapse: collapse;
-  display: block;
-  overflow-x: auto;
-  scrollbar-width: thin;
+  border-collapse: separate;
+  border-spacing: 0;
+  display: table;
+  overflow: hidden;
   border-radius: 12px;
   border: 1px solid rgba(139, 92, 246, 0.2);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
@@ -2041,10 +2051,20 @@ html.dark .prose thead, html.dark .ai-reply-card thead {
   white-space: nowrap;
   display: table-cell;
   text-align: left;
+  border-right: 1px solid rgba(139, 92, 246, 0.15);
+}
+
+.prose th:last-child, .ai-reply-card th:last-child {
+  border-right: none;
 }
 
 html.dark .prose th, html.dark .ai-reply-card th {
   color: #a78bfa;
+  border-right: 1px solid rgba(139, 92, 246, 0.25);
+}
+
+html.dark .prose th:last-child, html.dark .ai-reply-card th:last-child {
+  border-right: none;
 }
 
 .prose td, .ai-reply-card td {
@@ -2052,6 +2072,7 @@ html.dark .prose th, html.dark .ai-reply-card th {
   font-size: 0.875rem;
   color: #374151;
   border-bottom: 1px solid rgba(229, 231, 235, 0.6);
+  border-right: 1px solid rgba(229, 231, 235, 0.6);
   white-space: normal;
   vertical-align: top;
   display: table-cell;
@@ -2059,9 +2080,18 @@ html.dark .prose th, html.dark .ai-reply-card th {
   word-break: break-word;
 }
 
+.prose td:last-child, .ai-reply-card td:last-child {
+  border-right: none;
+}
+
 html.dark .prose td, html.dark .ai-reply-card td {
   color: #d1d5db;
   border-bottom: 1px solid rgba(75, 85, 99, 0.4);
+  border-right: 1px solid rgba(75, 85, 99, 0.4);
+}
+
+html.dark .prose td:last-child, html.dark .ai-reply-card td:last-child {
+  border-right: none;
 }
 
 .prose tr:last-child td, .ai-reply-card tr:last-child td {

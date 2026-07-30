@@ -98,21 +98,21 @@ app.post('/api/auth/send-otp', (req, res) => {
   if (!phone || phone.length < 10) {
     return res.status(400).json({ error: 'Enter a valid 10-digit mobile number' });
   }
-  const otp = '24680'; // Standard testing OTP for local dev
+  const otp = '123456'; // Standard testing OTP for local dev (6-digits to match frontend)
   localOtpStore.set(phone, { otp, expiresAt: Date.now() + 10 * 60 * 1000 });
 
   console.log(`\n========================================`);
   console.log(`📱 [LOCAL OTP] Sent to ${phone} -> OTP: ${otp}`);
   console.log(`========================================\n`);
 
-  res.json({ success: true, message: 'OTP sent! Use 24680 for testing.' });
+  res.json({ success: true, message: 'OTP sent! Use 123456 for testing.' });
 });
 
 app.post('/api/auth/verify-otp', (req, res) => {
   const { phone, otp } = req.body;
   const record = localOtpStore.get(phone);
   if (!record) return res.status(400).json({ error: 'No OTP found for this number' });
-  if (record.otp !== otp && otp !== '24680') return res.status(400).json({ error: 'Invalid OTP code' });
+  if (record.otp !== otp && otp !== '123456') return res.status(400).json({ error: 'Invalid OTP code' });
 
   localOtpStore.delete(phone);
   res.json({

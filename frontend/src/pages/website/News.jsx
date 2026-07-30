@@ -43,7 +43,18 @@ export default function News() {
 
   useEffect(() => {
     document.body.style.overflow = modal ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setModal(null);
+      }
+    };
+    if (modal) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [modal]);
   const defaultCms = {
     pages: { news: { features: { showGlobalNews: true, showMarketMovers: true, allowSearch: true } } }

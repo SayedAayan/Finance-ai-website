@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Send, Plus, Paperclip, FileText, AlertCircle, ArrowRight, Image as ImageIcon, MessageSquare, Trash2, Edit, PanelLeftClose, PanelLeft, ArrowDown, Mic, Volume2, Square, Copy, Check, RotateCcw, TrendingUp, Newspaper, HelpCircle, LineChart } from 'lucide-react';
+import { Send, Plus, Paperclip, FileText, AlertCircle, ArrowRight, Image as ImageIcon, MessageSquare, Trash2, Edit, PanelLeftClose, PanelLeft, ArrowDown, Mic, Volume2, Square, Copy, Check, RotateCcw, TrendingUp, Newspaper, HelpCircle, LineChart, User, Settings } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useAuth } from '../../context/AuthContext';
@@ -143,9 +143,14 @@ export default function Chat() {
 
   useEffect(() => {
     fetchChats();
-    const savedId = localStorage.getItem('activeChatId');
-    if (savedId) {
-      loadChat(savedId);
+    if (loc.state && loc.state.forceNewChat) {
+      createNewChat();
+      window.history.replaceState({}, document.title);
+    } else {
+      const savedId = localStorage.getItem('activeChatId');
+      if (savedId) {
+        loadChat(savedId);
+      }
     }
   }, []);
 
@@ -500,6 +505,23 @@ export default function Chat() {
               )}
             </div>
           </div>
+          <div className="px-3 pb-3 flex flex-col gap-1">
+            <div className="h-[1px] bg-gray-200/60 dark:bg-gray-850 my-2 mx-1" />
+            <Link
+              to="/settings"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            >
+              <User size={16} className="text-gray-400 dark:text-gray-500" />
+              <span className="text-sm font-medium">Account</span>
+            </Link>
+            <Link
+              to="/settings"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            >
+              <Settings size={16} className="text-gray-400 dark:text-gray-500" />
+              <span className="text-sm font-medium">Settings</span>
+            </Link>
+          </div>
         </div>
       ) : (
         <div className="w-[56px] bg-gray-50 dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 flex flex-col items-center h-full flex-shrink-0 py-4 gap-3">
@@ -524,6 +546,21 @@ export default function Chat() {
           >
             <Edit size={18} />
           </button>
+          <div className="flex-1" />
+          <Link
+            to="/settings"
+            className="p-2.5 text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            title="Account"
+          >
+            <User size={18} />
+          </Link>
+          <Link
+            to="/settings"
+            className="p-2.5 text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            title="Settings"
+          >
+            <Settings size={18} />
+          </Link>
         </div>
       )}
 
@@ -560,7 +597,7 @@ export default function Chat() {
         ) : (
           /* Messages */
           <div className="flex-1 overflow-y-auto p-8" ref={chatContainerRef} onScroll={handleScroll}>
-            <div className="max-w-4xl mx-auto flex flex-col gap-6 relative">
+            <div className="max-w-4xl mx-auto flex flex-col gap-6 relative pb-[180px]">
               {messages.map((m, idx) => (
                 <div
                   key={m.id}
@@ -591,11 +628,11 @@ export default function Chat() {
                       )}
                     </div>
                   ) : (
-                    <div className="flex gap-4 max-w-[85%]">
+                    <div className="flex gap-4 w-full">
                       <div className="w-8 h-8 rounded-full bg-white dark:bg-gray-900 shadow-sm border border-violet-100 dark:border-violet-500/20 flex items-center justify-center flex-shrink-0 mt-1 p-1.5">
                         <img src="/favicon.png" alt="Stockbuzz AI" className="w-full h-full object-contain" />
                       </div>
-                      <div className="flex flex-col gap-1.5 group/msg">
+                      <div className="flex-1 min-w-0 flex flex-col gap-1.5 group/msg">
                         <div className={`ai-reply-card py-2 prose prose-sm dark:prose-invert max-w-none text-gray-800 dark:text-gray-100 transition-opacity ${regeneratingId === m.id ? 'opacity-40' : ''}`}>
                           <ReactMarkdown remarkPlugins={[remarkGfm]}>
                             {m.text}
@@ -640,11 +677,11 @@ export default function Chat() {
                 </div>
               ))}
               {loading && (
-                <div className="flex gap-4 max-w-[85%]">
+                <div className="flex gap-4 w-full">
                   <div className="w-8 h-8 rounded-full bg-white dark:bg-gray-900 shadow-sm border border-violet-100 dark:border-violet-500/20 flex items-center justify-center flex-shrink-0 mt-1 p-1.5 animate-pulse">
                     <img src="/favicon.png" alt="Stockbuzz AI" className="w-full h-full object-contain" />
                   </div>
-                  <div className="ai-reply-card py-2 flex flex-col gap-2 min-w-[180px]">
+                  <div className="ai-reply-card py-2 flex flex-col gap-2 min-w-[180px] flex-1 min-w-0">
                     <div className="text-xs font-semibold text-violet-600 dark:text-violet-400">Thinking…</div>
                     <div className="flex flex-col gap-1.5">
                       <span className="chat-shimmer h-2 w-40 rounded-full"></span>
@@ -662,7 +699,7 @@ export default function Chat() {
         {messages.length > 0 && showScrollButton && (
           <button
             onClick={scrollToBottom}
-            className="absolute bottom-[100px] left-1/2 -translate-x-1/2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-md rounded-full p-2 text-gray-500 dark:text-gray-400 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all z-10"
+            className="absolute bottom-[140px] left-1/2 -translate-x-1/2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-md rounded-full p-2 text-gray-500 dark:text-gray-400 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all z-20"
             title="Scroll to bottom"
           >
             <ArrowDown size={20} />
@@ -670,8 +707,8 @@ export default function Chat() {
         )}
 
         {/* Input */}
-        <div className="px-4 sm:px-8 pb-5 pt-2 shrink-0">
-          <div className="max-w-4xl mx-auto">
+        <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-8 pb-5 pt-12 bg-gradient-to-t from-white via-white to-transparent dark:from-gray-950 dark:via-gray-950 dark:to-transparent pointer-events-none z-10">
+          <div className="max-w-4xl mx-auto pointer-events-auto">
             {filePreview && (
               <div className="mb-3 px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl flex items-center justify-between max-w-sm">
                 <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">

@@ -227,37 +227,46 @@ export default function Home({ onOpenAIChat }) {
   const marketMovers = marketMoverTab === 'gainers' ? sortedGainers : sortedLosers;
 
   const containerVariants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
-  const itemVariants = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } } };
+  const itemVariants = { 
+    hidden: { opacity: 0, y: 35, scale: 0.98 }, 
+    show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } } 
+  };
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-[#FCFCFF] dark:bg-gray-950">
       <div className="max-w-[1400px] mx-auto w-full px-6 relative">
         <div className="relative z-10 max-w-[1200px] mx-auto px-6 py-6 flex flex-col items-center">
 
-          <motion.div variants={containerVariants} initial="hidden" animate="show" className="w-full flex flex-col items-center">
-            
+          <div className="w-full flex flex-col items-center">
+
             {/* NEW LANDING PAGE HERO SECTION */}
-            <motion.div variants={itemVariants} className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center py-10 md:py-16">
+            <motion.div 
+              initial="hidden"
+              animate="show"
+              variants={containerVariants}
+              className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center py-10 md:py-16"
+            >
               {/* Left column: Value Proposition & CTAs */}
               <div className="lg:col-span-7 flex flex-col items-start text-left">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 text-xs font-bold mb-5 border border-violet-100 dark:border-violet-500/20">
-                  <Sparkles size={13} className="text-violet-600 dark:text-violet-400" /> Next-Gen AI Financial Analyst
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold mb-5 border border-blue-100 dark:border-blue-500/20">
+                  <Sparkles size={13} className="text-blue-600 dark:text-blue-400" /> Next-Gen AI Financial Analyst
                 </span>
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight leading-[1.1] mb-5 font-sans">
-                  Smart Wealth Building, <br/>
-                  <span className="bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">Powered by AI.</span>
+                  Smart Wealth Building, <br />
+                  <span className="bg-gradient-to-r from-blue-50 to-blue-700 bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(to right, #3b82f6, #1d4ed8)' }}>Powered by AI.</span>
                 </h1>
                 <p className="text-lg text-gray-500 dark:text-gray-400 max-w-xl mb-8 leading-relaxed">
                   Analyze stocks, track mutual funds, verify Demat statements, and compare performance with real-time market insights. All in one intelligent workspace.
                 </p>
                 <div className="flex flex-wrap gap-4 mb-6">
-                  <button 
+                  <button
                     onClick={() => navigate('/chat')}
-                    className="px-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-semibold shadow-md shadow-violet-500/20 hover:opacity-95 hover:shadow-lg transition-all"
+                    className="px-6 py-3 text-white rounded-xl font-semibold shadow-md shadow-blue-500/20 hover:opacity-95 hover:shadow-lg transition-all"
+                    style={{ background: 'linear-gradient(to right, #3b82f6, #1d4ed8)' }}
                   >
                     Start AI Research
                   </button>
-                  <button 
+                  <button
                     onClick={() => navigate('/compare')}
                     className="px-6 py-3 bg-white dark:bg-gray-905 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-800 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors shadow-sm"
                   >
@@ -277,26 +286,34 @@ export default function Home({ onOpenAIChat }) {
                   <div className="w-3 h-3 rounded-full bg-green-400"></div>
                   <span className="text-xs text-gray-400 dark:text-gray-500 font-mono ml-1">stockbuzz-ai-v1.0</span>
                 </div>
-                <h3 className="text-sm font-bold text-gray-800 dark:text-gray-100 mb-3">Ask anything to get started:</h3>
-                
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-sm font-bold text-gray-800 dark:text-gray-100">Ask anything to get started:</h3>
+                  <button
+                    onClick={() => navigate('/chat', { state: { forceNewChat: true } })}
+                    className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                  >
+                    Go to Chat <ArrowRight size={12} />
+                  </button>
+                </div>
+
                 <div className="relative flex items-center bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-2xl px-4 h-[52px] mb-4">
                   <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*,application/pdf" className="hidden" />
-                  <button onClick={() => fileInputRef.current?.click()} className="mr-2 p-1 text-gray-400 hover:text-violet-600 transition-colors"><Plus size={20} /></button>
-                  <input 
-                    value={input} 
-                    onChange={(e) => setInput(e.target.value)} 
-                    onKeyDown={(e) => e.key === 'Enter' && handleAsk()} 
-                    placeholder="e.g. Compare TCS vs Reliance" 
-                    className="flex-1 bg-transparent border-none outline-none text-sm text-gray-800 dark:text-gray-100 placeholder:text-gray-455 dark:placeholder:text-gray-500" 
+                  <button onClick={() => fileInputRef.current?.click()} className="mr-2 p-1 text-gray-400 hover:text-blue-600 transition-colors"><Plus size={20} /></button>
+                  <input
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAsk()}
+                    placeholder="e.g. Compare TCS vs Reliance"
+                    className="flex-1 bg-transparent border-none outline-none text-sm text-gray-800 dark:text-gray-100 placeholder:text-gray-455 dark:placeholder:text-gray-500"
                   />
                   {speechSupported && (
                     <button
                       onClick={toggleListening}
-                      className={`w-[32px] h-[32px] rounded-full flex items-center justify-center mr-1 transition-all ${isListening ? 'bg-red-500 text-white animate-pulse' : 'text-gray-400 hover:text-violet-600'}`}
+                      className={`w-[32px] h-[32px] rounded-full flex items-center justify-center mr-1 transition-all ${isListening ? 'bg-red-500 text-white animate-pulse' : 'text-gray-400 hover:text-blue-600'}`}
                       title={isListening ? 'Stop listening' : 'Speak your question'}
                     ><Mic size={15} /></button>
                   )}
-                  <button onClick={() => handleAsk()} disabled={!input.trim()} className="w-8 h-8 rounded-full bg-violet-600 text-white flex items-center justify-center transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:bg-violet-700">
+                  <button onClick={() => handleAsk()} disabled={!input.trim()} className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:bg-blue-700">
                     <Send size={12} className="ml-0.5" />
                   </button>
                 </div>
@@ -304,8 +321,8 @@ export default function Home({ onOpenAIChat }) {
                 <div className="flex flex-col gap-2">
                   <span className="text-[10px] text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider">Suggested Prompts</span>
                   {suggestions.slice(0, 3).map((s, i) => (
-                    <button key={i} onClick={() => handleAsk(s.label)} className="flex items-center gap-2 text-left px-3 py-2 bg-gray-50 dark:bg-gray-950 hover:bg-violet-50 dark:hover:bg-violet-500/5 hover:text-violet-600 dark:hover:text-violet-400 rounded-xl text-xs font-semibold text-gray-600 dark:text-gray-400 border border-gray-100 dark:border-gray-800/50 transition-colors truncate">
-                      <span className="text-violet-500 shrink-0">{s.icon}</span>
+                    <button key={i} onClick={() => handleAsk(s.label)} className="flex items-center gap-2 text-left px-3 py-2 bg-gray-50 dark:bg-gray-950 hover:bg-blue-50 dark:hover:bg-blue-500/5 hover:text-blue-600 dark:hover:text-blue-400 rounded-xl text-xs font-semibold text-gray-600 dark:text-gray-400 border border-gray-100 dark:border-gray-800/50 transition-colors truncate">
+                      <span className="text-blue-500 shrink-0">{s.icon}</span>
                       <span className="truncate text-[11px]">{s.label}</span>
                     </button>
                   ))}
@@ -316,12 +333,12 @@ export default function Home({ onOpenAIChat }) {
             {/* SERVICES & FEATURES SUMMARY CARDS */}
             <motion.div variants={itemVariants} className="w-full py-8 mb-10 border-t border-gray-100 dark:border-gray-800/80">
               <div className="text-center mb-8">
-                <span className="text-xs font-extrabold uppercase tracking-wider text-violet-600 dark:text-violet-400">Features & Services</span>
+                <span className="text-xs font-extrabold uppercase tracking-wider text-blue-600 dark:text-blue-400">Features & Services</span>
                 <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-gray-100 mt-1">What Stockbuzz Offers</h2>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-5 rounded-2xl hover:shadow-md transition-all flex flex-col items-start">
-                  <div className="w-10 h-10 rounded-xl bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 flex items-center justify-center mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-4">
                     <Sparkles size={20} />
                   </div>
                   <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-2">AI Copilot</h3>
@@ -543,9 +560,7 @@ export default function Home({ onOpenAIChat }) {
                 <p className="text-[13px] text-textMuted dark:text-gray-400">Side-by-side comparison of fundamentals and performance.</p>
               </div>
             </motion.div>
-
-          </motion.div>
-
+          </div>
         </div>
       </div>
     </div>
