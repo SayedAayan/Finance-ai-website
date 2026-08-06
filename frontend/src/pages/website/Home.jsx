@@ -509,18 +509,21 @@ export default function Home({ onOpenAIChat }) {
             </motion.div>
 
             {cmsConfig?.pages?.home?.features?.showMarketSnapshot && (
-              <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} variants={itemVariants} whileHover={{ y: -4, scale: 1.005, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)" }} className="w-full bg-white dark:bg-gray-900 rounded-[20px] p-[18px] shadow-sm border border-gray-100 dark:border-gray-800 mb-6 mx-auto flex items-center justify-between transition-all cursor-default">
-                <div className="w-[160px] pl-2"><h3 className="font-bold text-textMain dark:text-gray-100 text-lg leading-tight">Market<br />Snapshot</h3></div>
-                <div className="flex-1 flex justify-between items-center px-8">
+              <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} variants={itemVariants} whileHover={{ y: -4, scale: 1.005, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)" }} className="w-full bg-white dark:bg-gray-900 rounded-[20px] p-[18px] md:p-[24px] shadow-sm border border-gray-100 dark:border-gray-800 mb-6 mx-auto flex flex-col xl:flex-row items-start xl:items-center justify-between gap-6 transition-all cursor-default">
+                <div className="w-full xl:w-auto xl:min-w-[160px] flex justify-between xl:block items-center xl:pl-2">
+                  <h3 className="font-bold text-gray-900 dark:text-gray-100 text-lg leading-tight">Market<br className="hidden xl:block" />Snapshot</h3>
+                  <button onClick={() => navigate('/markets')} className="xl:hidden px-4 py-2 rounded-full border border-gray-200 dark:border-gray-800 text-blue-600 dark:text-blue-400 text-xs font-bold hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors">View All</button>
+                </div>
+                <div className="w-full xl:flex-1 grid grid-cols-2 md:grid-cols-4 gap-4 xl:gap-0 xl:flex xl:justify-between xl:px-8">
                   {marketIndices.map((idx, i) => (
-                    <div key={i} className="flex flex-col w-[140px]">
-                      <span className="text-[11px] font-bold text-textMuted dark:text-gray-400 uppercase tracking-wider mb-1">{idx.name}</span>
-                      <span className="text-[17px] font-extrabold text-textMain dark:text-gray-100 mb-1"><CountingNumber value={idx.value} /></span>
-                      <span className={`text-[11px] font-bold ${idx.trend === 'up' ? 'text-success' : 'text-danger'} flex items-center gap-1`}>{idx.change} ({idx.percent}) {idx.trend === 'up' ? <ArrowUpRight size={12} /> : <TrendingDown size={12} />}</span>
+                    <div key={i} className="flex flex-col xl:w-[140px]">
+                      <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">{idx.name}</span>
+                      <span className="text-[15px] md:text-[17px] font-extrabold text-gray-900 dark:text-gray-100 mb-1"><CountingNumber value={idx.value} /></span>
+                      <span className={`text-[11px] font-bold ${idx.trend === 'up' ? 'text-green-600' : 'text-red-600'} flex items-center gap-1`}>{idx.change} ({idx.percent}) {idx.trend === 'up' ? <ArrowUpRight size={12} /> : <TrendingDown size={12} />}</span>
                     </div>
                   ))}
                 </div>
-                <div className="w-[140px] flex justify-end pr-2"><button onClick={() => navigate('/markets')} className="px-5 py-2.5 rounded-full border border-gray-200 dark:border-gray-800 text-primary dark:text-blue-400 text-sm font-semibold hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors">View Markets</button></div>
+                <div className="hidden xl:flex xl:w-[140px] justify-end pr-2"><button onClick={() => navigate('/markets')} className="px-5 py-2.5 rounded-full border border-gray-200 dark:border-gray-800 text-blue-600 dark:text-blue-400 text-sm font-semibold hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors">View Markets</button></div>
               </motion.div>
             )}
 
