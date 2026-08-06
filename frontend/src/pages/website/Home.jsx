@@ -235,8 +235,8 @@ export default function Home({ onOpenAIChat }) {
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-white dark:bg-gray-950">
-      <div className="max-w-[1400px] mx-auto w-full px-6 relative">
-        <div className="relative z-10 max-w-[1200px] mx-auto px-6 py-6 flex flex-col items-center">
+      <div className="max-w-[1440px] mx-auto w-full px-4 sm:px-6 lg:px-8 relative">
+        <div className="relative z-10 w-full mx-auto py-6 flex flex-col items-center">
 
           <div className="w-full flex flex-col items-center">
 
@@ -380,7 +380,7 @@ export default function Home({ onOpenAIChat }) {
             </motion.div>
 
             {cmsConfig?.pages?.home?.features?.showFeaturedNews && featuredNews && (
-              <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} variants={itemVariants} className="w-full max-w-[1200px] mb-6">
+              <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} variants={itemVariants} className="w-full mb-6">
                 <div
                   className="bg-white dark:bg-gray-900 rounded-[22px] shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden cursor-pointer hover:shadow-md transition-all duration-300 grid grid-cols-1 md:grid-cols-3"
                   onClick={() => navigate('/news')}
@@ -415,7 +415,7 @@ export default function Home({ onOpenAIChat }) {
               </motion.div>
             )}
 
-            <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} variants={itemVariants} className="w-full max-w-[1200px] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[24px] mb-12">
+            <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} variants={itemVariants} className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[24px] mb-12">
               {cmsConfig?.pages?.home?.features?.showTrendingStocks && (
                 <motion.div whileHover={{ y: -6, scale: 1.01, borderColor: '#3b82f6', boxShadow: '0 10px 30px rgba(37,99,235,0.08)' }} transition={{ duration: 0.3, ease: 'easeOut' }} className="bg-white dark:bg-gray-900 rounded-[22px] p-[24px] h-[290px] shadow-sm border border-gray-100 dark:border-gray-800 transition-all duration-300 flex flex-col justify-center cursor-default">
                   <div className="flex justify-between items-center mb-5">
@@ -509,7 +509,7 @@ export default function Home({ onOpenAIChat }) {
             </motion.div>
 
             {cmsConfig?.pages?.home?.features?.showMarketSnapshot && (
-              <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} variants={itemVariants} whileHover={{ y: -4, scale: 1.005, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)" }} className="w-full max-w-[1200px] bg-white dark:bg-gray-900 rounded-[20px] p-[18px] shadow-sm border border-gray-100 dark:border-gray-800 mb-6 mx-auto flex items-center justify-between transition-all cursor-default">
+              <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} variants={itemVariants} whileHover={{ y: -4, scale: 1.005, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)" }} className="w-full bg-white dark:bg-gray-900 rounded-[20px] p-[18px] shadow-sm border border-gray-100 dark:border-gray-800 mb-6 mx-auto flex items-center justify-between transition-all cursor-default">
                 <div className="w-[160px] pl-2"><h3 className="font-bold text-textMain dark:text-gray-100 text-lg leading-tight">Market<br />Snapshot</h3></div>
                 <div className="flex-1 flex justify-between items-center px-8">
                   {marketIndices.map((idx, i) => (
@@ -524,11 +524,11 @@ export default function Home({ onOpenAIChat }) {
               </motion.div>
             )}
 
-            <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} variants={itemVariants} className="w-full max-w-[1200px] mb-12">
+            <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} variants={itemVariants} className="w-full mb-12">
               <MarketGraphPanel />
             </motion.div>
 
-            <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} variants={itemVariants} className="w-full max-w-[1200px] bg-white dark:bg-gray-900 rounded-[22px] p-[24px] shadow-sm border border-gray-100 dark:border-gray-800 mb-12">
+            <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} variants={itemVariants} className="w-full bg-white dark:bg-gray-900 rounded-[22px] p-[24px] shadow-sm border border-gray-100 dark:border-gray-800 mb-12">
               <div className="flex items-center justify-between mb-5">
                 <h3 className="font-bold text-textMain dark:text-gray-100 flex items-center gap-2"><BarChart2 size={18} className="text-gray-400 dark:text-gray-500" /> All Stocks</h3>
                 <button onClick={() => navigate('/markets')} className="text-primary dark:text-blue-400 text-xs font-bold bg-blue-50 dark:bg-blue-500/10 px-3 py-1 rounded-full hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors">View all</button>
@@ -552,7 +552,7 @@ export default function Home({ onOpenAIChat }) {
               </div>
             </motion.div>
 
-            <motion.div variants={itemVariants} className="w-full max-w-[1200px] grid grid-cols-1 md:grid-cols-3 gap-[24px] mb-12">
+            <motion.div variants={itemVariants} className="w-full grid grid-cols-1 md:grid-cols-3 gap-[24px] mb-12">
               <div onClick={() => navigate('/amcs')} className="bg-white dark:bg-gray-900 rounded-[22px] p-[24px] shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-md transition-all cursor-pointer flex flex-col gap-3">
                 <div className="w-11 h-11 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400"><Landmark size={20} /></div>
                 <h3 className="font-bold text-textMain dark:text-gray-100">AMC & Mutual Fund Database</h3>
