@@ -255,7 +255,14 @@ const NEWS_CACHE_MS = 15 * 60 * 1000; // 15 min
 async function getNewsFromNewsApi() {
   if (!NEWSAPI_KEY) throw new Error('NewsAPI key not configured');
   const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent('(Nifty OR Sensex OR "Indian stock market" OR "mutual fund" OR NSE OR BSE OR RBI OR SEBI) AND (India OR finance)')}&language=en&sortBy=publishedAt&pageSize=20&apiKey=${NEWSAPI_KEY}`;
-  const res = await fetch(url);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 4000);
+  let res;
+  try {
+    res = await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
   if (!res.ok) throw new Error(`NewsAPI HTTP ${res.status}`);
   const json = await res.json();
   if (json.status !== 'ok') throw new Error(`NewsAPI error: ${json.message || 'unknown'}`);
@@ -617,7 +624,7 @@ const tools = [
 ];
 
 // ─── Tool execution ───────────────────────────────────────────────────────────
-const rssParser = new Parser();
+const rssParser = new Parser({ timeout: 4000 });
 
 async function handleToolCall(toolCall) {
   const name = toolCall.function.name;
