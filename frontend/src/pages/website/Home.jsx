@@ -252,7 +252,7 @@ export default function Home({ onOpenAIChat }) {
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold mb-5 border border-blue-100 dark:border-blue-500/20">
                   <Sparkles size={13} className="text-blue-600 dark:text-blue-400" /> Next-Gen AI Financial Analyst
                 </span>
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight leading-[1.1] mb-5 font-sans">
+                <h1 className="text-4xl md:text-5xl xl:text-6xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight leading-[1.15] mb-5 font-sans">
                   Smart Wealth Building, <br />
                   <span className="bg-gradient-to-r from-blue-50 to-blue-700 bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(to right, #3b82f6, #1d4ed8)' }}>Powered by AI.</span>
                 </h1>
@@ -382,12 +382,11 @@ export default function Home({ onOpenAIChat }) {
             {cmsConfig?.pages?.home?.features?.showFeaturedNews && featuredNews && (
               <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} variants={itemVariants} className="w-full max-w-[1200px] mb-6">
                 <div
-                  className="bg-white dark:bg-gray-900 rounded-[22px] shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden cursor-pointer hover:shadow-md transition-all duration-300"
-                  style={{ display: 'grid', gridTemplateColumns: '1fr 2fr' }}
+                  className="bg-white dark:bg-gray-900 rounded-[22px] shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden cursor-pointer hover:shadow-md transition-all duration-300 grid grid-cols-1 md:grid-cols-3"
                   onClick={() => navigate('/news')}
                 >
                   {featuredNews.image && (
-                    <div style={{ height: '200px', overflow: 'hidden' }}>
+                    <div className="h-[200px] md:h-full overflow-hidden md:col-span-1">
                       <img
                         src={featuredNews.image}
                         alt={featuredNews.title}
@@ -398,26 +397,25 @@ export default function Home({ onOpenAIChat }) {
                       />
                     </div>
                   )}
-                  <div style={{ padding: '24px 28px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '10px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div className="p-5 md:p-7 flex flex-col justify-center gap-3 md:col-span-2">
+                    <div className="flex items-center gap-2">
                       <span style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: 'white', fontSize: '0.6rem', fontWeight: 800, padding: '3px 10px', borderRadius: '20px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>TODAY'S TOP STORY</span>
-                      <span className="text-[11px] text-textMuted dark:text-gray-400 font-semibold">{featuredNews.source}</span>
+                      <span className="text-[11px] text-gray-500 dark:text-gray-400 font-semibold">{featuredNews.source}</span>
                     </div>
-                    <h3 className="font-extrabold text-textMain dark:text-gray-100 text-[18px] leading-snug" style={{ margin: 0 }}>{featuredNews.title}</h3>
+                    <h3 className="font-extrabold text-gray-900 dark:text-gray-100 text-[18px] md:text-[20px] leading-snug m-0">{featuredNews.title}</h3>
                     {featuredNews.description && (
-                      <p className="text-[13px] text-textMuted dark:text-gray-400" style={{ margin: 0, lineHeight: '1.6', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{featuredNews.description}</p>
+                      <p className="text-[13px] md:text-[14px] text-gray-500 dark:text-gray-400 m-0 leading-relaxed" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{featuredNews.description}</p>
                     )}
                     <button
                       onClick={e => { e.stopPropagation(); navigate('/news'); }}
-                      className="text-primary dark:text-blue-400 text-[13px] font-bold text-left mt-1 hover:underline"
-                      style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', width: 'fit-content' }}
+                      className="text-blue-600 dark:text-blue-400 text-[13px] font-bold text-left mt-1 hover:underline bg-transparent border-none p-0 cursor-pointer w-fit"
                     >Read full story →</button>
                   </div>
                 </div>
               </motion.div>
             )}
 
-            <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} variants={itemVariants} className="w-full max-w-[1200px] grid grid-cols-1 xl:grid-cols-3 gap-[24px] mb-12">
+            <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} variants={itemVariants} className="w-full max-w-[1200px] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[24px] mb-12">
               {cmsConfig?.pages?.home?.features?.showTrendingStocks && (
                 <motion.div whileHover={{ y: -6, scale: 1.01, borderColor: '#3b82f6', boxShadow: '0 10px 30px rgba(37,99,235,0.08)' }} transition={{ duration: 0.3, ease: 'easeOut' }} className="bg-white dark:bg-gray-900 rounded-[22px] p-[24px] h-[290px] shadow-sm border border-gray-100 dark:border-gray-800 transition-all duration-300 flex flex-col justify-center cursor-default">
                   <div className="flex justify-between items-center mb-5">
