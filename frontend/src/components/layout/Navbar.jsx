@@ -36,6 +36,15 @@ export default function Navbar({ onToggleAIChat }) {
   const { currentUser, logout } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef(null);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     function handleClickOutsideCurrency(event) {
@@ -164,7 +173,7 @@ export default function Navbar({ onToggleAIChat }) {
   const askAiLabel = cmsConfig?.navbar?.askAiLabel || 'Ask AI';
 
   return (
-    <div className="sticky top-0 z-[100] flex flex-col shadow-sm">
+    <div className="sticky top-0 z-[100] flex flex-col">
       {/* Ticker Bar */}
       {marketData.length > 0 && (
         <div className="bg-gray-900 text-white text-[12px] font-medium py-1.5 overflow-hidden flex whitespace-nowrap border-b border-gray-800">
@@ -190,10 +199,10 @@ export default function Navbar({ onToggleAIChat }) {
         </div>
       )}
       <motion.nav
-        initial={{ y: -10, opacity: 0 }}
+        initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: 'easeOut' }}
-        className="bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 transition-colors duration-300"
+        className={`bg-white/80 dark:bg-gray-950/80 backdrop-blur-[18px] transition-all duration-300 ${isScrolled ? 'border-b border-gray-100 dark:border-gray-800 shadow-[0_10px_30px_rgba(37,99,235,0.08)]' : 'border-b border-transparent'}`}
       >
         <div className="container h-[80px] flex items-center justify-between gap-3">
 

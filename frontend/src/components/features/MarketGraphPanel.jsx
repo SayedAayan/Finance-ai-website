@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { LineChart as LineChartIcon, ChevronDown, ChevronRight, TrendingUp, TrendingDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const NIFTY_INDICES = [
   { label: 'NIFTY 50', symbol: '^NSEI' },
@@ -158,7 +159,17 @@ function IndexGroup({ title, indices, defaultOpen, accentColor }) {
             <div style={{ marginBottom: 6 }}>
               <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-3)' }}>{selected.label}</span>
             </div>
-            <MiniChart key={selected.symbol + range} symbol={selected.symbol} range={range} />
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={selected.symbol + range}
+                initial={{ opacity: 0, filter: 'blur(4px)' }}
+                animate={{ opacity: 1, filter: 'blur(0px)' }}
+                exit={{ opacity: 0, filter: 'blur(4px)' }}
+                transition={{ duration: 0.3 }}
+              >
+                <MiniChart symbol={selected.symbol} range={range} />
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       )}

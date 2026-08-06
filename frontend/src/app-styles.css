@@ -36,7 +36,7 @@
     --font-body: 'Inter', -apple-system, sans-serif;
 
     /* Backgrounds */
-    --bg-page: #F5F7FA;
+    --bg-page: #FFFFFF;
     --bg-card: #FFFFFF;
     --bg-subtle: #F0F4F8;
     --bg-hover: #EBF0F7;
@@ -1980,19 +1980,23 @@
 .compare-row:last-child .compare-label-cell {
   border-bottom-left-radius: 18px;
 }
+
 /* AI Chat Reply Markdown Horizontal Rules */
-.prose hr, .ai-reply-card hr {
+.prose hr,
+.ai-reply-card hr {
   border: 0;
   border-top: 1px solid rgba(0, 0, 0, 0.12);
   margin: 1.5rem 0;
 }
 
-html.dark .prose hr, html.dark .ai-reply-card hr {
+html.dark .prose hr,
+html.dark .ai-reply-card hr {
   border-top: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 /* AI Chat Reply Markdown Tables */
-.prose table, .ai-reply-card table {
+.prose table,
+.ai-reply-card table {
   width: 100%;
   margin-top: 1.25rem;
   margin-bottom: 1.25rem;
@@ -2005,43 +2009,51 @@ html.dark .prose hr, html.dark .ai-reply-card hr {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
 }
 
-html.dark .prose table, html.dark .ai-reply-card table {
+html.dark .prose table,
+html.dark .ai-reply-card table {
   border: 1px solid rgba(139, 92, 246, 0.25);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-.prose table::-webkit-scrollbar, .ai-reply-card table::-webkit-scrollbar {
+.prose table::-webkit-scrollbar,
+.ai-reply-card table::-webkit-scrollbar {
   height: 6px;
 }
 
-.prose table::-webkit-scrollbar-thumb, .ai-reply-card table::-webkit-scrollbar-thumb {
+.prose table::-webkit-scrollbar-thumb,
+.ai-reply-card table::-webkit-scrollbar-thumb {
   background-color: rgba(156, 163, 175, 0.3);
   border-radius: 3px;
 }
 
-.prose thead, .ai-reply-card thead {
+.prose thead,
+.ai-reply-card thead {
   background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(99, 102, 241, 0.08) 100%);
   border-bottom: 2px solid rgba(139, 92, 246, 0.25);
   display: table-header-group;
   width: 100%;
 }
 
-html.dark .prose thead, html.dark .ai-reply-card thead {
+html.dark .prose thead,
+html.dark .ai-reply-card thead {
   background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(99, 102, 241, 0.15) 100%);
   border-bottom: 2px solid rgba(139, 92, 246, 0.35);
 }
 
-.prose tbody, .ai-reply-card tbody {
+.prose tbody,
+.ai-reply-card tbody {
   display: table-row-group;
   width: 100%;
 }
 
-.prose tr, .ai-reply-card tr {
+.prose tr,
+.ai-reply-card tr {
   display: table-row;
   width: 100%;
 }
 
-.prose th, .ai-reply-card th {
+.prose th,
+.ai-reply-card th {
   padding: 12px 16px;
   font-weight: 600;
   font-size: 0.875rem;
@@ -2054,20 +2066,24 @@ html.dark .prose thead, html.dark .ai-reply-card thead {
   border-right: 1px solid rgba(139, 92, 246, 0.15);
 }
 
-.prose th:last-child, .ai-reply-card th:last-child {
+.prose th:last-child,
+.ai-reply-card th:last-child {
   border-right: none;
 }
 
-html.dark .prose th, html.dark .ai-reply-card th {
+html.dark .prose th,
+html.dark .ai-reply-card th {
   color: #a78bfa;
   border-right: 1px solid rgba(139, 92, 246, 0.25);
 }
 
-html.dark .prose th:last-child, html.dark .ai-reply-card th:last-child {
+html.dark .prose th:last-child,
+html.dark .ai-reply-card th:last-child {
   border-right: none;
 }
 
-.prose td, .ai-reply-card td {
+.prose td,
+.ai-reply-card td {
   padding: 12px 16px;
   font-size: 0.875rem;
   color: #374151;
@@ -2080,36 +2096,44 @@ html.dark .prose th:last-child, html.dark .ai-reply-card th:last-child {
   word-break: break-word;
 }
 
-.prose td:last-child, .ai-reply-card td:last-child {
+.prose td:last-child,
+.ai-reply-card td:last-child {
   border-right: none;
 }
 
-html.dark .prose td, html.dark .ai-reply-card td {
+html.dark .prose td,
+html.dark .ai-reply-card td {
   color: #d1d5db;
   border-bottom: 1px solid rgba(75, 85, 99, 0.4);
   border-right: 1px solid rgba(75, 85, 99, 0.4);
 }
 
-html.dark .prose td:last-child, html.dark .ai-reply-card td:last-child {
+html.dark .prose td:last-child,
+html.dark .ai-reply-card td:last-child {
   border-right: none;
 }
 
-.prose tr:last-child td, .ai-reply-card tr:last-child td {
+.prose tr:last-child td,
+.ai-reply-card tr:last-child td {
   border-bottom: none;
 }
 
-.prose tr:nth-child(even) td, .ai-reply-card tr:nth-child(even) td {
+.prose tr:nth-child(even) td,
+.ai-reply-card tr:nth-child(even) td {
   background-color: rgba(249, 250, 251, 0.4);
 }
 
-html.dark .prose tr:nth-child(even) td, html.dark .ai-reply-card tr:nth-child(even) td {
+html.dark .prose tr:nth-child(even) td,
+html.dark .ai-reply-card tr:nth-child(even) td {
   background-color: rgba(31, 41, 55, 0.3);
 }
 
-.prose tr:hover td, .ai-reply-card tr:hover td {
+.prose tr:hover td,
+.ai-reply-card tr:hover td {
   background-color: rgba(139, 92, 246, 0.03);
 }
 
-html.dark .prose tr:hover td, html.dark .ai-reply-card tr:hover td {
+html.dark .prose tr:hover td,
+html.dark .ai-reply-card tr:hover td {
   background-color: rgba(139, 92, 246, 0.06);
-}
+}
