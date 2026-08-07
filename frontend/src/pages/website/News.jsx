@@ -129,7 +129,13 @@ Please structure your response into the following sections:
         setBody(p.map(t => '<p>' + t.trim() + '</p>').join(''));
       }
     } catch {
-      setBody(`<div style="padding: 2rem 0; text-align: center; color: var(--text-2);"><p style="margin-bottom: 1rem; font-size: 1.1rem;">We couldn't load the full text for this article automatically.</p><a href="${a.link}" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 10px 20px; background: var(--bg-subtle); border-radius: 8px; color: var(--text-1); font-weight: 600; text-decoration: none;">Read full story on ${a.source} ➔</a></div>`);
+      setBody(`
+        <div style="padding: 12px 16px; background: var(--bg-subtle); border-radius: 8px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: var(--text-2); font-size: 0.85rem;">Showing original article view.</span>
+          <a href="${a.link}" target="_blank" rel="noopener noreferrer" style="color: var(--blue); font-weight: 700; text-decoration: none; font-size: 0.85rem;">Open in new tab ➔</a>
+        </div>
+        <iframe src="${a.link}" style="width: 100%; height: 75vh; border: none; border-radius: 8px; background: #fff;"></iframe>
+      `);
     } finally { setBodyLoading(false); }
   }
 
