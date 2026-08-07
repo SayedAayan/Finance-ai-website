@@ -61,6 +61,21 @@ export default function News() {
   };
   const [cmsConfig, setCmsConfig] = useState(defaultCms);
 
+const FALLBACK_IMAGES = [
+  'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&q=80&w=800',
+  'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&q=80&w=800',
+  'https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?auto=format&fit=crop&q=80&w=800',
+  'https://images.unsplash.com/photo-1642543492481-44e81e3914a1?auto=format&fit=crop&q=80&w=800',
+  'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?auto=format&fit=crop&q=80&w=800'
+];
+
+const getFallbackImage = (title) => {
+  if (!title) return FALLBACK_IMAGES[0];
+  let hash = 0;
+  for (let i = 0; i < title.length; i++) hash = title.charCodeAt(i) + ((hash << 5) - hash);
+  return FALLBACK_IMAGES[Math.abs(hash) % FALLBACK_IMAGES.length];
+};
+
   useEffect(() => {
     fetch('/api/cms')
       .then(res => res.json())
@@ -188,9 +203,9 @@ Please structure your response into the following sections:
           <div className="news-featured" onClick={() => openModal(featured)}>
             <div className="news-featured-img-wrap">
               <img 
-                src={featured.image || 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&q=80&w=800'} 
+                src={featured.image || getFallbackImage(featured.title)} 
                 alt="" 
-                onError={e => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&q=80&w=800'; }}
+                onError={e => { e.target.onerror = null; e.target.src = getFallbackImage(featured.title); }}
                 style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }} 
               />
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top,rgba(0,0,0,.35) 0%,transparent 45%)', pointerEvents: 'none' }} />

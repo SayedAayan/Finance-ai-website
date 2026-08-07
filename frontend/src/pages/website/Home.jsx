@@ -23,6 +23,21 @@ const COMPANY_DOMAINS = {
   'AARTISURF': 'aarti-surfactants.com',
 };
 
+const FALLBACK_IMAGES = [
+  'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&q=80&w=800',
+  'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&q=80&w=800',
+  'https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?auto=format&fit=crop&q=80&w=800',
+  'https://images.unsplash.com/photo-1642543492481-44e81e3914a1?auto=format&fit=crop&q=80&w=800',
+  'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?auto=format&fit=crop&q=80&w=800'
+];
+
+const getFallbackImage = (title) => {
+  if (!title) return FALLBACK_IMAGES[0];
+  let hash = 0;
+  for (let i = 0; i < title.length; i++) hash = title.charCodeAt(i) + ((hash << 5) - hash);
+  return FALLBACK_IMAGES[Math.abs(hash) % FALLBACK_IMAGES.length];
+};
+
 const COMPANY_LOGOS = {
   'RELIANCE': { bg: 'bg-gradient-to-br from-orange-400 to-red-500', label: 'R' },
   'TCS': { bg: 'bg-gradient-to-br from-blue-800 to-blue-950', label: 'TCS' },
@@ -422,9 +437,9 @@ export default function Home({ onOpenAIChat }) {
                 >
                   <div className="h-[200px] md:h-full overflow-hidden md:col-span-1">
                     <img
-                      src={featuredNews.image || 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&q=80&w=800'}
+                      src={featuredNews.image || getFallbackImage(featuredNews.title)}
                       alt={featuredNews.title}
-                      onError={e => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&q=80&w=800'; }}
+                      onError={e => { e.target.onerror = null; e.target.src = getFallbackImage(featuredNews.title); }}
                       style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block', transition: 'transform 0.4s' }}
                       onMouseEnter={e => { e.target.style.transform = 'scale(1.04)'; }}
                       onMouseLeave={e => { e.target.style.transform = 'scale(1)'; }}

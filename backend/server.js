@@ -311,14 +311,23 @@ async function getNewsFromGoogleRss() {
       if (item.link?.includes('livemint')) sourceName = 'Livemint';
       if (item.link?.includes('yahoo')) sourceName = 'Yahoo Finance';
 
+      const imgMatch = (item.content || '').match(/<img[^>]+src="([^">]+)"/);
+      let image = imgMatch ? imgMatch[1] : null;
+
+      let pubDateIso = new Date().toISOString();
+      if (item.pubDate) {
+        const d = new Date(item.pubDate);
+        if (!isNaN(d.getTime())) pubDateIso = d.toISOString();
+      }
+
       articles.push({
         title: item.title?.replace(/ - [^-]+$/, '').trim(),
         description: (item.contentSnippet || item.content || '').replace(/<[^>]+>/g, '').trim().substring(0, 300),
         source: sourceName,
         link: item.link,
-        image: null,
-        publishedAt: item.pubDate,
-        publishedMs: item.pubDate ? new Date(item.pubDate).getTime() : 0
+        image: image,
+        publishedAt: pubDateIso,
+        publishedMs: new Date(pubDateIso).getTime()
       });
     }
   }
