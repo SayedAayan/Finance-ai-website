@@ -1,6 +1,8 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { TrendingUp, Award, BookOpen, Target, Briefcase, BarChart2, CheckCircle2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { TrendingUp, Award, BookOpen, Target, Briefcase, BarChart2, CheckCircle2, ChevronDown, ChevronUp, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { mockStocks } from '../../data/mockData';
 
 export default function InvestorsStrategy() {
   const strategies = [
@@ -65,6 +67,30 @@ export default function InvestorsStrategy() {
       color: 'rose'
     }
   ];
+
+  const [expandedId, setExpandedId] = useState(null);
+  const navigate = useNavigate();
+
+  const toggleExpand = (id) => {
+    setExpandedId(expandedId === id ? null : id);
+  };
+
+  const getMatchedStocks = (strategyId) => {
+    switch(strategyId) {
+      case 'value':
+        return mockStocks.filter(s => s.peRatio < 25 && s.pbRatio < 5); // Relaxed for mock data
+      case 'canslim':
+        return mockStocks.filter(s => s.changePercent > 1.0);
+      case 'magic':
+        return mockStocks.filter(s => (s.eps / s.price) > 0.02 && s.debtToEquity < 0.5);
+      case 'drip':
+        return mockStocks.filter(s => s.dividendYield > 0.5);
+      case 'momentum':
+        return mockStocks.filter(s => s.changePercent > 0 || s.price > 2000);
+      default:
+        return [];
+    }
+  };
 
   return (
     <div className="w-full bg-gray-50 dark:bg-gray-950 min-h-screen pt-28 pb-24 relative overflow-hidden">
@@ -155,7 +181,7 @@ export default function InvestorsStrategy() {
                     {strategy.description}
                   </p>
                   
-                  <div className={`rounded-3xl p-8 ${strategy.lightBg} border border-${strategy.color}-100 dark:border-${strategy.color}-900/50`}>
+                  <div className={`rounded-3xl p-8 ${strategy.lightBg} border border-${strategy.color}-100 dark:border-${strategy.color}-900/50 mb-6`}>
                     <h4 className="text-sm font-bold uppercase tracking-widest text-gray-900 dark:text-white mb-6 flex items-center gap-2">
                       <Target size={18} className={`text-${strategy.color}-500`} />
                       Key Metrics & Rules
@@ -169,6 +195,69 @@ export default function InvestorsStrategy() {
                       ))}
                     </div>
                   </div>
+
+                  {/* Screener Expand Button */}
+                  <button 
+                    onClick={() => toggleExpand(strategy.id)}
+                    className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm font-bold shadow-sm hover:shadow-md hover:border-${strategy.color}-300 transition-all self-start`}
+                  >
+                    <span className={`text-${strategy.color}-600 dark:text-${strategy.color}-400`}>
+                      {expandedId === strategy.id ? 'Hide Matching Stocks' : 'Run Screener for this Strategy'}
+                    </span>
+                    {expandedId === strategy.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                  </button>
+
+                  {/* Expanded Screener Results */}
+                  <AnimatePresence>
+                    {expandedId === strategy.id && (
+                      <motion.div 
+                        initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                        animate={{ opacity: 1, height: 'auto', marginTop: 24 }}
+                        exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-lg">
+                          <h4 className="text-sm font-bold uppercase tracking-widest text-gray-900 dark:text-white mb-4">
+                            Matching Assets (Mock Data)
+                          </h4>
+                          <div className="space-y-3">
+                            {getMatchedStocks(strategy.id).map(stock => (
+                              <div 
+                                key={stock.id} 
+                                onClick={() => navigate(`/stock/${stock.ticker}`)}
+                                className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer transition-colors group"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className={`w-10 h-10 rounded-lg bg-${strategy.color}-100 dark:bg-${strategy.color}-900/30 flex items-center justify-center font-bold text-${strategy.color}-700 dark:text-${strategy.color}-300`}>
+                                    {stock.ticker.substring(0,2)}
+                                  </div>
+                                  <div>
+                                    <div className="font-bold text-gray-900 dark:text-white">{stock.name}</div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">{stock.ticker} • P/E: {stock.peRatio}</div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                  <div className="text-right">
+                                    <div className="font-bold text-gray-900 dark:text-white">₹{stock.price}</div>
+                                    <div className={`text-xs font-semibold ${stock.changePercent >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                      {stock.changePercent >= 0 ? '+' : ''}{stock.changePercent}%
+                                    </div>
+                                  </div>
+                                  <ArrowRight size={16} className="text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200 transition-colors" />
+                                </div>
+                              </div>
+                            ))}
+                            {getMatchedStocks(strategy.id).length === 0 && (
+                              <div className="text-center py-6 text-gray-500 dark:text-gray-400 text-sm">
+                                No mock stocks perfectly match this rigid criteria today.
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
                 </div>
               </motion.div>
             );

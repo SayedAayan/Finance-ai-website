@@ -1,11 +1,13 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Line, LineChart, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
-import { BarChart2, TrendingUp, Sparkles, AlertCircle, ArrowRight, Search, Loader2, Plus, X, LineChart as LineChartIcon, SlidersHorizontal } from 'lucide-react';
+import { BarChart2, TrendingUp, Sparkles, AlertCircle, ArrowRight, Search, Loader2, Plus, X, LineChart as LineChartIcon, SlidersHorizontal, Trash2 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useAuth } from '../../context/AuthContext';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
+
+const COLORS = ['var(--violet)', 'var(--blue)', 'var(--emerald)', 'var(--amber)', 'var(--rose)'];
 
 function isBetter(val1, val2, lowerIsBetter = false) {
   if (val1 == null || val2 == null || val1 === val2) return [null, null];
@@ -16,6 +18,30 @@ function isBetter(val1, val2, lowerIsBetter = false) {
   return [v1 > v2 ? 'win' : 'lose', v2 > v1 ? 'win' : 'lose'];
 }
 
+// Evaluate N values and return array of classes: 'winner' (best), 'loser' (worst), '' (middle)
+function evaluateNValues(values, lowerIsBetter = false) {
+  const parsed = values.map(v => parseFloat(String(v).replace(/[^0-9.-]/g, '')));
+  const valid = parsed.filter(n => !isNaN(n));
+  if (valid.length < 2) return values.map(() => '');
+  
+  const min = Math.min(...valid);
+  const max = Math.max(...valid);
+  
+  if (min === max) return values.map(() => '');
+
+  return parsed.map(v => {
+    if (isNaN(v)) return '';
+    if (lowerIsBetter) {
+      if (v === min) return 'winner';
+      if (v === max) return 'loser';
+    } else {
+      if (v === max) return 'winner';
+      if (v === min) return 'loser';
+    }
+    return '';
+  });
+}
+
 function fmt(n, digits = 2) {
   if (n === null || n === undefined || isNaN(n)) return '—';
   return Number(n).toLocaleString('en-IN', { maximumFractionDigits: digits });
@@ -23,7 +49,6 @@ function fmt(n, digits = 2) {
 
 const pct = (v) => v != null ? `${v >= 0 ? '+' : ''}${v}%` : '—';
 
-// Metric definitions: only fields the backend genuinely provides (no fabricated AUM/PE/etc.)
 const FUND_METRICS = [
   { key: 'amc', label: 'AMC', get: a => a.amc },
   { key: 'nav', label: 'NAV', get: (a, formatPrice) => a.nav != null ? formatPrice(a.nav) : '—' },
@@ -66,7 +91,6 @@ const CHART_RANGES = [
   { key: 'MAX', days: Infinity, label: 'Since Inception' },
 ];
 
-// Searchable async select backed by the live backend search/company/scheme lists
 function AssetPicker({ mode, value, onSelect, placeholder }) {
   const [query, setQuery] = useState('');
   const [options, setOptions] = useState([]);
@@ -188,7 +212,6 @@ function AssetPicker({ mode, value, onSelect, placeholder }) {
   );
 }
 
-// Filter control: toggle which metric rows are shown, placed in the "Select Assets to Compare" header
 function MetricFilterMenu({ allMetrics, activeKeys, onToggle }) {
   const [open, setOpen] = useState(false);
   const boxRef = useRef(null);
@@ -247,34 +270,45 @@ function MetricFilterMenu({ allMetrics, activeKeys, onToggle }) {
   );
 }
 
-// Normalizes two time series (filtered to a range) to % change from the range's start so NAV and stock price can share one chart
-function buildComparisonChartData(leftSeries, rightSeries, rangeDays) {
-  if (!leftSeries?.length || !rightSeries?.length) return [];
+function buildComparisonChartData(seriesArray, rangeDays) {
+  if (!seriesArray || seriesArray.length === 0) return [];
+  const validSeries = seriesArray.filter(s => s && s.length > 0);
+  if (validSeries.length < 2) return [];
+
   const cutoff = Number.isFinite(rangeDays) ? Date.now() - rangeDays * 86400000 : 0;
-  const leftFiltered = leftSeries.filter(p => p.time >= cutoff);
-  const rightFiltered = rightSeries.filter(p => p.time >= cutoff);
-  if (leftFiltered.length < 2 || rightFiltered.length < 2) return [];
+  
+  const filteredSeries = validSeries.map(s => {
+    const f = s.filter(p => p.time >= cutoff);
+    return { data: f, startVal: f[0]?.value };
+  });
 
-  const leftStart = leftFiltered[0].value;
-  const rightStart = rightFiltered[0].value;
-  if (!leftStart || !rightStart) return [];
+  if (filteredSeries.some(s => s.data.length < 2 || !s.startVal)) return [];
 
-  const rightByDay = new Map(rightFiltered.map(p => [new Date(p.time).toISOString().slice(0, 10), p.value]));
+  const baseSeries = filteredSeries[0].data;
+  const seriesMaps = filteredSeries.map(s => new Map(s.data.map(p => [new Date(p.time).toISOString().slice(0, 10), p.value])));
+
   const points = [];
-  for (const p of leftFiltered) {
+  for (const p of baseSeries) {
     const dayKey = new Date(p.time).toISOString().slice(0, 10);
-    const rVal = rightByDay.get(dayKey);
-    if (rVal == null) continue;
-    points.push({
-      time: p.time,
-      left: Number((((p.value - leftStart) / leftStart) * 100).toFixed(2)),
-      right: Number((((rVal - rightStart) / rightStart) * 100).toFixed(2))
-    });
+    const point = { time: p.time };
+    let missingData = false;
+    
+    for (let i = 0; i < filteredSeries.length; i++) {
+      const val = seriesMaps[i].get(dayKey);
+      if (val == null) {
+        missingData = true;
+        break;
+      }
+      point[`asset${i}`] = Number((((val - filteredSeries[i].startVal) / filteredSeries[i].startVal) * 100).toFixed(2));
+    }
+    
+    if (!missingData) {
+      points.push(point);
+    }
   }
   return points;
 }
 
-// Daily-return volatility (std dev of day-over-day % change) — a genuine measure computed from the series itself
 function computeVolatility(series) {
   if (!series || series.length < 3) return null;
   const dailyReturns = [];
@@ -295,12 +329,11 @@ export default function Compare() {
   const { formatPrice } = useCurrency();
   const { userPlan } = useAuth();
 
-  const [leftAsset, setLeftAsset] = useState(null);
-  const [rightAsset, setRightAsset] = useState(null);
-  const [leftDetail, setLeftDetail] = useState(null);
-  const [rightDetail, setRightDetail] = useState(null);
-  const [leftStats, setLeftStats] = useState(null);
-  const [rightStats, setRightStats] = useState(null);
+  // State arrays for N-asset comparison (default 3)
+  const [assets, setAssets] = useState([null, null, null]);
+  const [details, setDetails] = useState([null, null, null]);
+  const [stats, setStats] = useState([null, null, null]);
+  
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [activeKeys, setActiveKeys] = useState(DEFAULT_FUND_KEYS);
   const [chartRange, setChartRange] = useState('1Y');
@@ -309,12 +342,9 @@ export default function Compare() {
 
   const handleModeChange = (newMode) => {
     setMode(newMode);
-    setLeftAsset(null);
-    setRightAsset(null);
-    setLeftDetail(null);
-    setRightDetail(null);
-    setLeftStats(null);
-    setRightStats(null);
+    setAssets([null, null, null]);
+    setDetails([null, null, null]);
+    setStats([null, null, null]);
     setActiveKeys(newMode === 'funds' ? DEFAULT_FUND_KEYS : DEFAULT_STOCK_KEYS);
   };
 
@@ -322,27 +352,55 @@ export default function Compare() {
     setActiveKeys(keys => keys.includes(key) ? keys.filter(k => k !== key) : [...keys, key]);
   };
 
-  // Preselect a sensible default pair on load / mode switch so the page isn't empty
+  const updateAsset = (index, value) => {
+    const newAssets = [...assets];
+    newAssets[index] = value;
+    setAssets(newAssets);
+  };
+
+  const addAsset = () => {
+    if (assets.length < 5) {
+      setAssets([...assets, null]);
+      setDetails([...details, null]);
+      setStats([...stats, null]);
+    }
+  };
+
+  const removeAsset = (index) => {
+    let newAssets = assets.filter((_, i) => i !== index);
+    let newDetails = details.filter((_, i) => i !== index);
+    let newStats = stats.filter((_, i) => i !== index);
+    
+    if (newAssets.length < 2) {
+      newAssets = [...newAssets, null];
+      newDetails = [...newDetails, null];
+      newStats = [...newStats, null];
+    }
+    setAssets(newAssets);
+    setDetails(newDetails);
+    setStats(newStats);
+  };
+
   useEffect(() => {
     let active = true;
     async function loadDefaults() {
       try {
         if (mode === 'funds') {
-          const [a, b] = await Promise.all([
+          const [a, b, c] = await Promise.all([
             fetch(`${API_URL}/schemes?q=HDFC%20Flexi%20Cap%20Fund%20-%20Growth%20Option%20-%20Direct%20Plan&limit=1`).then(r => r.json()),
-            fetch(`${API_URL}/schemes?q=Parag%20Parikh%20Flexi%20Cap%20Fund%20-%20Direct%20Plan%20-%20Growth&limit=1`).then(r => r.json())
+            fetch(`${API_URL}/schemes?q=Parag%20Parikh%20Flexi%20Cap%20Fund%20-%20Direct%20Plan%20-%20Growth&limit=1`).then(r => r.json()),
+            fetch(`${API_URL}/schemes?q=SBI%20Bluechip%20Fund&limit=1`).then(r => r.json())
           ]);
           if (!active) return;
-          if (a.schemes?.[0]) setLeftAsset(a.schemes[0]);
-          if (b.schemes?.[0]) setRightAsset(b.schemes[0]);
+          setAssets([a.schemes?.[0] || null, b.schemes?.[0] || null, c.schemes?.[0] || null]);
         } else {
-          const [a, b] = await Promise.all([
+          const [a, b, c] = await Promise.all([
             fetch(`${API_URL}/companies?q=Reliance%20Industries&limit=1`).then(r => r.json()),
-            fetch(`${API_URL}/companies?q=Tata%20Consultancy%20Services&limit=1`).then(r => r.json())
+            fetch(`${API_URL}/companies?q=Tata%20Consultancy%20Services&limit=1`).then(r => r.json()),
+            fetch(`${API_URL}/companies?q=HDFC%20Bank&limit=1`).then(r => r.json())
           ]);
           if (!active) return;
-          if (a.companies?.[0]) setLeftAsset(a.companies[0]);
-          if (b.companies?.[0]) setRightAsset(b.companies[0]);
+          setAssets([a.companies?.[0] || null, b.companies?.[0] || null, c.companies?.[0] || null]);
         }
       } catch { /* leave pickers empty on failure */ }
     }
@@ -350,10 +408,9 @@ export default function Compare() {
     return () => { active = false; };
   }, [mode]);
 
-  // Fetch enriched detail (live price/NAV) + historical return stats + full chartable series whenever a picked asset changes
   useEffect(() => {
-    async function loadDetail(asset, setDetail, setStats) {
-      if (!asset) { setDetail(null); setStats(null); return; }
+    async function loadDetail(asset) {
+      if (!asset) return { detail: null, stats: null };
       try {
         if (mode === 'funds') {
           const schemeCode = asset.schemeCode || asset.id?.replace('MF:', '');
@@ -361,112 +418,101 @@ export default function Compare() {
             fetch(`${API_URL}/mutual-fund/${encodeURIComponent(asset.id)}`).then(r => r.json()),
             fetch(`${API_URL}/fund-stats/${encodeURIComponent(schemeCode)}`).then(r => r.json()).catch(() => null)
           ]);
-          setDetail(detailRes.scheme || null);
-          setStats(statsRes && !statsRes.error ? statsRes : null);
+          return { detail: detailRes.scheme || null, stats: statsRes && !statsRes.error ? statsRes : null };
         } else {
           const [companiesRes, statsRes] = await Promise.all([
             fetch(`${API_URL}/companies?q=${encodeURIComponent(asset.symbol)}&live=true&limit=5`).then(r => r.json()),
             fetch(`${API_URL}/stock-stats/${encodeURIComponent(asset.ticker)}`).then(r => r.json()).catch(() => null)
           ]);
           const match = (companiesRes.companies || []).find(c => c.id === asset.id) || companiesRes.companies?.[0] || null;
-          setDetail(match);
-          setStats(statsRes && !statsRes.error ? statsRes : null);
+          return { detail: match, stats: statsRes && !statsRes.error ? statsRes : null };
         }
       } catch {
-        setDetail(null);
-        setStats(null);
+        return { detail: null, stats: null };
       }
     }
+    
     setLoadingDetail(true);
-    Promise.all([
-      loadDetail(leftAsset, setLeftDetail, setLeftStats),
-      loadDetail(rightAsset, setRightDetail, setRightStats)
-    ]).finally(() => setLoadingDetail(false));
-  }, [leftAsset, rightAsset, mode]);
+    Promise.all(assets.map(a => loadDetail(a))).then(results => {
+      setDetails(results.map(r => r.detail));
+      setStats(results.map(r => r.stats));
+    }).finally(() => setLoadingDetail(false));
+  }, [assets, mode]);
 
-  const left = useMemo(() => {
-    if (!leftAsset) return {};
-    const s = leftStats || {};
-    if (mode === 'funds') {
-      const d = leftDetail || {};
+  const preparedAssets = useMemo(() => {
+    return assets.map((asset, i) => {
+      if (!asset) return null;
+      const d = details[i] || {};
+      const s = stats[i] || {};
+      
+      if (mode === 'funds') {
+        return {
+          id: asset.id, name: asset.name, amc: d.amc || asset.amc, nav: d.nav, navDate: d.date,
+          category: d.subCategory || d.category, isin: d.isin, plan: d.plan, option: d.option, schemeType: s.schemeType,
+          return1M: s.return1M, return3M: s.return3M, return6M: s.return6M, return1Y: s.return1Y, return3Y: s.return3Y,
+          series: s.series
+        };
+      }
       return {
-        id: leftAsset.id, name: leftAsset.name, amc: d.amc || leftAsset.amc, nav: d.nav, navDate: d.date,
-        category: d.subCategory || d.category, isin: d.isin, plan: d.plan, option: d.option, schemeType: s.schemeType,
-        return1M: s.return1M, return3M: s.return3M, return6M: s.return6M, return1Y: s.return1Y, return3Y: s.return3Y
+        id: asset.id, name: asset.name, symbol: asset.symbol, exchange: asset.exchange,
+        price: d.price, changePercent: d.changePercent, currency: d.currency,
+        fiftyTwoWeekHigh: s.fiftyTwoWeekHigh, fiftyTwoWeekLow: s.fiftyTwoWeekLow, volume: s.volume,
+        return1M: s.return1M, return3M: s.return3M, return6M: s.return6M, return1Y: s.return1Y,
+        series: s.series
       };
-    }
-    const d = leftDetail || {};
-    return {
-      id: leftAsset.id, name: leftAsset.name, symbol: leftAsset.symbol, exchange: leftAsset.exchange,
-      price: d.price, changePercent: d.changePercent, currency: d.currency,
-      fiftyTwoWeekHigh: s.fiftyTwoWeekHigh, fiftyTwoWeekLow: s.fiftyTwoWeekLow, volume: s.volume,
-      return1M: s.return1M, return3M: s.return3M, return6M: s.return6M, return1Y: s.return1Y
-    };
-  }, [leftAsset, leftDetail, leftStats, mode]);
-
-  const right = useMemo(() => {
-    if (!rightAsset) return {};
-    const s = rightStats || {};
-    if (mode === 'funds') {
-      const d = rightDetail || {};
-      return {
-        id: rightAsset.id, name: rightAsset.name, amc: d.amc || rightAsset.amc, nav: d.nav, navDate: d.date,
-        category: d.subCategory || d.category, isin: d.isin, plan: d.plan, option: d.option, schemeType: s.schemeType,
-        return1M: s.return1M, return3M: s.return3M, return6M: s.return6M, return1Y: s.return1Y, return3Y: s.return3Y
-      };
-    }
-    const d = rightDetail || {};
-    return {
-      id: rightAsset.id, name: rightAsset.name, symbol: rightAsset.symbol, exchange: rightAsset.exchange,
-      price: d.price, changePercent: d.changePercent, currency: d.currency,
-      fiftyTwoWeekHigh: s.fiftyTwoWeekHigh, fiftyTwoWeekLow: s.fiftyTwoWeekLow, volume: s.volume,
-      return1M: s.return1M, return3M: s.return3M, return6M: s.return6M, return1Y: s.return1Y
-    };
-  }, [rightAsset, rightDetail, rightStats, mode]);
+    });
+  }, [assets, details, stats, mode]);
 
   const activeMetrics = metrics.filter(m => activeKeys.includes(m.key));
-  const bothSelected = leftAsset && rightAsset;
-  const sameAsset = bothSelected && leftAsset.id === rightAsset.id;
+  const validAssets = preparedAssets.filter(Boolean);
+  const anySelected = validAssets.length > 0;
+  
+  // Ensure we have at least 2 unique assets to show meaningful comparison
+  const uniqueIds = new Set(validAssets.map(a => a.id));
+  const isComparable = validAssets.length >= 2 && uniqueIds.size === validAssets.length;
 
   const rangeDef = CHART_RANGES.find(r => r.key === chartRange) || CHART_RANGES[3];
-  const chartData = useMemo(
-    () => buildComparisonChartData(leftStats?.series, rightStats?.series, rangeDef.days),
-    [leftStats, rightStats, rangeDef]
-  );
+  
+  const chartData = useMemo(() => {
+    return buildComparisonChartData(validAssets.map(a => a.series), rangeDef.days);
+  }, [validAssets, rangeDef]);
 
-  // Data-driven summary: computed directly from the selected metric rows + the chart's own range/trend, not a fixed template
   const summary = useMemo(() => {
-    if (!bothSelected || sameAsset || chartData.length < 2) return null;
+    if (!isComparable || chartData.length < 2) return null;
 
-    const leftMove = chartData[chartData.length - 1].left;
-    const rightMove = chartData[chartData.length - 1].right;
-    const leader = leftMove > rightMove ? left : right;
-    const laggard = leftMove > rightMove ? right : left;
-    const leaderMove = Math.max(leftMove, rightMove);
-    const laggardMove = Math.min(leftMove, rightMove);
-    const gap = Number((leaderMove - laggardMove).toFixed(2));
+    const lastPoint = chartData[chartData.length - 1];
+    let bestIndex = -1, worstIndex = -1;
+    let maxMove = -Infinity, minMove = Infinity;
 
-    const leftVol = computeVolatility(leftStats?.series?.filter(p => Number.isFinite(rangeDef.days) ? p.time >= Date.now() - rangeDef.days * 86400000 : true));
-    const rightVol = computeVolatility(rightStats?.series?.filter(p => Number.isFinite(rangeDef.days) ? p.time >= Date.now() - rangeDef.days * 86400000 : true));
-    const steadier = (leftVol != null && rightVol != null)
-      ? (leftVol < rightVol ? left : right)
-      : null;
-    const steadierOther = steadier === left ? right : left;
+    validAssets.forEach((a, i) => {
+      const val = lastPoint[`asset${i}`];
+      if (val != null) {
+        if (val > maxMove) { maxMove = val; bestIndex = i; }
+        if (val < minMove) { minMove = val; worstIndex = i; }
+      }
+    });
+
+    if (bestIndex === -1 || worstIndex === -1) return null;
+
+    const leader = validAssets[bestIndex];
+    const laggard = validAssets[worstIndex];
+    const gap = Number((maxMove - minMove).toFixed(2));
+
+    const vols = validAssets.map(a => computeVolatility(a.series?.filter(p => Number.isFinite(rangeDef.days) ? p.time >= Date.now() - rangeDef.days * 86400000 : true)));
+    let lowestVol = Infinity;
+    let steadier = null;
+    
+    vols.forEach((v, i) => {
+      if (v != null && v < lowestVol) {
+        lowestVol = v;
+        steadier = validAssets[i];
+      }
+    });
 
     const rangeLabel = rangeDef.label || rangeDef.key;
 
-    const metricLines = activeMetrics
-      .filter(m => !['navDate'].includes(m.key))
-      .map(m => {
-        const lVal = m.get(left, formatPrice);
-        const rVal = m.get(right, formatPrice);
-        if (lVal === rVal || lVal == null || rVal == null || lVal === '—' || rVal === '—') return null;
-        return `${m.label.toLowerCase()}: ${left.name.split(' ')[0]} ${lVal} vs ${right.name.split(' ')[0]} ${rVal}`;
-      })
-      .filter(Boolean);
-
-    return { leader, laggard, gap, leaderMove, laggardMove, rangeLabel, steadier, steadierOther, leftVol, rightVol, metricLines };
-  }, [bothSelected, sameAsset, chartData, left, right, leftStats, rightStats, rangeDef, activeMetrics, formatPrice]);
+    return { leader, laggard, gap, leaderMove: maxMove, laggardMove: minMove, rangeLabel, steadier, lowestVol };
+  }, [isComparable, chartData, validAssets, rangeDef]);
 
   return (
     <div style={{ paddingBottom: '4rem' }}>
@@ -486,81 +532,87 @@ export default function Compare() {
       </div>
 
       <div className="container" style={{ paddingTop: '32px' }}>
-        <div className="compare-table" style={{ borderRadius: '18px', overflow: 'visible' }}>
+        <div className="compare-table" style={{ borderRadius: '18px', overflow: 'visible', display: 'flex', flexDirection: 'column' }}>
 
-          {/* Header with Asset Choice pickers + metric filter */}
-          <div className="compare-row compare-header-row" style={{ borderRadius: '18px 18px 0 0', overflow: 'visible', borderBottom: 'none' }}>
-            <div className="compare-col-header" style={{ background: 'var(--bg-subtle)', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap: '10px', fontWeight: 700, paddingLeft: '16px', color: 'var(--text-3)', fontSize: '0.8rem', textTransform: 'uppercase' }}>
+          <div style={{ display: 'flex', borderBottom: '1px solid var(--border)' }}>
+            <div className="compare-col-header" style={{ width: '220px', flexShrink: 0, background: 'var(--bg-subtle)', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap: '10px', fontWeight: 700, paddingLeft: '16px', color: 'var(--text-3)', fontSize: '0.8rem', textTransform: 'uppercase', borderRadius: '18px 0 0 0' }}>
               <span>Select Assets to Compare</span>
-              {bothSelected && (
+              {anySelected && (
                 <div style={{ textTransform: 'none' }}>
                   <MetricFilterMenu allMetrics={metrics} activeKeys={activeKeys} onToggle={toggleMetric} />
                 </div>
               )}
             </div>
 
-            <div className="compare-col-header" style={{ borderLeft: '1px solid var(--border)', padding: '16px', position: 'relative', zIndex: 5 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
-                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-3)' }}>ASSET 1</label>
-                <AssetPicker mode={mode} value={leftAsset} onSelect={setLeftAsset} placeholder={mode === 'funds' ? 'Search a mutual fund...' : 'Search a stock...'} />
-                {leftAsset && (
-                  <button className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }}
-                    onClick={() => navigate(mode === 'funds' ? `/fund/${leftAsset.id}` : `/stock/${leftAsset.id}`)}>
-                    Full Profile <ArrowRight size={13} />
+            <div style={{ display: 'flex', flexGrow: 1, overflowX: 'auto' }}>
+              {assets.map((asset, index) => (
+                <div key={index} style={{ flex: 1, minWidth: '220px', borderLeft: '1px solid var(--border)', padding: '16px', position: 'relative', zIndex: 10 - index }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-3)' }}>ASSET {index + 1}</label>
+                      {assets.length > 2 && (
+                        <button onClick={() => removeAsset(index)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '2px' }}>
+                          <Trash2 size={14} color="var(--text-3)" />
+                        </button>
+                      )}
+                    </div>
+                    
+                    <AssetPicker mode={mode} value={asset} onSelect={(a) => updateAsset(index, a)} placeholder={mode === 'funds' ? 'Search a fund...' : 'Search a stock...'} />
+                    {asset && (
+                      <button className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }}
+                        onClick={() => navigate(mode === 'funds' ? `/fund/${asset.id}` : `/stock/${asset.id}`)}>
+                        Full Profile <ArrowRight size={13} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+              
+              {assets.length < 5 && (
+                <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', padding: '16px', borderLeft: '1px solid var(--border)' }}>
+                  <button onClick={addAsset} className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '6px', borderRadius: '10px' }}>
+                    <Plus size={16} /> Add Asset
                   </button>
-                )}
-              </div>
-            </div>
-
-            <div className="compare-col-header" style={{ borderLeft: '1px solid var(--border)', padding: '16px', position: 'relative', zIndex: 5 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
-                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-3)' }}>ASSET 2</label>
-                <AssetPicker mode={mode} value={rightAsset} onSelect={setRightAsset} placeholder={mode === 'funds' ? 'Search a mutual fund...' : 'Search a stock...'} />
-                {rightAsset && (
-                  <button className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }}
-                    onClick={() => navigate(mode === 'funds' ? `/fund/${rightAsset.id}` : `/stock/${rightAsset.id}`)}>
-                    Full Profile <ArrowRight size={13} />
-                  </button>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Rows */}
-          {!bothSelected ? (
-            <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-3)' }}>
-              Select two {mode === 'funds' ? 'mutual funds' : 'stocks'} above to compare.
-            </div>
-          ) : loadingDetail ? (
-            <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-              <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Loading live data...
-            </div>
-          ) : activeMetrics.length === 0 ? (
-            <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-3)' }}>
-              No metrics selected. Use the <strong>Metrics</strong> filter above to add some.
-            </div>
-          ) : activeMetrics.map((m) => {
-            const lVal = m.get(left, formatPrice);
-            const rVal = m.get(right, formatPrice);
-            const [lWin, rWin] = isBetter(lVal, rVal, m.lowerBetter);
-            return (
-              <div key={m.key} className="compare-row">
-                <div className="compare-label-cell">{m.label}</div>
-                <div className={`compare-val-cell ${lWin === 'win' ? 'winner' : lWin === 'lose' ? 'loser' : ''}`}>
-                  {lVal ?? '—'}
-                  {lWin === 'win' && <span style={{ marginLeft: '8px', fontSize: '0.75rem' }}>▲</span>}
-                </div>
-                <div className={`compare-val-cell ${rWin === 'win' ? 'winner' : rWin === 'lose' ? 'loser' : ''}`}>
-                  {rVal ?? '—'}
-                  {rWin === 'win' && <span style={{ marginLeft: '8px', fontSize: '0.75rem' }}>▲</span>}
-                </div>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {!anySelected ? (
+              <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-3)' }}>
+                Select {mode === 'funds' ? 'mutual funds' : 'stocks'} above to compare.
               </div>
-            );
-          })}
+            ) : loadingDetail ? (
+              <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Loading live data...
+              </div>
+            ) : activeMetrics.length === 0 ? (
+              <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-3)' }}>
+                No metrics selected. Use the <strong>Metrics</strong> filter above to add some.
+              </div>
+            ) : activeMetrics.map((m) => {
+              const vals = preparedAssets.map(a => a ? m.get(a, formatPrice) : '—');
+              const classes = evaluateNValues(vals, m.lowerBetter);
+              return (
+                <div key={m.key} style={{ display: 'flex', borderBottom: '1px solid var(--border)' }} className="compare-row-multi">
+                  <div className="compare-label-cell" style={{ width: '220px', flexShrink: 0, padding: '14px 16px', fontWeight: 600, fontSize: '0.85rem' }}>{m.label}</div>
+                  <div style={{ display: 'flex', flexGrow: 1, overflowX: 'auto' }}>
+                    {vals.map((v, i) => (
+                      <div key={i} style={{ flex: 1, minWidth: '220px', padding: '14px 16px', borderLeft: '1px solid var(--border)', fontSize: '0.9rem' }} className={`compare-val-cell ${classes[i]}`}>
+                        {v ?? '—'}
+                        {classes[i] === 'winner' && <span style={{ marginLeft: '8px', fontSize: '0.75rem' }}>▲</span>}
+                      </div>
+                    ))}
+                    {assets.length < 5 && <div style={{ width: '130px', flexShrink: 0, borderLeft: '1px solid var(--border)' }}></div>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Comparison Chart */}
-        {bothSelected && !loadingDetail && (
+        {isComparable && !loadingDetail && (
           <div style={{ marginTop: '24px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '18px', padding: '22px 24px', boxShadow: '0 2px 8px rgba(0,0,0,.04)' }}>
             <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -615,11 +667,20 @@ export default function Compare() {
                     <Tooltip
                       contentStyle={{ borderRadius: 10, fontSize: 12, border: '1px solid var(--neutral-200)', background: 'var(--bg-card)' }}
                       labelFormatter={v => new Date(v).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                      formatter={(v, name) => [`${v >= 0 ? '+' : ''}${v}%`, name]}
+                      formatter={(v, name, props) => {
+                        const idx = parseInt(props.dataKey.replace('asset', ''));
+                        return [`${v >= 0 ? '+' : ''}${v}%`, validAssets[idx]?.name || name];
+                      }}
                     />
-                    <Legend iconType="circle" wrapperStyle={{ fontSize: 12, fontWeight: 600, marginTop: 10 }} />
-                    <Line type="monotone" dataKey="left" name={left?.name || 'Asset 1'} stroke="var(--violet)" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
-                    <Line type="monotone" dataKey="right" name={right?.name || 'Asset 2'} stroke="var(--blue)" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+                    <Legend iconType="circle" wrapperStyle={{ fontSize: 12, fontWeight: 600, marginTop: 10 }} 
+                      formatter={(value) => {
+                        const idx = parseInt(value.replace('asset', ''));
+                        return validAssets[idx]?.name || value;
+                      }}
+                    />
+                    {validAssets.map((a, i) => (
+                      <Line key={i} type="monotone" dataKey={`asset${i}`} stroke={COLORS[i % COLORS.length]} strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+                    ))}
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -632,39 +693,28 @@ export default function Compare() {
         )}
 
         {/* AI Summary */}
-        {bothSelected && !loadingDetail && (
+        {isComparable && !loadingDetail && summary && (
           <div className="ai-panel" style={{ marginTop: '24px' }}>
             <div className="ai-panel-header">
               <Sparkles size={18} color="var(--violet)" />
               <div className="ai-panel-title" style={{ fontSize: '1rem' }}>Comparison Summary</div>
               <span className="badge badge-violet" style={{ marginLeft: 'auto' }}>Research Only</span>
             </div>
-            {sameAsset ? (
-              <p>You have selected the same {mode === 'funds' ? 'fund' : 'stock'} in both slots. Pick two different {mode === 'funds' ? 'funds' : 'stocks'} to see a comparison.</p>
-            ) : summary ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <p>
-                  Over {summary.rangeLabel.toLowerCase()}, <strong>{summary.leader.name}</strong> outperformed <strong>{summary.laggard.name}</strong> by {summary.gap} percentage points
-                  ({pct(summary.leaderMove)} vs {pct(summary.laggardMove)}).
-                  {summary.steadier && (
-                    ` ${summary.steadier.name} also showed steadier day-to-day movement (${summary.steadier === left ? summary.leftVol : summary.rightVol}% daily volatility vs ${summary.steadierOther === left ? summary.leftVol : summary.rightVol}% for ${summary.steadierOther.name}), suggesting a smoother ride for holders over this period.`
-                  )}
-                </p>
-                {summary.metricLines.length > 0 && (
-                  <div>
-                    <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-3)', marginBottom: '4px' }}>On the metrics you've selected:</div>
-                    <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '0.85rem', color: 'var(--text-2)', lineHeight: 1.7 }}>
-                      {summary.metricLines.map((line, i) => <li key={i}>{line}</li>)}
-                    </ul>
-                  </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <p>
+                Over {summary.rangeLabel.toLowerCase()}, <strong>{summary.leader.name}</strong> was the best performer, outperforming the laggard <strong>{summary.laggard.name}</strong> by {summary.gap} percentage points
+                ({pct(summary.leaderMove)} vs {pct(summary.laggardMove)}).
+                {summary.steadier && (
+                  ` ${summary.steadier.name} showed the steadiest day-to-day movement (${summary.lowestVol}% daily volatility), suggesting a smoother ride for holders over this period compared to the others.`
                 )}
-                <p style={{ fontSize: '0.82rem', color: 'var(--text-3)' }}>
-                  Past performance and lower volatility are not guarantees of future results — they reflect what happened in this specific window, which can change with market conditions.
-                </p>
-              </div>
-            ) : (
-              <p>Comparing <strong>{left.name}</strong> vs <strong>{right.name}</strong>. Not enough historical overlap to compute a performance gap for the selected range.</p>
-            )}
+              </p>
+              
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-3)' }}>
+                Past performance and lower volatility are not guarantees of future results — they reflect what happened in this specific window, which can change with market conditions.
+              </p>
+            </div>
+            
             <div className="ai-disclaimer" style={{ display: 'inline-flex', width: 'fit-content', marginTop: '10px' }}>
               <AlertCircle size={13} />
               <span>Source: NSE/BSE/NASDAQ listings, AMFI NAV feed, Yahoo Finance • Not investment advice</span>
@@ -672,7 +722,9 @@ export default function Compare() {
           </div>
         )}
       </div>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }
+      .compare-row-multi:hover { background: var(--bg-subtle); }
+      `}</style>
     </div>
   );
 }
