@@ -267,12 +267,12 @@ export default function Home({ onOpenAIChat }) {
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold mb-5 border border-blue-100 dark:border-blue-500/20">
                   <Sparkles size={13} className="text-blue-600 dark:text-blue-400" /> Next-Gen AI Financial Analyst
                 </span>
-                <h1 className="text-4xl md:text-5xl xl:text-[4rem] font-bold text-gray-900 dark:text-white tracking-tight leading-[1.1] mb-6 font-sans">
-                  Bull brings <span className="font-black text-transparent bg-clip-text bg-gradient-to-br from-[#D4AF37] to-[#B38728]">Prosperity.</span><br />
-                  Bear brings <span className="font-black text-transparent bg-clip-text bg-gradient-to-br from-[#2563EB] to-[#1D4ED8]">Opportunity.</span>
+                <h1 className="text-4xl md:text-5xl xl:text-6xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight leading-[1.15] mb-5 font-sans">
+                  Bull brings Prosperity.<br />
+                  Bear brings <span className="bg-gradient-to-r from-blue-50 to-blue-700 bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(to right, #3b82f6, #1d4ed8)' }}>Opportunity.</span>
                 </h1>
-                <p className="text-xl md:text-2xl text-gray-500 dark:text-gray-400 font-medium max-w-xl mb-10 leading-relaxed">
-                  And now, master both with the <span className="font-bold text-gray-900 dark:text-white">power of AI.</span>
+                <p className="text-xl md:text-2xl font-medium text-gray-500 dark:text-gray-400 max-w-xl mb-8 leading-relaxed">
+                  And now, master both with the power of AI.
                 </p>
                 <div className="flex flex-wrap gap-4 mb-6">
                   <motion.button
