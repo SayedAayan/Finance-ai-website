@@ -366,12 +366,12 @@ async function getTopNews() {
   // Sort by date descending
   uniqueArticles.sort((a, b) => b.publishedMs - a.publishedMs);
 
-  // Pre-filter articles by checking readability permissions in parallel
+  // Pre-filter articles by checking readability permissions in parallel (limited to 15 to save CPU)
   const readableArticles = [];
   const checks = await Promise.allSettled(
-    uniqueArticles.slice(0, 25).map(async (a) => {
+    uniqueArticles.slice(0, 15).map(async (a) => {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3500);
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
       try {
         const res = await fetch(a.link, {
           headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
@@ -383,7 +383,7 @@ async function getTopNews() {
         const doc = new JSDOM(html, { url: a.link });
         const reader = new Readability(doc.window.document);
         const article = reader.parse();
-        if (!article || !article.textContent || article.textContent.trim().length < 100) {
+        if (!article || !article.textContent || article.textContent.trim().length < 50) {
           throw new Error('Unreadable');
         }
         return a;
@@ -399,9 +399,11 @@ async function getTopNews() {
       readableArticles.push(result.value);
     }
   }
+  
+  const finalArticles = readableArticles.length >= 3 ? readableArticles : uniqueArticles;
 
-  // Keep top 20 readable
-  newsCache = { fetchedAt: Date.now(), articles: readableArticles.slice(0, 20) };
+  // Keep top 20
+  newsCache = { fetchedAt: Date.now(), articles: finalArticles.slice(0, 20) };
   return newsCache;
 }
 
