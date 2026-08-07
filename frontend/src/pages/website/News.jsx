@@ -183,11 +183,12 @@ Please structure your response into the following sections:
         {cmsConfig?.pages?.news?.features?.showMarketMovers && featured && (
           <div className="news-featured" onClick={() => openModal(featured)}>
             <div className="news-featured-img-wrap">
-              {featured.image
-                ? <img src={featured.image} alt="" onError={e => { e.target.style.display = 'none'; }}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }} />
-                : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Newspaper size={40} style={{ color: 'rgba(255,255,255,.12)' }} /></div>
-              }
+              <img 
+                src={featured.image || 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&q=80&w=800'} 
+                alt="" 
+                onError={e => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&q=80&w=800'; }}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }} 
+              />
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top,rgba(0,0,0,.35) 0%,transparent 45%)', pointerEvents: 'none' }} />
               <span style={{ position: 'absolute', top: 16, left: 16, background: 'rgba(99,102,241,.92)', backdropFilter: 'blur(6px)', color: 'white', fontSize: '0.65rem', fontWeight: 800, padding: '5px 12px', borderRadius: 20, letterSpacing: '.07em', textTransform: 'uppercase', boxShadow: '0 4px 12px rgba(99,102,241,.35)' }}>Top Story</span>
             </div>

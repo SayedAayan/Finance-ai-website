@@ -385,18 +385,16 @@ export default function Home({ onOpenAIChat }) {
                   className="bg-white dark:bg-gray-900 rounded-[22px] shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden cursor-pointer hover:shadow-md transition-all duration-300 grid grid-cols-1 md:grid-cols-3"
                   onClick={() => navigate('/news')}
                 >
-                  {featuredNews.image && (
-                    <div className="h-[200px] md:h-full overflow-hidden md:col-span-1">
-                      <img
-                        src={featuredNews.image}
-                        alt={featuredNews.title}
-                        onError={e => { e.target.parentElement.style.display = 'none'; }}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block', transition: 'transform 0.4s' }}
-                        onMouseEnter={e => { e.target.style.transform = 'scale(1.04)'; }}
-                        onMouseLeave={e => { e.target.style.transform = 'scale(1)'; }}
-                      />
-                    </div>
-                  )}
+                  <div className="h-[200px] md:h-full overflow-hidden md:col-span-1">
+                    <img
+                      src={featuredNews.image || 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&q=80&w=800'}
+                      alt={featuredNews.title}
+                      onError={e => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&q=80&w=800'; }}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block', transition: 'transform 0.4s' }}
+                      onMouseEnter={e => { e.target.style.transform = 'scale(1.04)'; }}
+                      onMouseLeave={e => { e.target.style.transform = 'scale(1)'; }}
+                    />
+                  </div>
                   <div className="p-5 md:p-7 flex flex-col justify-center gap-3 md:col-span-2">
                     <div className="flex items-center gap-2">
                       <span style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: 'white', fontSize: '0.6rem', fontWeight: 800, padding: '3px 10px', borderRadius: '20px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>TODAY'S TOP STORY</span>

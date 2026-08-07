@@ -312,7 +312,7 @@ async function getNewsFromGoogleRss() {
       const sourceMatch = item.title?.match(/ - ([^-]+)$/);
       articles.push({
         title: item.title?.replace(/ - [^-]+$/, '').trim(),
-        description: '',
+        description: (item.contentSnippet || item.content || '').replace(/<[^>]+>/g, '').trim(),
         source: sourceMatch ? sourceMatch[1].trim() : (item.creator || 'Google News'),
         link: item.link,
         image: null,
