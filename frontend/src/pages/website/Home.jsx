@@ -267,12 +267,12 @@ export default function Home({ onOpenAIChat }) {
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold mb-5 border border-blue-100 dark:border-blue-500/20">
                   <Sparkles size={13} className="text-blue-600 dark:text-blue-400" /> Next-Gen AI Financial Analyst
                 </span>
-                <h1 className="text-4xl md:text-5xl xl:text-6xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight leading-[1.15] mb-5 font-sans">
+                <h1 className="text-4xl md:text-5xl xl:text-6xl font-black text-gray-900 dark:text-gray-100 tracking-tight leading-[1.1] mb-4 font-sans">
                   Bull brings Prosperity.<br />
-                  Bear brings <span className="bg-gradient-to-r from-blue-50 to-blue-700 bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(to right, #3b82f6, #1d4ed8)' }}>Opportunity.</span>
+                  Bear brings Opportunity.
                 </h1>
-                <p className="text-xl md:text-2xl font-medium text-gray-500 dark:text-gray-400 max-w-xl mb-8 leading-relaxed">
-                  And now, master both with the power of AI.
+                <p className="text-xl md:text-2xl text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500 font-bold max-w-xl mb-8 leading-relaxed">
+                  Master both with the power of AI.
                 </p>
                 <div className="flex flex-wrap gap-4 mb-6">
                   <motion.button
