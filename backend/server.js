@@ -1488,6 +1488,36 @@ app.get('/api/news', async (req, res) => {
   }
 });
 
+app.get('/api/read-article', async (req, res) => {
+  try {
+    const url = req.query.url;
+    if (!url) return res.status(400).json({ error: 'url required' });
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
+    try {
+      const fetchRes = await fetch(url, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      if (!fetchRes.ok) throw new Error('Failed to fetch');
+      
+      const html = await fetchRes.text();
+      const doc = new JSDOM(html, { url });
+      const reader = new Readability(doc.window.document);
+      const article = reader.parse();
+      res.json({ article });
+    } catch (e) {
+      clearTimeout(timeoutId);
+      throw e;
+    }
+  } catch (err) {
+    res.json({ error: err.message });
+  }
+});
+
 app.get('/api/admin/news', async (req, res) => {
   try {
     const { articles, fetchedAt } = await getTopNews();

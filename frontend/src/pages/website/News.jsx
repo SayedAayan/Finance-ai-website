@@ -129,9 +129,7 @@ Please structure your response into the following sections:
         setBody(p.map(t => '<p>' + t.trim() + '</p>').join(''));
       }
     } catch {
-      setModal(null);
-      window.open(a.link, '_blank', 'noopener,noreferrer');
-      return;
+      setBody(`<div style="padding: 2rem 0; text-align: center; color: var(--text-2);"><p style="margin-bottom: 1rem; font-size: 1.1rem;">We couldn't load the full text for this article automatically.</p><a href="${a.link}" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 10px 20px; background: var(--bg-subtle); border-radius: 8px; color: var(--text-1); font-weight: 600; text-decoration: none;">Read full story on ${a.source} ➔</a></div>`);
     } finally { setBodyLoading(false); }
   }
 
