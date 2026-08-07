@@ -288,17 +288,14 @@ async function getNewsFromNewsApi() {
 }
 
 async function getNewsFromGoogleRss() {
-  const queries = [
-    'Indian stock market Nifty Sensex',
-    'mutual fund India AMFI NAV',
-    'NSE BSE India company results',
-    'RBI SEBI markets India'
+  const feeds = [
+    'https://www.livemint.com/rss/markets',
+    'https://www.livemint.com/rss/companies',
+    'https://www.livemint.com/rss/industry'
   ];
 
   const settled = await Promise.allSettled(
-    queries.map(q => rssParser.parseURL(
-      `https://news.google.com/rss/search?q=${encodeURIComponent(q + ' finance')}&hl=en-IN&gl=IN&ceid=IN:en`
-    ))
+    feeds.map(feedUrl => rssParser.parseURL(feedUrl))
   );
 
   const seen = new Set();
@@ -310,10 +307,14 @@ async function getNewsFromGoogleRss() {
       if (!key || seen.has(key)) continue;
       seen.add(key);
       const sourceMatch = item.title?.match(/ - ([^-]+)$/);
+      let sourceName = sourceMatch ? sourceMatch[1].trim() : (item.creator || 'Financial News');
+      if (item.link?.includes('livemint')) sourceName = 'Livemint';
+      if (item.link?.includes('yahoo')) sourceName = 'Yahoo Finance';
+
       articles.push({
         title: item.title?.replace(/ - [^-]+$/, '').trim(),
-        description: (item.contentSnippet || item.content || '').replace(/<[^>]+>/g, '').trim(),
-        source: sourceMatch ? sourceMatch[1].trim() : (item.creator || 'Google News'),
+        description: (item.contentSnippet || item.content || '').replace(/<[^>]+>/g, '').trim().substring(0, 300),
+        source: sourceName,
         link: item.link,
         image: null,
         publishedAt: item.pubDate,
