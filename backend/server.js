@@ -366,8 +366,42 @@ async function getTopNews() {
   // Sort by date descending
   uniqueArticles.sort((a, b) => b.publishedMs - a.publishedMs);
 
+  // Pre-filter articles by checking readability permissions in parallel
+  const readableArticles = [];
+  const checks = await Promise.allSettled(
+    uniqueArticles.slice(0, 25).map(async (a) => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
+      try {
+        const res = await fetch(a.link, {
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        if (!res.ok) throw new Error('Bad status');
+        const html = await res.text();
+        const doc = new JSDOM(html, { url: a.link });
+        const reader = new Readability(doc.window.document);
+        const article = reader.parse();
+        if (!article || !article.textContent || article.textContent.trim().length < 100) {
+          throw new Error('Unreadable');
+        }
+        return a;
+      } catch (err) {
+        clearTimeout(timeoutId);
+        throw err;
+      }
+    })
+  );
+
+  for (const result of checks) {
+    if (result.status === 'fulfilled') {
+      readableArticles.push(result.value);
+    }
+  }
+
   // Keep top 20 readable
-  newsCache = { fetchedAt: Date.now(), articles: uniqueArticles.slice(0, 20) };
+  newsCache = { fetchedAt: Date.now(), articles: readableArticles.slice(0, 20) };
   return newsCache;
 }
 
