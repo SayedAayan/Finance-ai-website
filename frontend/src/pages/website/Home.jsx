@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Sparkles, Send, ArrowRight, BookOpen, TrendingUp, BarChart2, Plus, ArrowUpRight, TrendingDown, Activity, Newspaper, Landmark, Mic, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Sparkles, Send, ArrowRight, BookOpen, TrendingUp, BarChart2, Plus, ArrowUpRight, TrendingDown, Activity, Newspaper, Landmark, Mic, ChevronLeft, ChevronRight, ShieldCheck, Scale } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { mockStocks, mockNews } from '../../data/mockData';
@@ -376,14 +376,14 @@ export default function Home({ onOpenAIChat }) {
                 <style>{`div::-webkit-scrollbar { display: none; }`}</style>
                 <motion.div onClick={() => navigate('/investors-strategy')} whileHover={{ y: -6, scale: 1.01, borderColor: '#f97316', boxShadow: '0 10px 30px rgba(249,115,22,0.08)' }} transition={{ duration: 0.3, ease: 'easeOut' }} className="min-w-[280px] w-[280px] md:min-w-[320px] shrink-0 snap-start bg-white dark:bg-gray-900 border border-gray-200/60 dark:border-gray-800 shadow-sm p-5 rounded-2xl hover:shadow-xl hover:border-orange-200 dark:hover:border-orange-900/50 transition-all flex flex-col items-start cursor-pointer group">
                   <motion.div whileHover={{ rotate: 10, scale: 1.1 }} className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 flex items-center justify-center mb-4 group-hover:bg-orange-600 group-hover:text-white transition-colors duration-300">
-                    <TrendingUp size={20} />
+                    <ShieldCheck size={20} />
                   </motion.div>
                   <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-2 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">Investors Strategy</h3>
                   <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">Learn the top formulas and strategies used by successful investors to outperform the market.</p>
                 </motion.div>
                 <motion.div onClick={() => navigate('/compare')} whileHover={{ y: -6, scale: 1.01, borderColor: '#3b82f6', boxShadow: '0 10px 30px rgba(37,99,235,0.08)' }} transition={{ duration: 0.3, ease: 'easeOut' }} className="min-w-[280px] w-[280px] md:min-w-[320px] shrink-0 snap-start bg-white dark:bg-gray-900 border border-gray-200/60 dark:border-gray-800 shadow-sm p-5 rounded-2xl hover:shadow-xl hover:border-blue-200 dark:hover:border-blue-900/50 transition-all flex flex-col items-start cursor-pointer group">
                   <motion.div whileHover={{ rotate: -10, scale: 1.1 }} className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
-                    <Activity size={20} />
+                    <Scale size={20} />
                   </motion.div>
                   <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Technical Comparison</h3>
                   <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">Run side-by-side comparisons of multiple tickers to analyze price action, returns, and fundamental valuation metrics.</p>
