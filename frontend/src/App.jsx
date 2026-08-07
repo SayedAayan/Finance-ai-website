@@ -16,6 +16,7 @@ import WealthBucket from './pages/website/WealthBucket';
 import AmcDatabase from './pages/website/AmcDatabase';
 import Login from './pages/website/Login';
 import Superadmin from './pages/admin/Superadmin';
+import InvestorsStrategy from './pages/website/InvestorsStrategy';
 import Checkout from './pages/website/Checkout';
 import AIChatSidebar from './components/features/AIChatSidebar';
 
@@ -64,6 +65,7 @@ function Layout() {
           <Route path="/watchlist" element={<Watchlist />} />
           <Route path="/markets" element={<Markets />} />
           <Route path="/wealth" element={<WealthBucket />} />
+          <Route path="/investors-strategy" element={<InvestorsStrategy />} />
           <Route path="/amcs" element={<AmcDatabase />} />
           <Route path="/mutual-funds" element={<AmcDatabase />} />
           <Route path="/news" element={<News />} />

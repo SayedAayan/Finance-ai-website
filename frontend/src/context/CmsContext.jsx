@@ -22,7 +22,8 @@ export const defaultCmsConfig = {
       { id: '5', label: 'Others ▾', subItems: [
         { id: '5-1', label: 'Markets Overview', path: '/markets' },
         { id: '5-3', label: 'Stock Profile', path: '/stock' },
-        { id: '5-4', label: 'Fund Profile', path: '/fund' }
+        { id: '5-4', label: 'Fund Profile', path: '/fund' },
+        { id: '5-5', label: 'Investors Strategy', path: '/investors-strategy' }
       ]}
     ],
     tickers: ['NIFTY 50', 'SENSEX', 'NIFTY BANK', 'USDINR=X'],
