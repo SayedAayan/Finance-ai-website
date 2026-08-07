@@ -268,8 +268,8 @@ export default function Home({ onOpenAIChat }) {
                   <Sparkles size={13} className="text-blue-600 dark:text-blue-400" /> Next-Gen AI Financial Analyst
                 </span>
                 <h1 className="text-4xl md:text-5xl xl:text-[3.5rem] font-extrabold text-gray-900 dark:text-white tracking-tight leading-[1.15] mb-6 font-sans">
-                  Bull brings <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-green-600">Prosperity.</span><br />
-                  Bear brings <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Opportunity.</span>
+                  Bull brings <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-900 to-blue-700 dark:from-blue-600 dark:to-blue-400">Prosperity.</span><br />
+                  Bear brings <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-red-500 dark:from-red-500 dark:to-red-400">Opportunity.</span>
                 </h1>
                 <p className="text-xl md:text-2xl text-gray-500 dark:text-gray-400 font-medium max-w-xl mb-10 leading-relaxed">
                   And now, master both with the <span className="font-bold text-gray-900 dark:text-white">power of AI.</span>
