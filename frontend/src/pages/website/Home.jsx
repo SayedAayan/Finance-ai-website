@@ -352,7 +352,7 @@ export default function Home({ onOpenAIChat }) {
                   <motion.div whileHover={{ rotate: 10, scale: 1.1 }} className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
                     <Sparkles size={20} />
                   </motion.div>
-                  <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Stockbuzz AI</h3>
+                  <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Whatsapp Alert</h3>
                   <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">Context-aware conversational agent that answers financial queries, formats data, and tracks market sentiment.</p>
                 </motion.div>
                 <motion.div onClick={() => navigate('/compare')} whileHover={{ y: -6, scale: 1.01, borderColor: '#3b82f6', boxShadow: '0 10px 30px rgba(37,99,235,0.08)' }} transition={{ duration: 0.3, ease: 'easeOut' }} className="bg-white dark:bg-gray-900 border border-gray-200/60 dark:border-gray-800 shadow-sm p-5 rounded-2xl hover:shadow-xl hover:border-blue-200 dark:hover:border-blue-900/50 transition-all flex flex-col items-start cursor-pointer group">
