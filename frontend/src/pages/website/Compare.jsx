@@ -1,13 +1,13 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Line, LineChart, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
-import { BarChart2, TrendingUp, Sparkles, AlertCircle, ArrowRight, Search, Loader2, Plus, X, LineChart as LineChartIcon, SlidersHorizontal, Trash2 } from 'lucide-react';
+import { BarChart2, TrendingUp, Sparkles, AlertCircle, ArrowRight, Search, Loader2, Plus, X, LineChart as LineChartIcon, SlidersHorizontal, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useAuth } from '../../context/AuthContext';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
-const COLORS = ['var(--violet)', 'var(--blue)', 'var(--emerald)', 'var(--amber)', 'var(--rose)'];
+const COLORS = ['var(--violet)', 'var(--blue)', 'var(--green)', 'var(--orange)', 'var(--red)', 'var(--text-1)'];
 
 function isBetter(val1, val2, lowerIsBetter = false) {
   if (val1 == null || val2 == null || val1 === val2) return [null, null];
@@ -359,7 +359,7 @@ export default function Compare() {
   };
 
   const addAsset = () => {
-    if (assets.length < 5) {
+    if (assets.length < 6) {
       setAssets([...assets, null]);
       setDetails([...details, null]);
       setStats([...stats, null]);
@@ -514,37 +514,61 @@ export default function Compare() {
     return { leader, laggard, gap, leaderMove: maxMove, laggardMove: minMove, rangeLabel, steadier, lowestVol };
   }, [isComparable, chartData, validAssets, rangeDef]);
 
+  const tableScrollRef = useRef(null);
+  const scrollTable = (direction) => {
+    if (tableScrollRef.current) {
+      const scrollAmount = 250;
+      tableScrollRef.current.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
+    }
+  };
+
+
   return (
     <div style={{ paddingBottom: '4rem' }}>
       <div className="hero" style={{ padding: '30px 0' }}>
         <div className="container">
           <h2 style={{ marginBottom: '8px' }}>Compare</h2>
           <p style={{ color: 'var(--text-2)', marginBottom: '24px' }}>Side-by-side analysis — spot differences at a glance.</p>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button onClick={() => handleModeChange('funds')} className={`btn btn-sm ${mode === 'funds' ? 'btn-primary' : 'btn-outline'}`}>
-              <BarChart2 size={14} /> Mutual Funds
-            </button>
-            <button onClick={() => handleModeChange('stocks')} className={`btn btn-sm ${mode === 'stocks' ? 'btn-primary' : 'btn-outline'}`}>
-              <TrendingUp size={14} /> Stocks
-            </button>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button onClick={() => handleModeChange('funds')} className={`btn btn-sm ${mode === 'funds' ? 'btn-primary' : 'btn-outline'}`}>
+                <BarChart2 size={14} /> Mutual Funds
+              </button>
+              <button onClick={() => handleModeChange('stocks')} className={`btn btn-sm ${mode === 'stocks' ? 'btn-primary' : 'btn-outline'}`}>
+                <TrendingUp size={14} /> Stocks
+              </button>
+            </div>
+            
+            {assets.length > 2 && (
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button onClick={() => scrollTable('left')} className="btn btn-outline" style={{ borderRadius: '50%', width: '36px', height: '36px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <ChevronLeft size={18} />
+                </button>
+                <button onClick={() => scrollTable('right')} className="btn btn-outline" style={{ borderRadius: '50%', width: '36px', height: '36px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       <div className="container" style={{ paddingTop: '32px' }}>
-        <div className="compare-table" style={{ borderRadius: '18px', overflow: 'visible', display: 'flex', flexDirection: 'column' }}>
+        <div className="compare-table-wrapper" style={{ position: 'relative' }}>
+          <div ref={tableScrollRef} style={{ overflowX: 'auto', paddingBottom: '8px' }} className="hide-scrollbar">
+            <div className="compare-table" style={{ borderRadius: '18px', display: 'flex', flexDirection: 'column', minWidth: 'max-content' }}>
 
-          <div style={{ display: 'flex', borderBottom: '1px solid var(--border)' }}>
-            <div className="compare-col-header" style={{ width: '220px', flexShrink: 0, background: 'var(--bg-subtle)', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap: '10px', fontWeight: 700, paddingLeft: '16px', color: 'var(--text-3)', fontSize: '0.8rem', textTransform: 'uppercase', borderRadius: '18px 0 0 0' }}>
-              <span>Select Assets to Compare</span>
-              {anySelected && (
-                <div style={{ textTransform: 'none' }}>
-                  <MetricFilterMenu allMetrics={metrics} activeKeys={activeKeys} onToggle={toggleMetric} />
+              <div style={{ display: 'flex', borderBottom: '1px solid var(--border)' }}>
+                <div className="compare-col-header" style={{ width: '220px', flexShrink: 0, background: 'var(--bg-subtle)', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap: '10px', fontWeight: 700, paddingLeft: '16px', color: 'var(--text-3)', fontSize: '0.8rem', textTransform: 'uppercase', borderRadius: '18px 0 0 0', position: 'sticky', left: 0, zIndex: 20 }}>
+                  <span>Select Assets to Compare</span>
+                  {anySelected && (
+                    <div style={{ textTransform: 'none' }}>
+                      <MetricFilterMenu allMetrics={metrics} activeKeys={activeKeys} onToggle={toggleMetric} />
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            <div style={{ display: 'flex', flexGrow: 1, overflowX: 'auto' }}>
+                <div style={{ display: 'flex', flexGrow: 1 }}>
               {assets.map((asset, index) => (
                 <div key={index} style={{ flex: 1, minWidth: '220px', borderLeft: '1px solid var(--border)', padding: '16px', position: 'relative', zIndex: 10 - index }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
@@ -568,9 +592,9 @@ export default function Compare() {
                 </div>
               ))}
               
-              {assets.length < 5 && (
-                <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', padding: '16px', borderLeft: '1px solid var(--border)' }}>
-                  <button onClick={addAsset} className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '6px', borderRadius: '10px' }}>
+              {assets.length < 6 && (
+                <div style={{ width: '160px', flexShrink: 0, display: 'flex', alignItems: 'center', padding: '16px', borderLeft: '1px solid var(--border)' }}>
+                  <button onClick={addAsset} className="btn btn-outline w-full" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', borderRadius: '10px' }}>
                     <Plus size={16} /> Add Asset
                   </button>
                 </div>
@@ -596,19 +620,21 @@ export default function Compare() {
               const classes = evaluateNValues(vals, m.lowerBetter);
               return (
                 <div key={m.key} style={{ display: 'flex', borderBottom: '1px solid var(--border)' }} className="compare-row-multi">
-                  <div className="compare-label-cell" style={{ width: '220px', flexShrink: 0, padding: '14px 16px', fontWeight: 600, fontSize: '0.85rem' }}>{m.label}</div>
-                  <div style={{ display: 'flex', flexGrow: 1, overflowX: 'auto' }}>
+                  <div className="compare-label-cell" style={{ width: '220px', flexShrink: 0, padding: '14px 16px', fontWeight: 600, fontSize: '0.85rem', position: 'sticky', left: 0, zIndex: 20, background: 'var(--bg-card)', borderRight: '1px solid var(--border)' }}>{m.label}</div>
+                  <div style={{ display: 'flex', flexGrow: 1 }}>
                     {vals.map((v, i) => (
                       <div key={i} style={{ flex: 1, minWidth: '220px', padding: '14px 16px', borderLeft: '1px solid var(--border)', fontSize: '0.9rem' }} className={`compare-val-cell ${classes[i]}`}>
                         {v ?? '—'}
                         {classes[i] === 'winner' && <span style={{ marginLeft: '8px', fontSize: '0.75rem' }}>▲</span>}
                       </div>
                     ))}
-                    {assets.length < 5 && <div style={{ width: '130px', flexShrink: 0, borderLeft: '1px solid var(--border)' }}></div>}
+                    {assets.length < 6 && <div style={{ width: '160px', flexShrink: 0, borderLeft: '1px solid var(--border)' }}></div>}
                   </div>
                 </div>
               );
             })}
+          </div>
+            </div>
           </div>
         </div>
 
