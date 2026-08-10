@@ -183,7 +183,7 @@ export default function InvestorsStrategy() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3 }}
-                className="white-bg-glass-card dark:bg-gray-900 rounded-[32px]"
+                className="apple-glass-card dark:bg-gray-900 rounded-[32px]"
               >
                 {/* Header Area */}
                 <div className={`p-8 md:p-10 border-b border-gray-100 dark:border-gray-800 relative overflow-hidden`}>

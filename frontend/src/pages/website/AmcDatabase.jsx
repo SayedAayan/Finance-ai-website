@@ -136,9 +136,9 @@ export default function AmcDatabase() {
             {!amcsLoading && !amcsError && (
               <>
                 <p className="text-sm text-gray-400 dark:text-gray-500 mb-4">{filteredAmcs.length} of {amcs.length} AMFI-registered AMCs</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="responsive-grid">
                   {filteredAmcs.map((amc) => (
-                    <div key={amc.name} className="white-bg-glass-card dark:bg-gray-900 rounded-2xl">
+                    <div key={amc.name} className="apple-glass-card dark:bg-gray-900 rounded-2xl">
                       <button
                         onClick={() => toggleAmc(amc.name)}
                         className="w-full flex items-center justify-between gap-3 p-5 text-left hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors"
@@ -221,13 +221,13 @@ export default function AmcDatabase() {
             {!companiesLoading && !companiesError && (
               <>
                 <p className="text-sm text-gray-400 dark:text-gray-500 mb-4">{filteredCompanies.length} companies</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="responsive-grid">
                   {filteredCompanies.map((c) => {
                     const isPositive = parseFloat(c.changePercent) >= 0;
                     return (
                       <div
                         key={c.ticker}
-                        className="white-bg-glass-card dark:bg-gray-900 rounded-2xl p-5 transition-all group"
+                        className="apple-glass-card dark:bg-gray-900 rounded-2xl p-5 transition-all group"
                       >
                         <div className="flex items-start justify-between gap-2 mb-3">
                           <div className="min-w-0">

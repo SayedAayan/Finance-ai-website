@@ -47,16 +47,16 @@
     --neutral-200: #DDE3ED;
 
     /* Text */
-    --text-1: #0D1B2E;
+    --text-1: #1D1D1F;
     /* headings */
-    --text-2: #3A4A60;
+    --text-2: #86868B;
     /* body */
-    --text-3: #7A8DA8;
+    --text-3: #86868B;
     /* captions, labels */
     --text-inv: #FFFFFF;
 
     /* Brand */
-    --blue: #1A56DB;
+    --blue: #0071E3;
     --blue-light: #EEF3FE;
     --blue-mid: #3B6FE0;
 
@@ -151,15 +151,31 @@
 
   html {
     scroll-behavior: smooth;
+    max-width: 100vw;
+    overflow-x: hidden;
   }
 
   body {
     font-family: var(--font-body);
     background: var(--bg-page);
-    color: var(--text-2);
+    background-color: #F5F5F7 !important;
+    color: var(--text-1);
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
-    font-size: 15px;
+    font-size: clamp(14px, 1vw + 10px, 16px);
+    max-width: 100vw;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  h1 { font-size: clamp(1.8rem, 3vw + 1rem, 2.5rem); line-height: 1.2; }
+  h2 { font-size: clamp(1.5rem, 2vw + 1rem, 2rem); line-height: 1.3; }
+  h3 { font-size: clamp(1.2rem, 1.5vw + 1rem, 1.5rem); line-height: 1.4; }
+  
+  img, svg, video, canvas {
+    max-width: 100%;
+    height: auto;
+    object-fit: contain;
   }
 
   a {
@@ -175,11 +191,33 @@
   }
 
   input,
-  textarea {
+  textarea,
+  select {
     font-family: var(--font-body);
-    border: none;
-    background: none;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 12px;
+    padding: 10px 16px;
+    color: var(--text-1);
     outline: none;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
+  }
+
+  input:focus,
+  textarea:focus,
+  select:focus {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15), inset 0 1px 2px rgba(0,0,0,0.02);
+  }
+
+  /* Optional: Reset search input defaults */
+  input[type="search"]::-webkit-search-decoration,
+  input[type="search"]::-webkit-search-cancel-button {
+    -webkit-appearance: none;
   }
 
   img {
@@ -2224,30 +2262,67 @@ html.dark .ai-reply-card tr:hover td {
   background-color: rgba(139, 92, 246, 0.06);
 }
 
-.white-bg-glass-card {
-  /* Off-white translucent tint for subtle distinction on white */
+.apple-glass-card {
   background: rgba(255, 255, 255, 0.75);
-  
-  /* Apple glass blur and clarity boost */
   backdrop-filter: blur(25px) saturate(180%);
   -webkit-backdrop-filter: blur(25px) saturate(180%);
-  
-  /* Triple-layered depth: ambient shadow, edge ring, top light reflection */
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 20px;
   box-shadow: 
     0 10px 30px -5px rgba(0, 0, 0, 0.05),
     0 0 0 1px rgba(0, 0, 0, 0.03),
     inset 0 1px 1px 0 rgba(255, 255, 255, 0.9);
-    
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
 }
 
-.white-bg-glass-card:hover {
-  background: rgba(255, 255, 255, 0.85);
-  box-shadow: 
-    0 20px 40px -10px rgba(0, 0, 0, 0.08),
-    0 0 0 1px rgba(0, 0, 0, 0.04),
-    inset 0 1px 2px 0 rgba(255, 255, 255, 1);
+@media (max-width: 480px) {
+  .apple-glass-card {
+    border-radius: 16px;
+  }
+}
+
+.apple-glass-card:hover {
   transform: translateY(-3px);
+  box-shadow: 
+    0 15px 35px -5px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(0, 0, 0, 0.04),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 1);
+}
+
+.apple-glass-card:active {
+  transform: scale(0.98);
+}
+
+.responsive-grid {
+  display: grid;
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+/* Mobile */
+@media (max-width: 639px) {
+  .responsive-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 16px;
+  }
+}
+
+/* Tablet */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .responsive-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    padding: 24px;
+  }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+  .responsive-grid {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
+    padding: 32px;
+  }
 }

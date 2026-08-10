@@ -316,7 +316,7 @@ export default function Home({ onOpenAIChat }) {
               <motion.div
                 animate={{ y: [0, -3, 0] }}
                 transition={{ duration: 5.5, repeat: Infinity, ease: 'easeInOut' }}
-                className="white-bg-glass-card lg:col-span-5 w-full rounded-3xl p-6 relative"
+                className="apple-glass-card lg:col-span-5 w-full rounded-3xl p-6 relative"
               >
                 <div className="absolute top-0 right-0 -mt-3 -mr-3 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[11px] font-bold px-3 py-1 rounded-full border border-indigo-100 dark:border-indigo-500/20 shadow-sm">
                   Live Terminal
@@ -372,7 +372,7 @@ export default function Home({ onOpenAIChat }) {
             </motion.div>
 
             {/* SERVICES & FEATURES SUMMARY CARDS */}
-            <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} variants={itemVariants} className="white-bg-glass-card w-full py-10 px-6 sm:px-10 mb-10 rounded-[32px]">
+            <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} variants={itemVariants} className="apple-glass-card w-full py-10 px-6 sm:px-10 mb-10 rounded-[32px]">
               <div className="flex items-end justify-between mb-8">
                 <div className="text-left">
                   <span className="text-xs font-extrabold uppercase tracking-wider text-blue-600 dark:text-blue-400">Features & Services</span>
@@ -389,21 +389,21 @@ export default function Home({ onOpenAIChat }) {
               </div>
               <div ref={sliderRef} className="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 <style>{`div::-webkit-scrollbar { display: none; }`}</style>
-                <motion.div onClick={() => navigate('/investors-strategy')} whileHover={{ y: -6, scale: 1.01, boxShadow: '0 16px 40px rgba(249,115,22,0.14)' }} transition={{ duration: 0.3, ease: 'easeOut' }} className="white-bg-glass-card min-w-[280px] w-[280px] md:min-w-[320px] shrink-0 snap-start p-5 rounded-2xl transition-all flex flex-col items-start cursor-pointer group">
+                <motion.div onClick={() => navigate('/investors-strategy')} whileHover={{ y: -6, scale: 1.01, boxShadow: '0 16px 40px rgba(249,115,22,0.14)' }} transition={{ duration: 0.3, ease: 'easeOut' }} className="apple-glass-card min-w-[280px] w-[280px] md:min-w-[320px] shrink-0 snap-start p-5 rounded-2xl transition-all flex flex-col items-start cursor-pointer group">
                   <motion.div whileHover={{ rotate: 10, scale: 1.1 }} className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 flex items-center justify-center mb-4 group-hover:bg-orange-600 group-hover:text-white transition-colors duration-300">
                     <ShieldCheck size={20} />
                   </motion.div>
                   <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-2 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">Investors Strategy</h3>
                   <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">Learn the top formulas and strategies used by successful investors to outperform the market.</p>
                 </motion.div>
-                <motion.div onClick={() => navigate('/compare')} whileHover={{ y: -6, scale: 1.01, boxShadow: '0 16px 40px rgba(37,99,235,0.14)' }} transition={{ duration: 0.3, ease: 'easeOut' }} className="white-bg-glass-card min-w-[280px] w-[280px] md:min-w-[320px] shrink-0 snap-start p-5 rounded-2xl transition-all flex flex-col items-start cursor-pointer group">
+                <motion.div onClick={() => navigate('/compare')} whileHover={{ y: -6, scale: 1.01, boxShadow: '0 16px 40px rgba(37,99,235,0.14)' }} transition={{ duration: 0.3, ease: 'easeOut' }} className="apple-glass-card min-w-[280px] w-[280px] md:min-w-[320px] shrink-0 snap-start p-5 rounded-2xl transition-all flex flex-col items-start cursor-pointer group">
                   <motion.div whileHover={{ rotate: -10, scale: 1.1 }} className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
                     <Scale size={20} />
                   </motion.div>
                   <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Technical Comparison</h3>
                   <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">Run side-by-side comparisons of multiple tickers to analyze price action, returns, and fundamental valuation metrics.</p>
                 </motion.div>
-                <motion.div onClick={() => navigate('/watchlist')} whileHover={{ y: -6, scale: 1.01, boxShadow: '0 16px 40px rgba(22,163,74,0.14)' }} transition={{ duration: 0.3, ease: 'easeOut' }} className="white-bg-glass-card min-w-[280px] w-[280px] md:min-w-[320px] shrink-0 snap-start p-5 rounded-2xl transition-all flex flex-col items-start cursor-pointer group">
+                <motion.div onClick={() => navigate('/watchlist')} whileHover={{ y: -6, scale: 1.01, boxShadow: '0 16px 40px rgba(22,163,74,0.14)' }} transition={{ duration: 0.3, ease: 'easeOut' }} className="apple-glass-card min-w-[280px] w-[280px] md:min-w-[320px] shrink-0 snap-start p-5 rounded-2xl transition-all flex flex-col items-start cursor-pointer group">
                   <motion.div whileHover={{ rotate: 10, scale: 1.1 }} className="w-10 h-10 rounded-xl bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 flex items-center justify-center mb-4 group-hover:bg-green-600 group-hover:text-white transition-colors duration-300">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
                       <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
@@ -412,14 +412,14 @@ export default function Home({ onOpenAIChat }) {
                   <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-2 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">Whatsapp Alert</h3>
                   <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">Get daily market insights, personalized stock alerts, and real-time updates directly on your WhatsApp.</p>
                 </motion.div>
-                <motion.div onClick={() => navigate('/mutual-funds')} whileHover={{ y: -6, scale: 1.01, boxShadow: '0 16px 40px rgba(16,185,129,0.14)' }} transition={{ duration: 0.3, ease: 'easeOut' }} className="white-bg-glass-card min-w-[280px] w-[280px] md:min-w-[320px] shrink-0 snap-start p-5 rounded-2xl transition-all flex flex-col items-start cursor-pointer group">
+                <motion.div onClick={() => navigate('/mutual-funds')} whileHover={{ y: -6, scale: 1.01, boxShadow: '0 16px 40px rgba(16,185,129,0.14)' }} transition={{ duration: 0.3, ease: 'easeOut' }} className="apple-glass-card min-w-[280px] w-[280px] md:min-w-[320px] shrink-0 snap-start p-5 rounded-2xl transition-all flex flex-col items-start cursor-pointer group">
                   <motion.div whileHover={{ rotate: 10, scale: 1.1 }} className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-4 group-hover:bg-emerald-600 group-hover:text-white transition-colors duration-300">
                     <Landmark size={20} />
                   </motion.div>
                   <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">AMFI Fund Explorer</h3>
                   <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">Direct AMFI API connection to search and browse historical NAV prices across major Indian mutual fund houses.</p>
                 </motion.div>
-                <motion.div onClick={() => navigate('/watchlist')} whileHover={{ y: -6, scale: 1.01, boxShadow: '0 16px 40px rgba(99,102,241,0.14)' }} transition={{ duration: 0.3, ease: 'easeOut' }} className="white-bg-glass-card min-w-[280px] w-[280px] md:min-w-[320px] shrink-0 snap-start p-5 rounded-2xl transition-all flex flex-col items-start cursor-pointer group">
+                <motion.div onClick={() => navigate('/watchlist')} whileHover={{ y: -6, scale: 1.01, boxShadow: '0 16px 40px rgba(99,102,241,0.14)' }} transition={{ duration: 0.3, ease: 'easeOut' }} className="apple-glass-card min-w-[280px] w-[280px] md:min-w-[320px] shrink-0 snap-start p-5 rounded-2xl transition-all flex flex-col items-start cursor-pointer group">
                   <motion.div whileHover={{ rotate: -10, scale: 1.1 }} className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-4 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300">
                     <BookOpen size={20} />
                   </motion.div>
@@ -432,7 +432,7 @@ export default function Home({ onOpenAIChat }) {
             {cmsConfig?.pages?.home?.features?.showFeaturedNews && featuredNews && (
               <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} variants={itemVariants} className="w-full mb-6">
                 <div
-                  className="white-bg-glass-card rounded-[22px] cursor-pointer hover:shadow-md transition-all duration-300 grid grid-cols-1 md:grid-cols-3"
+                  className="apple-glass-card rounded-[22px] cursor-pointer hover:shadow-md transition-all duration-300 grid grid-cols-1 md:grid-cols-3"
                   onClick={() => navigate('/news')}
                 >
                   <div className="h-[200px] md:h-full overflow-hidden md:col-span-1">
@@ -463,9 +463,9 @@ export default function Home({ onOpenAIChat }) {
               </motion.div>
             )}
 
-            <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} variants={itemVariants} className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[24px] mb-12">
+            <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} variants={itemVariants} className="w-full responsive-grid mb-12">
               {cmsConfig?.pages?.home?.features?.showTrendingStocks && (
-                <motion.div whileHover={{ y: -6, scale: 1.01, boxShadow: '0 10px 30px rgba(37,99,235,0.08)' }} transition={{ duration: 0.3, ease: 'easeOut' }} className="white-bg-glass-card rounded-[22px] p-[24px] h-[290px] transition-all duration-300 flex flex-col justify-center cursor-default">
+                <motion.div whileHover={{ y: -6, scale: 1.01, boxShadow: '0 10px 30px rgba(37,99,235,0.08)' }} transition={{ duration: 0.3, ease: 'easeOut' }} className="apple-glass-card rounded-[22px] p-[24px] h-[290px] transition-all duration-300 flex flex-col justify-center cursor-default">
                   <div className="flex justify-between items-center mb-5">
                     <h3 className="font-bold text-textMain dark:text-gray-100 flex items-center gap-2"><span className="text-xl">🔥</span> Trending Stocks</h3>
                     <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => navigate('/markets')} className="text-primary dark:text-blue-400 text-xs font-bold bg-blue-50 dark:bg-blue-500/10 px-3 py-1 rounded-full hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors">View all</motion.button>
@@ -493,7 +493,7 @@ export default function Home({ onOpenAIChat }) {
               )}
 
               {cmsConfig?.pages?.home?.features?.showMarketMovers && (
-                <motion.div whileHover={{ y: -6, scale: 1.01, boxShadow: '0 10px 30px rgba(37,99,235,0.08)' }} transition={{ duration: 0.3, ease: 'easeOut' }} className="white-bg-glass-card rounded-[22px] p-[24px] h-[290px] transition-all duration-300 flex flex-col justify-center cursor-default">
+                <motion.div whileHover={{ y: -6, scale: 1.01, boxShadow: '0 10px 30px rgba(37,99,235,0.08)' }} transition={{ duration: 0.3, ease: 'easeOut' }} className="apple-glass-card rounded-[22px] p-[24px] h-[290px] transition-all duration-300 flex flex-col justify-center cursor-default">
                   <div className="flex justify-between items-center mb-5">
                     <h3 className="font-bold text-textMain flex items-center gap-2"><TrendingUp size={18} className="text-gray-400 dark:text-gray-500" /> Market Movers</h3>
                     <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-full">
@@ -524,7 +524,7 @@ export default function Home({ onOpenAIChat }) {
               )}
 
               {cmsConfig?.pages?.home?.features?.showMarketPulse && (
-                <motion.div whileHover={{ y: -6, scale: 1.01, boxShadow: '0 10px 30px rgba(37,99,235,0.08)' }} transition={{ duration: 0.3, ease: 'easeOut' }} className="white-bg-glass-card rounded-[22px] p-[24px] h-[290px] transition-all duration-300 flex flex-col">
+                <motion.div whileHover={{ y: -6, scale: 1.01, boxShadow: '0 10px 30px rgba(37,99,235,0.08)' }} transition={{ duration: 0.3, ease: 'easeOut' }} className="apple-glass-card rounded-[22px] p-[24px] h-[290px] transition-all duration-300 flex flex-col">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="font-bold text-textMain dark:text-gray-100 flex items-center gap-2"><Newspaper size={18} className="text-gray-400 dark:text-gray-500" /> Market Pulse</h3>
                     <button onClick={() => navigate('/news')} className="text-primary dark:text-blue-400 text-xs font-bold bg-blue-50 dark:bg-blue-500/10 px-3 py-1 rounded-full">View all</button>
@@ -557,7 +557,7 @@ export default function Home({ onOpenAIChat }) {
             </motion.div>
 
             {cmsConfig?.pages?.home?.features?.showMarketSnapshot && (
-              <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} variants={itemVariants} whileHover={{ y: -4, scale: 1.005, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)" }} className="white-bg-glass-card w-full rounded-[20px] p-[18px] md:p-[24px] mb-6 mx-auto flex flex-col xl:flex-row items-start xl:items-center justify-between gap-6 transition-all cursor-default">
+              <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} variants={itemVariants} whileHover={{ y: -4, scale: 1.005, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)" }} className="apple-glass-card w-full rounded-[20px] p-[18px] md:p-[24px] mb-6 mx-auto flex flex-col xl:flex-row items-start xl:items-center justify-between gap-6 transition-all cursor-default">
                 <div className="w-full xl:w-auto xl:min-w-[160px] flex justify-between xl:block items-center xl:pl-2">
                   <h3 className="font-bold text-gray-900 dark:text-gray-100 text-lg leading-tight">Market<br className="hidden xl:block" />Snapshot</h3>
                   <button onClick={() => navigate('/markets')} className="xl:hidden px-4 py-2 rounded-full border border-gray-200 dark:border-gray-800 text-blue-600 dark:text-blue-400 text-xs font-bold hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors">View All</button>
@@ -579,7 +579,7 @@ export default function Home({ onOpenAIChat }) {
               <MarketGraphPanel />
             </motion.div>
 
-            <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} variants={itemVariants} className="white-bg-glass-card w-full rounded-[22px] p-[24px] mb-12">
+            <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} variants={itemVariants} className="apple-glass-card w-full rounded-[22px] p-[24px] mb-12">
               <div className="flex items-center justify-between mb-5">
                 <h3 className="font-bold text-textMain dark:text-gray-100 flex items-center gap-2"><BarChart2 size={18} className="text-gray-400 dark:text-gray-500" /> All Stocks</h3>
                 <button onClick={() => navigate('/markets')} className="text-primary dark:text-blue-400 text-xs font-bold bg-blue-50 dark:bg-blue-500/10 px-3 py-1 rounded-full hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors">View all</button>
@@ -603,18 +603,18 @@ export default function Home({ onOpenAIChat }) {
               </div>
             </motion.div>
 
-            <motion.div variants={itemVariants} className="w-full grid grid-cols-1 md:grid-cols-3 gap-[24px] mb-12">
-              <div onClick={() => navigate('/amcs')} className="white-bg-glass-card rounded-[22px] p-[24px] hover:shadow-md transition-all cursor-pointer flex flex-col gap-3">
+            <motion.div variants={itemVariants} className="w-full responsive-grid mb-12">
+              <div onClick={() => navigate('/amcs')} className="apple-glass-card rounded-[22px] p-[24px] hover:shadow-md transition-all cursor-pointer flex flex-col gap-3">
                 <div className="w-11 h-11 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400"><Landmark size={20} /></div>
                 <h3 className="font-bold text-textMain dark:text-gray-100">AMC & Mutual Fund Database</h3>
                 <p className="text-[13px] text-textMuted dark:text-gray-400">Explore live NAVs and fund houses sourced directly from AMFI.</p>
               </div>
-              <div onClick={() => navigate('/watchlist')} className="white-bg-glass-card rounded-[22px] p-[24px] hover:shadow-md transition-all cursor-pointer flex flex-col gap-3">
+              <div onClick={() => navigate('/watchlist')} className="apple-glass-card rounded-[22px] p-[24px] hover:shadow-md transition-all cursor-pointer flex flex-col gap-3">
                 <div className="w-11 h-11 rounded-xl bg-violet-50 dark:bg-violet-500/10 flex items-center justify-center text-violet-600 dark:text-violet-400"><Activity size={20} /></div>
                 <h3 className="font-bold text-textMain dark:text-gray-100">Your Watchlist</h3>
                 <p className="text-[13px] text-textMuted dark:text-gray-400">Track your favorite stocks and funds with live price alerts.</p>
               </div>
-              <div onClick={() => navigate('/compare')} className="white-bg-glass-card rounded-[22px] p-[24px] hover:shadow-md transition-all cursor-pointer flex flex-col gap-3">
+              <div onClick={() => navigate('/compare')} className="apple-glass-card rounded-[22px] p-[24px] hover:shadow-md transition-all cursor-pointer flex flex-col gap-3">
                 <div className="w-11 h-11 rounded-xl bg-green-50 dark:bg-green-500/10 flex items-center justify-center text-green-600 dark:text-green-400"><TrendingUp size={20} /></div>
                 <h3 className="font-bold text-textMain dark:text-gray-100">Compare Stocks & Funds</h3>
                 <p className="text-[13px] text-textMuted dark:text-gray-400">Side-by-side comparison of fundamentals and performance.</p>

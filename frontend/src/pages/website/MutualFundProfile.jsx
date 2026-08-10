@@ -97,7 +97,8 @@ export default function MutualFundProfile() {
               <h4 style={{ margin: 0 }}>Trailing Returns</h4>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>As of Last Trading Session</span>
             </div>
-            <table className="data-table right-align">
+            <div className="overflow-x-auto w-full">
+              <table className="data-table right-align">
               <thead>
                 <tr>
                   <th style={{ textAlign: 'left' }}>Period</th>
@@ -127,6 +128,7 @@ export default function MutualFundProfile() {
                 </tr>
               </tbody>
             </table>
+            </div>
           </div>
 
           {/* Holdings */}

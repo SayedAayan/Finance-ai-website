@@ -209,7 +209,8 @@ export default function StockProfile() {
               <h4 style={{ margin: 0 }}>Peer Comparison</h4>
               <Link to="/compare" className="btn btn-ghost btn-sm">Full Compare <ArrowRight size={13} /></Link>
             </div>
-            <table className="data-table right-align">
+            <div className="overflow-x-auto w-full">
+              <table className="data-table right-align">
               <thead>
                 <tr>
                   <th style={{ textAlign: 'left' }}>Company</th>
@@ -247,6 +248,7 @@ export default function StockProfile() {
                 </tr>
               </tbody>
             </table>
+            </div>
           </div>
         </div>
 

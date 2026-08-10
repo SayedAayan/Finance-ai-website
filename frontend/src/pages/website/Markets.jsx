@@ -186,13 +186,13 @@ export default function Markets() {
 
         {/* Indices Grid */}
         {cmsConfig?.pages?.markets?.features?.showGlobalIndices && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          <div className="responsive-grid mb-12">
             {indices.map((index, idx) => {
               const isPositive = parseFloat(index.change) >= 0;
               return (
                 <div 
                   key={idx} 
-                  className="white-bg-glass-card dark:bg-gray-900 rounded-2xl p-6 transition-shadow relative group"
+                  className="apple-glass-card dark:bg-gray-900 rounded-2xl p-6 transition-shadow relative group"
                 >
                   {/* Decorative background glow */}
                   <div className={`absolute -right-8 -top-8 w-24 h-24 rounded-full blur-2xl opacity-20 transition-opacity group-hover:opacity-40 ${isPositive ? 'bg-green-500' : 'bg-red-500'}`}></div>
@@ -231,10 +231,10 @@ export default function Markets() {
         )}
 
         {/* Additional Markets Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="responsive-grid">
           
           {/* Top Gainers */}
-          <div className="white-bg-glass-card dark:bg-gray-900 p-6 rounded-3xl">
+          <div className="apple-glass-card dark:bg-gray-900 p-6 rounded-3xl">
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-green-50 dark:bg-green-500/10 rounded-xl flex items-center justify-center text-green-600 dark:text-green-400">
@@ -273,7 +273,7 @@ export default function Markets() {
           </div>
 
           {/* Top Losers */}
-          <div className="white-bg-glass-card dark:bg-gray-900 p-6 rounded-3xl">
+          <div className="apple-glass-card dark:bg-gray-900 p-6 rounded-3xl">
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-red-50 dark:bg-red-500/10 rounded-xl flex items-center justify-center text-red-600 dark:text-red-400">
@@ -312,7 +312,7 @@ export default function Markets() {
           </div>
 
           {/* Top Mutual Funds */}
-          <div className="white-bg-glass-card dark:bg-gray-900 p-6 rounded-3xl">
+          <div className="apple-glass-card dark:bg-gray-900 p-6 rounded-3xl">
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-blue-50 dark:bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-400">

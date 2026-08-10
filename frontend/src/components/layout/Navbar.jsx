@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Search, X, Moon, Sun, Settings as SettingsIcon, ChevronDown, Menu } from 'lucide-react';
+import { Search, X, Moon, Sun, Settings as SettingsIcon, ChevronDown, Menu, Home, TrendingUp, Bookmark, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import logo from '../../assets/logo.png';
 import { useTheme } from '../../context/ThemeContext';
@@ -203,7 +203,7 @@ export default function Navbar({ onToggleAIChat }) {
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: 'easeOut' }}
-        className={`bg-white/80 dark:bg-gray-950/80 backdrop-blur-[18px] transition-all duration-300 ${isScrolled ? 'border-b border-gray-100 dark:border-gray-800 shadow-[0_10px_30px_rgba(37,99,235,0.08)]' : 'border-b border-transparent'}`}
+        className={`hidden lg:block apple-glass-card transition-all duration-300 rounded-none border-t-0 border-l-0 border-r-0 ${isScrolled ? 'shadow-md' : 'shadow-none'}`}
       >
         <div className="container h-[80px] flex items-center justify-between gap-3">
 
@@ -465,6 +465,34 @@ export default function Navbar({ onToggleAIChat }) {
           </div>
         </div>
       </motion.nav>
+
+      {/* Mobile Bottom Tab Bar */}
+      <div className="lg:hidden fixed bottom-6 left-4 right-4 z-[100]">
+        <div className="apple-glass-card flex items-center justify-around py-3 px-2">
+          <Link to="/" className={`flex flex-col items-center gap-1 ${active('/') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500'}`}>
+            <Home size={22} />
+            <span className="text-[10px] font-medium">Home</span>
+          </Link>
+          <Link to="/markets" className={`flex flex-col items-center gap-1 ${active('/markets') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500'}`}>
+            <TrendingUp size={22} />
+            <span className="text-[10px] font-medium">Markets</span>
+          </Link>
+          
+          {/* Ask AI FAB (Floating Action Button style in the center) */}
+          <button onClick={onToggleAIChat} className="relative -top-6 bg-gradient-to-r from-violet-600 to-indigo-600 text-white p-3.5 rounded-full shadow-lg hover:shadow-xl transform transition-transform hover:scale-105 active:scale-95">
+            <span className="font-bold text-[12px] uppercase">AI</span>
+          </button>
+
+          <Link to="/watchlist" className={`flex flex-col items-center gap-1 ${active('/watchlist') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500'}`}>
+            <Bookmark size={22} />
+            <span className="text-[10px] font-medium">Watchlist</span>
+          </Link>
+          <Link to={currentUser ? "/settings" : "/login"} className={`flex flex-col items-center gap-1 ${active('/settings') || active('/login') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500'}`}>
+            <User size={22} />
+            <span className="text-[10px] font-medium">{currentUser ? 'Profile' : 'Login'}</span>
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
