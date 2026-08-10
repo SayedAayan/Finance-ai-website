@@ -265,12 +265,6 @@ export default function Home({ onOpenAIChat }) {
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-white dark:bg-gray-950">
-      <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-        <div className="absolute -top-24 -left-24 w-[420px] h-[420px] rounded-full opacity-40 dark:opacity-25 blur-[90px]" style={{ background: 'radial-gradient(circle, #60a5fa, transparent 70%)' }} />
-        <div className="absolute top-[10%] right-[-10%] w-[480px] h-[480px] rounded-full opacity-30 dark:opacity-20 blur-[100px]" style={{ background: 'radial-gradient(circle, #a78bfa, transparent 70%)' }} />
-        <div className="absolute top-[55%] left-[5%] w-[380px] h-[380px] rounded-full opacity-30 dark:opacity-20 blur-[90px]" style={{ background: 'radial-gradient(circle, #fb923c, transparent 70%)' }} />
-        <div className="absolute bottom-[-10%] right-[10%] w-[420px] h-[420px] rounded-full opacity-30 dark:opacity-20 blur-[100px]" style={{ background: 'radial-gradient(circle, #34d399, transparent 70%)' }} />
-      </div>
       <div className="max-w-[1440px] mx-auto w-full px-4 sm:px-6 lg:px-8 relative">
         <div className="relative z-10 w-full mx-auto py-6 flex flex-col items-center">
 
