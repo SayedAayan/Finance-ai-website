@@ -583,7 +583,7 @@ export default function Chat() {
                   <button
                     key={i}
                     onClick={() => sendContextualMessage(p.text)}
-                    className="flex items-center gap-3 text-left px-4 py-3.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl hover:border-violet-300 dark:hover:border-violet-500/40 hover:shadow-md transition-all group"
+                    className="flex items-center gap-3 text-left px-4 py-3.5 white-bg-glass-card dark:bg-gray-900 rounded-xl transition-all group"
                   >
                     <div className="w-8 h-8 rounded-lg bg-violet-50 dark:bg-violet-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-violet-100 dark:group-hover:bg-violet-500/20 transition-colors">
                       <Icon size={15} className="text-violet-600 dark:text-violet-400" />
@@ -633,7 +633,7 @@ export default function Chat() {
                         <img src="/favicon.png" alt="Stockbuzz AI" className="w-full h-full object-contain" />
                       </div>
                       <div className="flex-1 min-w-0 flex flex-col gap-1.5 group/msg">
-                        <div className={`ai-reply-card py-2 prose prose-sm dark:prose-invert max-w-none text-gray-800 dark:text-gray-100 transition-opacity ${regeneratingId === m.id ? 'opacity-40' : ''}`}>
+                        <div className={`ai-reply-card white-bg-glass-card p-4 rounded-2xl prose prose-sm dark:prose-invert max-w-none text-gray-800 dark:text-gray-100 transition-opacity ${regeneratingId === m.id ? 'opacity-40' : ''}`}>
                           <ReactMarkdown remarkPlugins={[remarkGfm]}>
                             {m.text}
                           </ReactMarkdown>
