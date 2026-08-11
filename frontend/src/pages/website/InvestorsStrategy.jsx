@@ -11,18 +11,18 @@ export default function InvestorsStrategy() {
   const navigate = useNavigate();
 
   return (
-    <div className="w-full bg-gray-50 dark:bg-gray-950 min-h-screen pt-28 pb-24 relative overflow-hidden">
+    <div className="w-full bg-gray-50 dark:bg-gray-950 min-h-screen pt-12 pb-16 relative overflow-hidden">
 
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-400/20 dark:bg-blue-900/20 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-purple-400/20 dark:bg-purple-900/20 blur-[120px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
 
-        <div className="text-center max-w-3xl mx-auto mb-16">
+        <div className="text-center max-w-3xl mx-auto mb-10">
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white dark:bg-gray-900 shadow-sm border border-gray-200 dark:border-gray-800 text-blue-600 dark:text-blue-400 text-sm font-bold tracking-wide uppercase mb-6"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white dark:bg-gray-900 shadow-sm border border-gray-200 dark:border-gray-800 text-blue-600 dark:text-blue-400 text-sm font-bold tracking-wide uppercase mb-4"
           >
             <ShieldCheck size={16} />
             <span>Master the Markets</span>
@@ -31,15 +31,15 @@ export default function InvestorsStrategy() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-6"
+            className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-4"
           >
-            Pick a <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Strategy</span>, See the Stocks
+            Pick a <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 pr-1 -mr-1 pb-1">Strategy</span>, See the Stocks
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-lg text-gray-600 dark:text-gray-400 leading-relaxed"
+            className="text-base text-gray-600 dark:text-gray-400 leading-relaxed"
           >
             Every card below is a world-class investing method. Open one to instantly run our live screener and see which stocks match its criteria today, ranked by fit.
           </motion.p>

@@ -53,14 +53,14 @@ export default function StrategyResults() {
   };
 
   return (
-    <div className="w-full bg-gray-50 dark:bg-gray-950 min-h-screen pt-28 pb-24 relative overflow-hidden">
+    <div className="w-full bg-gray-50 dark:bg-gray-950 min-h-screen pt-12 pb-16 relative overflow-hidden">
       <div className={`absolute top-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-gradient-to-br ${strategy.gradient} opacity-10 blur-[120px] pointer-events-none`} />
 
       <div className="max-w-6xl mx-auto px-6 relative z-10">
 
         <button
           onClick={() => navigate('/investors-strategy')}
-          className="inline-flex items-center gap-2 text-sm font-bold text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-8 transition-colors"
+          className="inline-flex items-center gap-2 text-sm font-bold text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 transition-colors"
         >
           <ArrowLeft size={16} />
           All Strategies
@@ -70,7 +70,7 @@ export default function StrategyResults() {
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="apple-glass-card rounded-[28px] p-8 md:p-10 mb-8 relative overflow-hidden"
+          className="apple-glass-card rounded-[28px] p-8 md:p-10 mb-6 relative overflow-hidden"
         >
           <div className={`absolute top-0 right-0 w-64 h-64 bg-gradient-to-br ${strategy.gradient} opacity-10 blur-3xl rounded-full translate-x-1/3 -translate-y-1/3`} />
 
