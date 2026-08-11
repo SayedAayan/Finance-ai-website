@@ -284,17 +284,30 @@ function buildComparisonChartData(seriesArray, rangeDays) {
 
   if (filteredSeries.some(s => s.data.length < 2 || !s.startVal)) return [];
 
+  const isIntraday = rangeDays <= 7;
+  const getKey = (time) => {
+    const iso = new Date(time).toISOString();
+    return isIntraday ? iso.slice(0, 16) : iso.slice(0, 10); // Match by minute for intraday, else by day
+  };
+
   const baseSeries = filteredSeries[0].data;
-  const seriesMaps = filteredSeries.map(s => new Map(s.data.map(p => [new Date(p.time).toISOString().slice(0, 10), p.value])));
+  const seriesMaps = filteredSeries.map(s => new Map(s.data.map(p => [getKey(p.time), p.value])));
 
   const points = [];
+  const seenKeys = new Set();
+  
   for (const p of baseSeries) {
-    const dayKey = new Date(p.time).toISOString().slice(0, 10);
+    const key = getKey(p.time);
+    
+    // Deduplicate so we don't plot hundreds of identical flat points if API returns high-density intraday data for a daily chart
+    if (seenKeys.has(key)) continue;
+    seenKeys.add(key);
+    
     const point = { time: p.time };
     let missingData = false;
     
     for (let i = 0; i < filteredSeries.length; i++) {
-      const val = seriesMaps[i].get(dayKey);
+      const val = seriesMaps[i].get(key);
       if (val == null) {
         missingData = true;
         break;
@@ -691,7 +704,7 @@ export default function Compare() {
                 <ResponsiveContainer width="100%" height={320}>
                   <LineChart data={chartData} margin={{ top: 4, right: 12, left: 0, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--neutral-200)" vertical={false} />
-                    <XAxis dataKey="time" tick={{ fontSize: 11 }} minTickGap={60} axisLine={false} tickLine={false}
+                    <XAxis dataKey="time" type="number" scale="time" domain={['dataMin', 'dataMax']} tick={{ fontSize: 11 }} minTickGap={60} axisLine={false} tickLine={false}
                       tickFormatter={v => new Date(v).toLocaleDateString('en-IN', chartRange === '1D' ? { hour: '2-digit', minute: '2-digit' } : { month: 'short', day: 'numeric', year: rangeDef.days > 400 ? '2-digit' : undefined })} />
                     <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={50}
                       tickFormatter={v => `${v}%`} />
