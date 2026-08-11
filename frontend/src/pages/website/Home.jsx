@@ -264,8 +264,8 @@ export default function Home({ onOpenAIChat }) {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-white dark:bg-gray-950">
-      <div className="max-w-[1440px] mx-auto w-full px-4 sm:px-6 lg:px-8 relative">
+    <div className="min-h-screen relative overflow-hidden dark text-gray-100" style={{ backgroundColor: '#000080' }}>
+      <div className="max-w-[1440px] mx-auto w-full px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="relative z-10 w-full mx-auto py-6 flex flex-col items-center">
 
           <div className="w-full flex flex-col items-center">
@@ -325,7 +325,6 @@ export default function Home({ onOpenAIChat }) {
                   <div className="w-3 h-3 rounded-full bg-red-400"></div>
                   <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
                   <div className="w-3 h-3 rounded-full bg-green-400"></div>
-                  <span className="text-xs text-gray-400 dark:text-gray-500 font-mono ml-1">stockbuzz-ai-v1.0</span>
                 </div>
                 <div className="flex justify-between items-center mb-3">
                   <h3 className="text-sm font-bold text-gray-800 dark:text-gray-100">Ask anything to get started:</h3>
