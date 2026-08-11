@@ -11,7 +11,7 @@ export default function Footer() {
   const footerLogo = footerConfig.logo || globalConfig.siteLogo || logo;
   const tagline = footerConfig.tagline || 'AI-powered research for Indian retail investors. We explain, compare, and source every answer — never recommend.';
   const disclaimerTitle = footerConfig.disclaimerTitle || 'IMPORTANT DISCLAIMER';
-  const disclaimerText = footerConfig.disclaimerText || 'StockBuzz is a research and education platform — not a SEBI-registered investment advisor. All content is for informational and educational purposes only. We do not provide personalized investment advice, buy/sell/hold recommendations, or guarantee any returns. Mutual fund investments are subject to market risks. Please read all scheme-related documents carefully. Past performance is not indicative of future returns.';
+  const disclaimerText = footerConfig.disclaimerText || 'STOCKBUZZ™ is a technology software and analytical research tool. It is not a SEBI-registered Investment Adviser (RIA), Research Analyst (RA), or Brokerage. The platform does not provide buy/sell recommendations, price targets, or personalized financial advice. All analysis is generated algorithmically for educational and information-processing purposes only.';
   const copyright = footerConfig.copyright || '© 2026 StockBuzz Technologies Pvt. Ltd. All rights reserved. Data sourced from NSE, BSE, AMFI, and public regulatory filings.';
 
   const columns = footerConfig.columns || [
