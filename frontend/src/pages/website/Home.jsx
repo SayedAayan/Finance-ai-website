@@ -264,7 +264,7 @@ export default function Home({ onOpenAIChat }) {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden dark text-gray-100" style={{ backgroundColor: '#000080' }}>
+    <div className="min-h-screen relative overflow-hidden">
       <div className="max-w-[1440px] mx-auto w-full px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="relative z-10 w-full mx-auto py-6 flex flex-col items-center">
 
