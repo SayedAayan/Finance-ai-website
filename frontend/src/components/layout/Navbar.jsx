@@ -261,7 +261,7 @@ export default function Navbar({ onToggleAIChat }) {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 8 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute top-[calc(100%+8px)] left-1/2 -translate-x-1/2 w-[180px] z-50 bg-white/98 dark:bg-gray-900/98 backdrop-blur-xl border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl p-1.5"
+                      className="absolute top-[calc(100%+8px)] left-1/2 -translate-x-1/2 w-[180px] z-50 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl p-1.5"
                     >
                       {OTHER_LINKS.map((item) => (
                         <Link
@@ -310,7 +310,7 @@ export default function Navbar({ onToggleAIChat }) {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
-                    className="absolute top-[calc(100%+8px)] left-0 w-full max-h-[300px] overflow-y-auto z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl py-2"
+                    className="absolute top-[calc(100%+8px)] left-0 w-full max-h-[300px] overflow-y-auto z-50 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl py-2"
                   >
                     {filteredResults.length > 0 ? (
                       filteredResults.map((result) => (
@@ -358,7 +358,7 @@ export default function Navbar({ onToggleAIChat }) {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 8 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute top-[calc(100%+8px)] right-0 w-[200px] max-h-[320px] overflow-y-auto z-50 bg-white/98 dark:bg-gray-900/98 backdrop-blur-xl border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl p-1.5"
+                    className="absolute top-[calc(100%+8px)] right-0 w-[200px] max-h-[320px] overflow-y-auto z-50 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl p-1.5"
                   >
                     {Object.entries(currencies).map(([code, info]) => (
                       <button

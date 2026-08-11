@@ -100,7 +100,7 @@ export default function SearchBar({ className = '', placeholder = "Search stocks
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 8 }}
               transition={{ duration: 0.15 }}
-              className="absolute top-[calc(100%+8px)] left-0 w-full min-w-[300px] max-h-[300px] overflow-y-auto z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl py-2"
+              className="absolute top-[calc(100%+8px)] left-0 w-full min-w-[300px] max-h-[300px] overflow-y-auto z-50 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl py-2"
             >
               {filteredResults.length > 0 ? (
                 filteredResults.map((result) => (
