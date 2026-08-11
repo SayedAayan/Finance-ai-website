@@ -203,7 +203,7 @@ export default function Navbar({ onToggleAIChat }) {
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: 'easeOut' }}
-        className={`hidden lg:block apple-glass-card transition-all duration-300 rounded-none border-t-0 border-l-0 border-r-0 ${isScrolled ? 'shadow-md' : 'shadow-none'}`}
+        className={`hidden lg:block navbar-solid transition-all duration-300 rounded-none border-t-0 border-l-0 border-r-0 ${isScrolled ? 'shadow-md' : 'shadow-none'}`}
       >
         <div className="container h-[80px] flex items-center justify-between gap-3">
 
@@ -468,7 +468,7 @@ export default function Navbar({ onToggleAIChat }) {
 
       {/* Mobile Bottom Tab Bar */}
       <div className="lg:hidden fixed bottom-6 left-4 right-4 z-[100]">
-        <div className="apple-glass-card flex items-center justify-around py-3 px-2">
+        <div className="navbar-solid rounded-2xl flex items-center justify-around py-3 px-2">
           <Link to="/" className={`flex flex-col items-center gap-1 ${active('/') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500'}`}>
             <Home size={22} />
             <span className="text-[10px] font-medium">Home</span>

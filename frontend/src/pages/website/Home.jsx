@@ -386,7 +386,7 @@ export default function Home({ onOpenAIChat }) {
                   </button>
                 </div>
               </div>
-              <div ref={sliderRef} className="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              <div ref={sliderRef} className="flex gap-6 overflow-x-auto snap-x snap-mandatory pt-2 pb-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 <style>{`div::-webkit-scrollbar { display: none; }`}</style>
                 <motion.div onClick={() => navigate('/investors-strategy')} whileHover={{ y: -6, scale: 1.01, boxShadow: '0 16px 40px rgba(249,115,22,0.14)' }} transition={{ duration: 0.3, ease: 'easeOut' }} className="apple-glass-card min-w-[280px] w-[280px] md:min-w-[320px] shrink-0 snap-start p-5 rounded-2xl transition-all flex flex-col items-start cursor-pointer group">
                   <motion.div whileHover={{ rotate: 10, scale: 1.1 }} className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 flex items-center justify-center mb-4 group-hover:bg-orange-600 group-hover:text-white transition-colors duration-300">
