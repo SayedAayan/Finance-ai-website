@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Line, LineChart, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
-import { BarChart2, TrendingUp, Sparkles, AlertCircle, ArrowRight, Search, Loader2, Plus, X, LineChart as LineChartIcon, SlidersHorizontal, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { BarChart2, TrendingUp, Sparkles, AlertCircle, ArrowRight, Search, Loader2, Plus, X, LineChart as LineChartIcon, SlidersHorizontal, Trash2, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useAuth } from '../../context/AuthContext';
@@ -337,6 +337,7 @@ export default function Compare() {
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [activeKeys, setActiveKeys] = useState(DEFAULT_FUND_KEYS);
   const [chartRange, setChartRange] = useState('1Y');
+  const [hiddenGraphIds, setHiddenGraphIds] = useState([]);
 
   const metrics = mode === 'funds' ? FUND_METRICS : STOCK_METRICS;
 
@@ -345,6 +346,7 @@ export default function Compare() {
     setAssets([null, null, null]);
     setDetails([null, null, null]);
     setStats([null, null, null]);
+    setHiddenGraphIds([]);
     setActiveKeys(newMode === 'funds' ? DEFAULT_FUND_KEYS : DEFAULT_STOCK_KEYS);
   };
 
@@ -473,18 +475,20 @@ export default function Compare() {
 
   const rangeDef = CHART_RANGES.find(r => r.key === chartRange) || CHART_RANGES[3];
   
+  const graphAssets = useMemo(() => validAssets.filter(a => !hiddenGraphIds.includes(a.id)), [validAssets, hiddenGraphIds]);
+
   const chartData = useMemo(() => {
-    return buildComparisonChartData(validAssets.map(a => a.series), rangeDef.days);
-  }, [validAssets, rangeDef]);
+    return buildComparisonChartData(graphAssets.map(a => a.series), rangeDef.days);
+  }, [graphAssets, rangeDef]);
 
   const summary = useMemo(() => {
-    if (!isComparable || chartData.length < 2) return null;
+    if (!isComparable || chartData.length < 2 || graphAssets.length < 2) return null;
 
     const lastPoint = chartData[chartData.length - 1];
     let bestIndex = -1, worstIndex = -1;
     let maxMove = -Infinity, minMove = Infinity;
 
-    validAssets.forEach((a, i) => {
+    graphAssets.forEach((a, i) => {
       const val = lastPoint[`asset${i}`];
       if (val != null) {
         if (val > maxMove) { maxMove = val; bestIndex = i; }
@@ -494,25 +498,25 @@ export default function Compare() {
 
     if (bestIndex === -1 || worstIndex === -1) return null;
 
-    const leader = validAssets[bestIndex];
-    const laggard = validAssets[worstIndex];
+    const leader = graphAssets[bestIndex];
+    const laggard = graphAssets[worstIndex];
     const gap = Number((maxMove - minMove).toFixed(2));
 
-    const vols = validAssets.map(a => computeVolatility(a.series?.filter(p => Number.isFinite(rangeDef.days) ? p.time >= Date.now() - rangeDef.days * 86400000 : true)));
+    const vols = graphAssets.map(a => computeVolatility(a.series?.filter(p => Number.isFinite(rangeDef.days) ? p.time >= Date.now() - rangeDef.days * 86400000 : true)));
     let lowestVol = Infinity;
     let steadier = null;
     
     vols.forEach((v, i) => {
       if (v != null && v < lowestVol) {
         lowestVol = v;
-        steadier = validAssets[i];
+        steadier = graphAssets[i];
       }
     });
 
     const rangeLabel = rangeDef.label || rangeDef.key;
 
     return { leader, laggard, gap, leaderMove: maxMove, laggardMove: minMove, rangeLabel, steadier, lowestVol };
-  }, [isComparable, chartData, validAssets, rangeDef]);
+  }, [isComparable, chartData, graphAssets, rangeDef]);
 
   const tableScrollRef = useRef(null);
   const scrollTable = (direction) => {
@@ -662,6 +666,7 @@ export default function Compare() {
                 ))}
               </div>
             </div>
+            
             <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-3)', marginBottom: '12px' }}>
               % change over {rangeDef.label || rangeDef.key}, normalized to a common start date
             </div>
@@ -695,20 +700,47 @@ export default function Compare() {
                       labelFormatter={v => new Date(v).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                       formatter={(v, name, props) => {
                         const idx = parseInt(props.dataKey.replace('asset', ''));
-                        return [`${v >= 0 ? '+' : ''}${v}%`, validAssets[idx]?.name || name];
+                        return [`${v >= 0 ? '+' : ''}${v}%`, graphAssets[idx]?.name || name];
                       }}
                     />
-                    <Legend iconType="circle" wrapperStyle={{ fontSize: 12, fontWeight: 600, marginTop: 10 }} 
-                      formatter={(value) => {
-                        const idx = parseInt(value.replace('asset', ''));
-                        return validAssets[idx]?.name || value;
-                      }}
-                    />
-                    {validAssets.map((a, i) => (
-                      <Line key={i} type="monotone" dataKey={`asset${i}`} stroke={COLORS[i % COLORS.length]} strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
-                    ))}
+                    {graphAssets.map((a, i) => {
+                      const origIdx = validAssets.findIndex(va => va.id === a.id);
+                      return <Line key={a.id} type="monotone" dataKey={`asset${i}`} stroke={COLORS[origIdx % COLORS.length]} strokeWidth={2} dot={false} activeDot={{ r: 4 }} />;
+                    })}
                   </LineChart>
                 </ResponsiveContainer>
+
+                {/* Custom Interactive Legend */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '8px', marginTop: '16px' }}>
+                  {validAssets.map((a, i) => {
+                    const isVisible = !hiddenGraphIds.includes(a.id);
+                    const color = COLORS[i % COLORS.length];
+                    return (
+                      <button
+                        key={a.id}
+                        onClick={() => setHiddenGraphIds(prev => isVisible ? [...prev, a.id] : prev.filter(id => id !== a.id))}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px',
+                          borderRadius: '16px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer',
+                          border: `1px solid ${isVisible ? color : 'var(--border)'}`,
+                          background: isVisible ? `${color}15` : 'transparent',
+                          color: isVisible ? color : 'var(--text-3)',
+                          transition: 'all .15s'
+                        }}
+                      >
+                        <div style={{
+                          width: '14px', height: '14px', borderRadius: '4px',
+                          background: isVisible ? color : 'transparent',
+                          border: `1px solid ${isVisible ? color : 'var(--text-3)'}`,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center'
+                        }}>
+                          {isVisible && <Check size={10} color="#fff" strokeWidth={3} />}
+                        </div>
+                        {a.name}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             ) : (
               <div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-3)', fontSize: '0.85rem' }}>
