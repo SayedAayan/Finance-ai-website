@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowUpDown, CheckCircle2, Target } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { mockStocks } from '../../data/mockData';
 import { getStrategy, getMatchedStocks, STRATEGIES } from '../../data/strategyEngine';
+import InvestorAvatar from '../../components/InvestorAvatar';
 
 const COLUMNS = [
   { key: 'matchScore', label: 'Match' },
@@ -74,11 +75,16 @@ export default function StrategyResults() {
         >
           <div className={`absolute top-0 right-0 w-64 h-64 bg-gradient-to-br ${strategy.gradient} opacity-10 blur-3xl rounded-full translate-x-1/3 -translate-y-1/3`} />
 
-          <span className={`inline-block px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-full bg-${strategy.color}-50 dark:bg-${strategy.color}-900/20 text-${strategy.color}-600 dark:text-${strategy.color}-400 mb-4`}>
-            Strategy {strategy.number}
-          </span>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white mb-2">{strategy.title}</h1>
-          <h2 className="text-base font-semibold text-gray-500 dark:text-gray-400 mb-5">{strategy.subtitle}</h2>
+          <div className="flex items-start justify-between gap-6 mb-4">
+            <div>
+              <span className={`inline-block px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-full bg-${strategy.color}-50 dark:bg-${strategy.color}-900/20 text-${strategy.color}-600 dark:text-${strategy.color}-400 mb-4`}>
+                Strategy {strategy.number}
+              </span>
+              <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white mb-2">{strategy.title}</h1>
+              <h2 className="text-base font-semibold text-gray-500 dark:text-gray-400">{strategy.subtitle}</h2>
+            </div>
+            <InvestorAvatar strategy={strategy} sizePx={72} />
+          </div>
           <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-6 max-w-3xl">{strategy.description}</p>
 
           <div className="flex flex-wrap gap-3">

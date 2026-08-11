@@ -1,11 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, Award, Briefcase, BarChart2, Target, ShieldCheck, ArrowRight } from 'lucide-react';
+import { ShieldCheck, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { mockStocks } from '../../data/mockData';
 import { STRATEGIES, getMatchedStocks } from '../../data/strategyEngine';
-
-const ICONS = { value: Briefcase, canslim: TrendingUp, magic: Award, drip: BarChart2, momentum: Target };
+import InvestorAvatar from '../../components/InvestorAvatar';
 
 export default function InvestorsStrategy() {
   const navigate = useNavigate();
@@ -47,7 +46,6 @@ export default function InvestorsStrategy() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {STRATEGIES.map((strategy, idx) => {
-            const Icon = ICONS[strategy.id] || Briefcase;
             const count = getMatchedStocks(strategy.id, mockStocks).length;
             return (
               <motion.button
@@ -61,17 +59,17 @@ export default function InvestorsStrategy() {
               >
                 <div className={`absolute top-0 right-0 w-40 h-40 bg-gradient-to-br ${strategy.gradient} opacity-10 blur-3xl rounded-full translate-x-1/3 -translate-y-1/3`} />
 
-                <div className="flex items-start justify-between mb-6">
-                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${strategy.gradient} text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                    <Icon size={24} />
+                <div className="flex items-center gap-4 mb-5">
+                  <InvestorAvatar strategy={strategy} />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-xl font-extrabold text-gray-900 dark:text-white leading-tight">{strategy.title}</h3>
+                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">{strategy.subtitle}</p>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold bg-${strategy.color}-50 dark:bg-${strategy.color}-900/20 text-${strategy.color}-600 dark:text-${strategy.color}-400`}>
+                  <span className={`shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-${strategy.color}-50 dark:bg-${strategy.color}-900/20 text-${strategy.color}-600 dark:text-${strategy.color}-400`}>
                     {count} match{count === 1 ? '' : 'es'}
                   </span>
                 </div>
 
-                <h3 className="text-xl font-extrabold text-gray-900 dark:text-white mb-1">{strategy.title}</h3>
-                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-4">{strategy.subtitle}</p>
                 <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-6 flex-1">{strategy.description}</p>
 
                 <div className={`inline-flex items-center gap-2 text-sm font-bold text-${strategy.color}-600 dark:text-${strategy.color}-400`}>
