@@ -141,6 +141,11 @@
           "path": "/"
         },
         {
+          "id": "4",
+          "label": "Pro Playbook",
+          "path": "/investors-strategy"
+        },
+        {
           "id": "2",
           "label": "Compare",
           "path": "/compare"
@@ -151,18 +156,13 @@
           "path": "/watchlist"
         },
         {
-          "id": "4",
-          "label": "News",
-          "path": "/news"
-        },
-        {
           "id": "5",
           "label": "Others ▾",
           "subItems": [
             {
-              "id": "5-1",
-              "label": "Markets Overview",
-              "path": "/markets"
+              "id": "5-6",
+              "label": "News",
+              "path": "/news"
             },
             {
               "id": "5-3",
@@ -173,6 +173,11 @@
               "id": "5-4",
               "label": "Fund Profile",
               "path": "/fund"
+            },
+            {
+              "id": "5-1",
+              "label": "Markets Overview",
+              "path": "/markets"
             }
           ]
         }
