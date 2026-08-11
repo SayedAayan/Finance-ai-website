@@ -336,7 +336,7 @@ export default function Home({ onOpenAIChat }) {
                   </button>
                 </div>
 
-                <div className="relative flex items-center bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-2xl px-4 h-[52px] mb-4 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10 transition-all duration-250">
+                <div className="relative flex items-center bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-2xl px-4 h-[52px] mb-4 transition-all duration-250">
                   <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*,application/pdf" className="hidden" />
                   <button onClick={() => fileInputRef.current?.click()} className="mr-2 p-1 text-gray-400 hover:text-blue-600 transition-colors"><Plus size={20} /></button>
                   <input
@@ -344,7 +344,7 @@ export default function Home({ onOpenAIChat }) {
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleAsk()}
                     placeholder="e.g. Compare TCS vs Reliance"
-                    className="flex-1 bg-transparent border-none outline-none text-sm text-gray-800 dark:text-gray-100 placeholder:text-gray-455 dark:placeholder:text-gray-500"
+                    className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:border-transparent focus:outline-none text-sm text-gray-800 dark:text-gray-100 placeholder:text-gray-455 dark:placeholder:text-gray-500"
                   />
                   {speechSupported && (
                     <button

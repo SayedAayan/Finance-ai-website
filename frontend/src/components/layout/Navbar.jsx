@@ -287,14 +287,14 @@ export default function Navbar({ onToggleAIChat }) {
 
             {/* Search Bar */}
             <div className="relative hidden lg:block" ref={searchRef}>
-              <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-full px-3.5 w-[270px] h-[38px] shadow-sm focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10 focus-within:w-[330px] transition-all duration-300">
+              <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-full px-3.5 w-[270px] h-[38px] shadow-sm transition-all duration-300">
                 <Search size={16} className="text-textMuted dark:text-gray-500" />
                 <input
                   value={searchQuery}
                   onChange={handleSearchChange}
                   onFocus={() => searchQuery.trim() && setShowSuggestions(true)}
                   placeholder="Search stocks, Mutual funds..."
-                  className="bg-transparent border-none outline-none text-sm text-textMain dark:text-gray-100 placeholder-textMuted dark:placeholder-gray-500 w-full"
+                  className="bg-transparent border-none outline-none focus:ring-0 focus:border-transparent focus:outline-none text-[13px] text-textMain dark:text-gray-100 placeholder-textMuted dark:placeholder-gray-500 w-full"
                 />
                 {searchQuery && (
                   <button onClick={() => { setSearchQuery(''); setFilteredResults([]); }} className="text-textMuted hover:text-textMain dark:text-gray-500 dark:hover:text-gray-200">
