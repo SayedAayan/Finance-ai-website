@@ -240,7 +240,10 @@ export default function Home({ onOpenAIChat }) {
     { label: 'What is P/E ratio?', icon: <BookOpen size={16} /> },
     { label: 'Tell me about Reliance', icon: <TrendingUp size={16} /> },
     { label: 'HDFC Flexi Cap Fund', icon: <BarChart2 size={16} /> },
-    { label: 'Compare TCS vs Reliance', icon: <Activity size={16} /> }
+    { label: 'Compare TCS vs Reliance', icon: <Activity size={16} /> },
+    { label: 'What is a Mutual Fund?', icon: <Landmark size={16} /> },
+    { label: 'Top IT Stocks to watch', icon: <TrendingUp size={16} /> },
+    { label: 'Explain SIP basics', icon: <BookOpen size={16} /> }
   ];
 
   const TRENDING_ICON = { stock: <TrendingUp size={16} />, fund: <BarChart2 size={16} />, amc: <Landmark size={16} /> };
@@ -249,9 +252,9 @@ export default function Home({ onOpenAIChat }) {
   const shortenLabel = (label) => label.replace(/\s*-\s*(Growth Option|Growth Plan|Direct Plan|Regular Plan|Direct|Regular|Growth).*/i, '').trim();
 
   const trendingSuggestions = trending.map(t => ({ label: shortenLabel(t.label), icon: TRENDING_ICON[t.type] || <Activity size={16} />, trending: true }));
-  const suggestions = trendingSuggestions.length >= 4
-    ? trendingSuggestions.slice(0, 4)
-    : [...trendingSuggestions, ...DEFAULT_SUGGESTIONS].slice(0, 4);
+  const suggestions = trendingSuggestions.length >= 6
+    ? trendingSuggestions.slice(0, 6)
+    : [...trendingSuggestions, ...DEFAULT_SUGGESTIONS].slice(0, 6);
 
   const sortedGainers = [...stocks].sort((a, b) => b.changePercent - a.changePercent).slice(0, 3);
   const sortedLosers = [...stocks].sort((a, b) => a.changePercent - b.changePercent).slice(0, 3);
@@ -360,12 +363,14 @@ export default function Home({ onOpenAIChat }) {
 
                 <div className="flex flex-col gap-2">
                   <span className="text-[10px] text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider">Suggested Prompts</span>
-                  {suggestions.slice(0, 3).map((s, i) => (
-                    <button key={i} onClick={() => handleAsk(s.label)} className="flex items-center gap-2 text-left px-3 py-2 bg-gray-50 dark:bg-gray-950 hover:bg-blue-50 dark:hover:bg-blue-500/5 hover:text-blue-600 dark:hover:text-blue-400 rounded-xl text-xs font-semibold text-gray-600 dark:text-gray-400 border border-gray-100 dark:border-gray-800/50 transition-colors truncate">
-                      <span className="text-blue-500 shrink-0">{s.icon}</span>
-                      <span className="truncate text-[11px]">{s.label}</span>
-                    </button>
-                  ))}
+                  <div className="grid grid-cols-2 gap-2">
+                    {suggestions.slice(0, 6).map((s, i) => (
+                      <button key={i} onClick={() => handleAsk(s.label)} className="flex items-center gap-2 text-left px-3 py-2 bg-gray-50 dark:bg-gray-950 hover:bg-blue-50 dark:hover:bg-blue-500/5 hover:text-blue-600 dark:hover:text-blue-400 rounded-xl text-xs font-semibold text-gray-600 dark:text-gray-400 border border-gray-100 dark:border-gray-800/50 transition-colors truncate">
+                        <span className="text-blue-500 shrink-0">{s.icon}</span>
+                        <span className="truncate text-[11px]">{s.label}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </motion.div>
             </motion.div>
