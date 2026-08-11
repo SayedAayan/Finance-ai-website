@@ -439,7 +439,7 @@ export default function Home({ onOpenAIChat }) {
                   className="apple-glass-card rounded-[22px] cursor-pointer hover:shadow-md transition-all duration-300 grid grid-cols-1 md:grid-cols-3"
                   onClick={() => navigate('/news')}
                 >
-                  <div className="h-[200px] md:h-full overflow-hidden md:col-span-1">
+                  <div className="h-[200px] md:h-full overflow-hidden md:col-span-1 rounded-t-[22px] md:rounded-t-none md:rounded-l-[22px]">
                     <img
                       src={featuredNews.image || getFallbackImage(featuredNews.title)}
                       alt={featuredNews.title}
@@ -467,11 +467,11 @@ export default function Home({ onOpenAIChat }) {
               </motion.div>
             )}
 
-            <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} variants={itemVariants} className="w-full responsive-grid mb-12">
+            <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} variants={itemVariants} className="w-full grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
               {cmsConfig?.pages?.home?.features?.showTrendingStocks && (
                 <motion.div whileHover={{ y: -6, scale: 1.01, boxShadow: '0 10px 30px rgba(37,99,235,0.08)' }} transition={{ duration: 0.3, ease: 'easeOut' }} className="apple-glass-card rounded-[22px] p-[24px] h-[290px] transition-all duration-300 flex flex-col justify-center cursor-default">
                   <div className="flex justify-between items-center mb-5">
-                    <h3 className="font-bold text-textMain dark:text-gray-100 flex items-center gap-2"><span className="text-xl">🔥</span> Trending Stocks</h3>
+                    <h3 className="font-bold text-[17px] text-textMain dark:text-gray-100 flex items-center gap-2"><span className="text-[22px]">🔥</span> Trending Stocks</h3>
                     <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => navigate('/markets')} className="text-primary dark:text-blue-400 text-xs font-bold bg-blue-50 dark:bg-blue-500/10 px-3 py-1 rounded-full hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors">View all</motion.button>
                   </div>
                   <div className="flex flex-col gap-4">
@@ -499,10 +499,10 @@ export default function Home({ onOpenAIChat }) {
               {cmsConfig?.pages?.home?.features?.showMarketMovers && (
                 <motion.div whileHover={{ y: -6, scale: 1.01, boxShadow: '0 10px 30px rgba(37,99,235,0.08)' }} transition={{ duration: 0.3, ease: 'easeOut' }} className="apple-glass-card rounded-[22px] p-[24px] h-[290px] transition-all duration-300 flex flex-col justify-center cursor-default">
                   <div className="flex justify-between items-center mb-5">
-                    <h3 className="font-bold text-textMain flex items-center gap-2"><TrendingUp size={18} className="text-gray-400 dark:text-gray-500" /> Market Movers</h3>
-                    <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-full">
-                      <button onClick={() => setMarketMoverTab('gainers')} className={`px-4 text-[11px] font-bold py-1.5 rounded-full transition-all ${marketMoverTab === 'gainers' ? 'bg-white dark:bg-gray-700 text-primary dark:text-blue-400 shadow-sm' : 'text-textMuted hover:text-textMain dark:hover:text-gray-100'}`}>Top Gainers</button>
-                      <button onClick={() => setMarketMoverTab('losers')} className={`px-4 text-[11px] font-bold py-1.5 rounded-full transition-all ${marketMoverTab === 'losers' ? 'bg-white dark:bg-gray-700 text-textMain dark:text-gray-100 shadow-sm' : 'text-textMuted hover:text-textMain dark:hover:text-gray-100'}`}>Top Losers</button>
+                    <h3 className="font-bold text-[17px] text-textMain flex items-center gap-1.5 whitespace-nowrap"><TrendingUp size={22} className="text-gray-400 dark:text-gray-500" /> Market Movers</h3>
+                    <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-full shrink-0">
+                      <button onClick={() => setMarketMoverTab('gainers')} className={`px-2.5 sm:px-3 text-[11px] font-bold py-1.5 rounded-full transition-all ${marketMoverTab === 'gainers' ? 'bg-white dark:bg-gray-700 text-primary dark:text-blue-400 shadow-sm' : 'text-textMuted hover:text-textMain dark:hover:text-gray-100'}`}>Top Gainers</button>
+                      <button onClick={() => setMarketMoverTab('losers')} className={`px-2.5 sm:px-3 text-[11px] font-bold py-1.5 rounded-full transition-all ${marketMoverTab === 'losers' ? 'bg-white dark:bg-gray-700 text-textMain dark:text-gray-100 shadow-sm' : 'text-textMuted hover:text-textMain dark:hover:text-gray-100'}`}>Top Losers</button>
                     </div>
                   </div>
                   <div className="flex flex-col gap-3">
@@ -530,7 +530,7 @@ export default function Home({ onOpenAIChat }) {
               {cmsConfig?.pages?.home?.features?.showMarketPulse && (
                 <motion.div whileHover={{ y: -6, scale: 1.01, boxShadow: '0 10px 30px rgba(37,99,235,0.08)' }} transition={{ duration: 0.3, ease: 'easeOut' }} className="apple-glass-card rounded-[22px] p-[24px] h-[290px] transition-all duration-300 flex flex-col">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-bold text-textMain dark:text-gray-100 flex items-center gap-2"><Newspaper size={18} className="text-gray-400 dark:text-gray-500" /> Market Pulse</h3>
+                    <h3 className="font-bold text-[17px] text-textMain dark:text-gray-100 flex items-center gap-2"><Newspaper size={22} className="text-gray-400 dark:text-gray-500" /> Market Pulse</h3>
                     <button onClick={() => navigate('/news')} className="text-primary dark:text-blue-400 text-xs font-bold bg-blue-50 dark:bg-blue-500/10 px-3 py-1 rounded-full">View all</button>
                   </div>
                   <div className="relative overflow-hidden flex-1 [mask-image:linear-gradient(to_bottom,transparent,black_12px,black_calc(100%-12px),transparent)]">
@@ -607,7 +607,7 @@ export default function Home({ onOpenAIChat }) {
               </div>
             </motion.div>
 
-            <motion.div variants={itemVariants} className="w-full responsive-grid mb-12">
+            <motion.div variants={itemVariants} className="w-full grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
               <div onClick={() => navigate('/amcs')} className="apple-glass-card rounded-[22px] p-[24px] hover:shadow-md transition-all cursor-pointer flex flex-col gap-3">
                 <div className="w-11 h-11 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400"><Landmark size={20} /></div>
                 <h3 className="font-bold text-textMain dark:text-gray-100">AMC & Mutual Fund Database</h3>
