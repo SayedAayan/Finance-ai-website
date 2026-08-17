@@ -27,6 +27,15 @@ const AI_PROVIDERS = [
   { name: 'OpenAI', url: 'https://api.openai.com/v1/chat/completions', key: process.env.OPENAI_API_KEY, model: 'gpt-3.5-turbo' }
 ].filter(p => p.key);
 
+// Vision-capable provider for "point at the screen and ask" — needs a model that
+// accepts image_url content parts. Gemini 2.0 Flash is natively multimodal and
+// free-tier friendly, so it doubles as both the text and vision provider.
+const VISION_PROVIDER = process.env.GEMINI_API_KEY
+  ? { name: 'Gemini Vision', url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', key: process.env.GEMINI_API_KEY, model: 'gemini-2.0-flash' }
+  : process.env.OPENAI_API_KEY
+    ? { name: 'OpenAI Vision', url: 'https://api.openai.com/v1/chat/completions', key: process.env.OPENAI_API_KEY, model: 'gpt-4o-mini' }
+    : null;
+
 // ─── Yahoo Finance v8 chart API ───────────────────────────────────────────────
 // Uses browser User-Agent + chart endpoint — no auth/crumb needed
 const YF_HEADERS = {
@@ -2178,6 +2187,63 @@ CURRENT TIME & REAL-TIME DATA ACCESS
     res.status(500).json({ error: 'Stockbuzz AI error', detail: err.message });
   }
 });
+
+// ─── Vision chat: "circle this on the screen and ask" ────────────────────────
+// Accepts a base64 screenshot (full page or a cropped region) plus a question,
+// and asks a vision-capable model to answer based on what's actually visible.
+app.post('/api/vision-chat', async (req, res) => {
+  apiUsageStats.ai++;
+  const { imageBase64, question } = req.body || {};
+
+  if (!imageBase64 || typeof imageBase64 !== 'string') {
+    return res.status(400).json({ error: 'imageBase64 is required' });
+  }
+  if (!VISION_PROVIDER) {
+    return res.status(503).json({ error: 'Vision AI is unavailable', detail: 'No vision-capable API key configured (set GEMINI_API_KEY or OPENAI_API_KEY)' });
+  }
+
+  const userQuestion = (question || '').trim() || 'What is shown in this part of the screen? Explain it simply.';
+
+  try {
+    const response = await fetch(VISION_PROVIDER.url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${VISION_PROVIDER.key}`
+      },
+      body: JSON.stringify({
+        model: VISION_PROVIDER.model,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are Stockbuzz AI, looking at a screenshot of a financial website (stocks, mutual funds, calculators, market data) that the user has captured or circled a region of. Explain what is visible clearly and concisely, and if the user asks how to do something, give direct step-by-step guidance based on what you can see on screen. Keep answers short (2-5 sentences) unless more detail is genuinely needed. Include the standard SEBI disclaimer only if giving investment advice.'
+          },
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: userQuestion },
+              { type: 'image_url', image_url: { url: imageBase64 } }
+            ]
+          }
+        ],
+        max_tokens: 500
+      })
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Vision API HTTP ${response.status}: ${errText.slice(0, 200)}`);
+    }
+
+    const data = await response.json();
+    const reply = data.choices?.[0]?.message?.content || 'I could not analyze that region — please try again.';
+    res.json({ reply, model: VISION_PROVIDER.model, provider: VISION_PROVIDER.name });
+  } catch (err) {
+    console.error('❌ Vision chat error:', err.message);
+    res.status(500).json({ error: 'Stockbuzz Vision AI error', detail: err.message });
+  }
+});
+
 // ─── CMS API for Superadmin ──────────────────────────────────────────────────
 app.get('/api/cms', async (req, res) => {
   try {

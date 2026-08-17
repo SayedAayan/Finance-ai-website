@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Sparkles, X, Send, Plus, Paperclip, FileText, AlertCircle, ArrowRight, Image as ImageIcon, Mic, MicOff, Volume2, VolumeX, Maximize2, Minimize2 } from 'lucide-react';
-import { mockStocks, mockFunds } from '../../data/mockData';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { getVisiblePageContext } from '../../utils/pageContext';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '/api/chat';
 
@@ -123,46 +123,29 @@ export default function AIChatSidebar({ isOpen, onClose }) {
     return () => window.removeEventListener('open-ai-chat', handleOpenAndQuery);
   }, [isOpen, messages]);
 
-  // Detect context based on URL route
-  const getPageContext = () => {
+  // Human-friendly label for the "ACTIVE CONTEXT" badge — the actual page data sent
+  // to the AI is captured live from the DOM at send-time (see getVisiblePageContext),
+  // not from this static map.
+  const ROUTE_LABELS = [
+    { test: (p) => p === '/', type: 'Dashboard', name: 'StockBuzz Home' },
+    { test: (p) => p === '/compare', type: 'Compare', name: 'Asset Comparison Tool' },
+    { test: (p) => p === '/watchlist', type: 'Watchlist', name: 'User Watchlist' },
+    { test: (p) => p === '/news', type: 'News', name: 'Financial News Hub' },
+    { test: (p) => p === '/settings', type: 'Settings', name: 'Account Settings' },
+    { test: (p) => p === '/calculators', type: 'Calculators', name: 'Financial Calculators' },
+    { test: (p) => p.startsWith('/stock'), type: 'Stock Profile', name: 'Stock Profile' },
+    { test: (p) => p.startsWith('/fund'), type: 'Fund Profile', name: 'Fund Profile' },
+    { test: (p) => p.startsWith('/markets'), type: 'Markets', name: 'Markets Overview' },
+    { test: (p) => p.startsWith('/investors-strategy'), type: 'Pro Book', name: 'Investor Strategies' },
+  ];
+
+  const getContextLabel = () => {
     const path = loc.pathname;
-    if (path === '/') {
-      return { type: 'Dashboard', name: 'StockBuzz Home', data: 'Global market dashboard and overview.' };
-    }
-    if (path === '/compare') {
-      return { type: 'Compare', name: 'Asset Comparison Tool', data: 'Currently comparing HDFC Flexi Cap vs PPFAS Flexi Cap OR Reliance vs TCS.' };
-    }
-    if (path === '/watchlist') {
-      return { type: 'Watchlist', name: 'User Watchlist', data: 'Watching Reliance, TCS, HDFC Flexi Cap, PPFAS Flexi Cap.' };
-    }
-    if (path === '/news') {
-      return { type: 'News', name: 'Curated Financial News', data: 'Latest headlines regarding Reliance Energy Giga factories, IT sector soft earnings, SEBI expense ratios.' };
-    }
-    if (path === '/settings') {
-      return { type: 'Settings', name: 'Account Settings & Integrations', data: 'User notifications preferences, Demat statement verification, subscription tiers.' };
-    }
-    if (path.startsWith('/stock/')) {
-      const stockId = path.split('/')[2];
-      const stock = mockStocks.find(s => s.id === stockId);
-      return { 
-        type: 'Stock Profile', 
-        name: stock ? stock.name : stockId, 
-        data: stock ? `Price: ₹${stock.price}, Change: ${stock.changePercent}%, P/E: ${stock.peRatio}, Debt/Equity: ${stock.debtToEquity}, Promoters: ${stock.promoterHolding}%` : '' 
-      };
-    }
-    if (path.startsWith('/fund/')) {
-      const fundId = path.split('/')[2];
-      const fund = mockFunds.find(f => f.id === fundId);
-      return { 
-        type: 'Fund Profile', 
-        name: fund ? fund.name : fundId, 
-        data: fund ? `NAV: ₹${fund.nav}, Expense Ratio: ${fund.expenseRatio}%, 1Y Return: ${fund.returns['1Y']}%, Risk: ${fund.riskometer}, AUM: ${fund.aum}` : '' 
-      };
-    }
-    return { type: 'General', name: 'StockBuzz Platform', data: '' };
+    const match = ROUTE_LABELS.find(r => r.test(path));
+    return match || { type: 'General', name: 'StockBuzz Platform' };
   };
 
-  const context = getPageContext();
+  const context = getContextLabel();
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -220,9 +203,14 @@ export default function AIChatSidebar({ isOpen, onClose }) {
     setLoading(true);
 
     try {
-      // Build prompt incorporating page context & hidden system guidelines
+      // Build prompt incorporating a live snapshot of what's actually on screen,
+      // plus hidden system guidelines, so answers are grounded in the real page —
+      // not a hardcoded per-route description.
       const finalPrompt = hiddenPrompt || q;
-      const contextualQuery = `[Context: User is on page "${context.name}" (${context.type}) with data: "${context.data}"]\n` + 
+      const snapshot = getVisiblePageContext();
+      const contextualQuery = `[Context: The user is currently looking at the "${context.name}" (${context.type}) page at ${snapshot.url}. ` +
+                              `Here is the actual visible content of that page right now:\n"""\n${snapshot.body || '(page has no readable text content)'}\n"""\n` +
+                              `Answer the user's question using this real on-screen content — refer to specific numbers, labels, or buttons visible above when relevant. If the user asks "what is this" or "what should I do," explain based on what's actually shown.]\n` +
                               (attachedFileInfo ? `[Attached File: ${attachedFileInfo.name} (${attachedFileInfo.type})]\n` : '') +
                               finalPrompt;
 

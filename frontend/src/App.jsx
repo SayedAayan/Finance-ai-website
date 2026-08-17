@@ -21,12 +21,15 @@ import StrategyResults from './pages/website/StrategyResults';
 import Checkout from './pages/website/Checkout';
 import Calculators from './pages/website/Calculators';
 import AIChatSidebar from './components/features/AIChatSidebar';
+import AIPet from './components/features/AIPet';
+import AIScreenShare from './components/features/AIScreenShare';
 
 function Layout() {
   const loc = useLocation();
   const isLogin = loc.pathname === '/login';
   const isCheckout = loc.pathname === '/checkout';
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
+  const [isScreenShareOpen, setIsScreenShareOpen] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -82,6 +85,12 @@ function Layout() {
 
       {/* Global Context-Aware AI Chat Sidebar */}
       <AIChatSidebar isOpen={isAIChatOpen} onClose={() => setIsAIChatOpen(false)} />
+
+      {/* "Circle to Search"-style visual assistant — screenshots the page so the user can point at anything and ask */}
+      <AIScreenShare isOpen={isScreenShareOpen} onClose={() => setIsScreenShareOpen(false)} />
+
+      {/* Floating draggable AI pet — visible on every page, opens the visual screen-search assistant */}
+      <AIPet onOpen={() => setIsScreenShareOpen(true)} hidden={isAIChatOpen || isScreenShareOpen || isChat} />
 
       <BackToTop />
     </div>
