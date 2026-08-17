@@ -13,7 +13,7 @@ async function patchLiveCms() {
   // 2. Overwrite navItems with the new intended structure
   data.navbar.navItems = [
     { id: '1', label: 'Home', path: '/' },
-    { id: '4', label: 'Pro Playbook', path: '/investors-strategy' },
+    { id: '4', label: 'Pro Book', path: '/investors-strategy' },
     { id: '2', label: 'Compare', path: '/compare' },
     { id: '3', label: 'Watchlist', path: '/watchlist' },
     { id: '5', label: 'Others ▾', subItems: [

@@ -19,6 +19,7 @@ import Superadmin from './pages/admin/Superadmin';
 import InvestorsStrategy from './pages/website/InvestorsStrategy';
 import StrategyResults from './pages/website/StrategyResults';
 import Checkout from './pages/website/Checkout';
+import Calculators from './pages/website/Calculators';
 import AIChatSidebar from './components/features/AIChatSidebar';
 
 function Layout() {
@@ -72,6 +73,7 @@ function Layout() {
           <Route path="/mutual-funds" element={<AmcDatabase />} />
           <Route path="/news" element={<News />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/calculators" element={<Calculators />} />
           <Route path="/chat" element={<Chat />} />
         </Routes>
       </main>

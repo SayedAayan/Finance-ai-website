@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { ShieldAlert, TrendingUp, Sparkles, ArrowRight, Info, Home } from 'lucide-react';
+import { ShieldAlert, TrendingUp, Sparkles, ArrowRight, Info, Home, Calculator } from 'lucide-react';
 import { useCurrency } from '../../context/CurrencyContext';
 import SearchBar from '../../components/ui/SearchBar';
 
@@ -59,8 +59,17 @@ export default function MutualFundProfile() {
                 <span style={{ fontSize: '0.8rem', color: 'var(--text-3)', fontWeight: 500 }}>{d.category}</span>
               </div>
             </div>
-            <div style={{ marginLeft: 'auto' }} className="trust-mark">
-              <div className="live-dot"></div> Live NAV
+            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div className="trust-mark">
+                <div className="live-dot"></div> Live NAV
+              </div>
+              <Link
+                to={`/calculators?calc=sip&type=fund&name=${encodeURIComponent(d.name)}&schemeCode=${encodeURIComponent(id)}`}
+                className="btn btn-outline btn-sm"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              >
+                <Calculator size={14} /> Calculate SIP Returns
+              </Link>
             </div>
           </div>
 

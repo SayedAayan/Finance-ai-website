@@ -397,7 +397,7 @@ export default function Home({ onOpenAIChat }) {
                   <motion.div whileHover={{ rotate: 10, scale: 1.1 }} className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 flex items-center justify-center mb-4 group-hover:bg-orange-600 group-hover:text-white transition-colors duration-300">
                     <BookOpen size={20} />
                   </motion.div>
-                  <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-2 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">Pro Playbook</h3>
+                  <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-2 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">Pro Book</h3>
                   <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">Learn the top formulas and strategies used by successful investors to outperform the market.</p>
                 </motion.div>
                 <motion.div onClick={() => navigate('/compare')} whileHover={{ y: -6, scale: 1.01, boxShadow: '0 16px 40px rgba(37,99,235,0.14)' }} transition={{ duration: 0.3, ease: 'easeOut' }} className="apple-glass-card min-w-[280px] w-[280px] md:min-w-[320px] shrink-0 snap-start p-5 rounded-2xl transition-all flex flex-col items-start cursor-pointer group">

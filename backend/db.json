@@ -113,11 +113,53 @@
     }
   ],
   "trending": {
-    "2026-07-29": {
-      "Midwest Limited": {
-        "label": "Midwest Limited",
+    "2026-08-17": {
+      "Reliance Industries Limited": {
+        "label": "Reliance Industries Limited",
         "type": "stock",
-        "route": "/stock/NSE:MIDWESTLTD",
+        "route": "/stock/NSE:RELIANCE",
+        "count": 3
+      },
+      "Coca-Cola Company (The) Common Stock": {
+        "label": "Coca-Cola Company (The) Common Stock",
+        "type": "stock",
+        "route": "/stock/NYSE:KO",
+        "count": 1
+      },
+      "Kothari Petrochemicals Limited": {
+        "label": "Kothari Petrochemicals Limited",
+        "type": "stock",
+        "route": "/stock/NSE:KOTHARIPET",
+        "count": 1
+      },
+      "Kotak Mahindra Bank Limited": {
+        "label": "Kotak Mahindra Bank Limited",
+        "type": "stock",
+        "route": "/stock/NSE:KOTAKBANK",
+        "count": 1
+      },
+      "HDFC Bank Limited": {
+        "label": "HDFC Bank Limited",
+        "type": "stock",
+        "route": "/stock/NSE:HDFCBANK",
+        "count": 2
+      },
+      "EA Bridgeway Blue Chip ETF": {
+        "label": "EA Bridgeway Blue Chip ETF",
+        "type": "stock",
+        "route": "/stock/NYSEArca:BBLU",
+        "count": 1
+      },
+      "ICICI Prudential Bluechip Fund - Institutional Option - I - Growth": {
+        "label": "ICICI Prudential Bluechip Fund - Institutional Option - I - Growth",
+        "type": "fund",
+        "route": "/fund/MF:108467",
+        "count": 2
+      },
+      "CAPITALMIND FLEXI CAP FUND DIRECT GROWTH": {
+        "label": "CAPITALMIND FLEXI CAP FUND DIRECT GROWTH",
+        "type": "fund",
+        "route": "/fund/MF:153738",
         "count": 1
       }
     }
@@ -142,7 +184,7 @@
         },
         {
           "id": "4",
-          "label": "Pro Playbook",
+          "label": "Pro Book",
           "path": "/investors-strategy"
         },
         {
@@ -163,6 +205,11 @@
               "id": "5-6",
               "label": "News",
               "path": "/news"
+            },
+            {
+              "id": "5-5",
+              "label": "Calculators",
+              "path": "/calculators"
             },
             {
               "id": "5-3",

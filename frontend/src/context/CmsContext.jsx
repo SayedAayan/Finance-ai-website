@@ -16,11 +16,12 @@ export const defaultCmsConfig = {
   navbar: {
     navItems: [
       { id: '1', label: 'Home', path: '/' },
-      { id: '4', label: 'Pro Playbook', path: '/investors-strategy' },
+      { id: '4', label: 'Pro Book', path: '/investors-strategy' },
       { id: '2', label: 'Compare', path: '/compare' },
       { id: '3', label: 'Watchlist', path: '/watchlist' },
       { id: '5', label: 'Others ▾', subItems: [
         { id: '5-6', label: 'News', path: '/news' },
+        { id: '5-5', label: 'Calculators', path: '/calculators' },
         { id: '5-3', label: 'Stock Profile', path: '/stock' },
         { id: '5-4', label: 'Fund Profile', path: '/fund' },
         { id: '5-1', label: 'Markets Overview', path: '/markets' }

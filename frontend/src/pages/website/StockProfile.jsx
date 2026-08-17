@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { TrendingUp, TrendingDown, Info, Sparkles, AlertTriangle, ArrowRight, Home, LineChart as LineChartIcon } from 'lucide-react';
+import { TrendingUp, TrendingDown, Info, Sparkles, AlertTriangle, ArrowRight, Home, LineChart as LineChartIcon, Calculator } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import SearchBar from '../../components/ui/SearchBar';
 import { useCurrency } from '../../context/CurrencyContext';
@@ -109,8 +109,17 @@ export default function StockProfile() {
                 <span style={{ fontSize: '0.8rem', color: 'var(--text-3)', fontWeight: 500 }}>{d.sector}</span>
               </div>
             </div>
-            <div style={{ marginLeft: 'auto' }} className="trust-mark">
-              <div className="live-dot"></div> Live Data
+            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div className="trust-mark">
+                <div className="live-dot"></div> Live Data
+              </div>
+              <Link
+                to={`/calculators?calc=lumpsum&type=stock&name=${encodeURIComponent(d.name)}&ticker=${encodeURIComponent(id.includes('.') ? id : `${id}.NS`)}`}
+                className="btn btn-outline btn-sm"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              >
+                <Calculator size={14} /> Calculate Returns
+              </Link>
             </div>
           </div>
 
