@@ -6,7 +6,7 @@ import logo from '../../assets/logo.png';
 import { useTheme } from '../../context/ThemeContext';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useAuth } from '../../context/AuthContext';
-import { useCms } from '../../context/CmsContext';
+import { useCms, defaultCmsConfig } from '../../context/CmsContext';
 
 export default function Navbar({ onToggleAIChat }) {
   const loc = useLocation();
@@ -14,7 +14,10 @@ export default function Navbar({ onToggleAIChat }) {
   const { cmsConfig } = useCms();
   const active = (p) => loc.pathname === p;
 
-  const navItems = cmsConfig?.navbar?.navItems || [];
+  // Nav links are a code/routing concern, not editorial content — always use the
+  // build's own defaults so the navbar reflects what's actually deployed, regardless
+  // of whether the CMS backend is up to date.
+  const navItems = defaultCmsConfig.navbar.navItems;
   const mainLinks = navItems.filter(item => !item.subItems);
   const otherLinksData = navItems.find(item => item.subItems);
   const OTHER_LINKS = otherLinksData ? otherLinksData.subItems : [];
