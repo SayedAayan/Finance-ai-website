@@ -1,9 +1,17 @@
-// Extracts a plain-text snapshot of what's currently visible on screen, so the AI
-// assistant can answer "what is this" / "how do I do X" questions grounded in the
-// real page content instead of a hardcoded per-route description.
+// Extracts a plain-text and structured visual snapshot of what's currently visible on screen,
+// enabling the STOCKBUZZ AI Guardian ("Lens" and "Assistant" modules) to perform visual sweeps,
+// entity identification, and metric extraction.
 
 const SKIP_TAGS = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'SVG', 'PATH', 'IFRAME']);
 const MAX_CHARS = 4000;
+
+const KNOWN_TICKERS = [
+  'NIFTY 50', 'NIFTY50', 'SENSEX', 'BANKNIFTY', 'NIFTY BANK', 'NIFTY IT',
+  'RELIANCE', 'TCS', 'INFY', 'HDFCBANK', 'ICICIBANK', 'SBIN', 'BHARTIARTL',
+  'ITC', 'KOTAKBANK', 'LT', 'HINDUNILVR', 'AXISBANK', 'TATAMOTORS', 'SUNPHARMA',
+  'MARUTI', 'NTPC', 'POWERGRID', 'TITAN', 'BAJFINANCE', 'ADANIENT', 'ADANIPORTS',
+  'TSLA', 'AAPL', 'NVDA', 'MSFT', 'GOOGL', 'AMZN'
+];
 
 function isVisible(el) {
   if (!(el instanceof Element)) return false;
@@ -19,7 +27,6 @@ function isInViewport(el, buffer = 400) {
 }
 
 // Walks the DOM under `root`, collecting short text fragments from leaf-ish elements
-// (things whose own direct text is non-empty), skipping hidden nodes and script/style tags.
 function collectText(root, { viewportOnly } = {}) {
   const lines = [];
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, {
@@ -59,7 +66,7 @@ function collectFormValues(root) {
   root.querySelectorAll('input, select, textarea').forEach(el => {
     if (!isVisible(el)) return;
     const label = el.getAttribute('aria-label') || el.placeholder || el.name || '';
-    if (el.type === 'range') return; // paired number input already captures the value
+    if (el.type === 'range') return; // paired number input captures the value
     const val = el.value;
     if (val === '' || val == null) return;
     values.push(`${label ? label + ' = ' : ''}${val}`.trim());
@@ -67,9 +74,58 @@ function collectFormValues(root) {
   return values;
 }
 
+// Extracts visible stock tickers and financial entities
+function extractVisibleTickers(textLines) {
+  const found = new Set();
+  const fullText = textLines.join(' ');
+
+  for (const ticker of KNOWN_TICKERS) {
+    const regex = new RegExp(`\\b${ticker.replace(/\s+/g, '\\s*')}\\b`, 'i');
+    if (regex.test(fullText)) {
+      found.add(ticker.toUpperCase());
+    }
+  }
+
+  // Also check URL parameters or path (e.g., /stock/RELIANCE or /fund/HDFC)
+  const pathParts = window.location.pathname.split('/').filter(Boolean);
+  if (pathParts.length >= 2 && (pathParts[0] === 'stock' || pathParts[0] === 'fund' || pathParts[0] === 'pro-book')) {
+    found.add(decodeURIComponent(pathParts[1]).toUpperCase());
+  }
+
+  return Array.from(found);
+}
+
+// Extracts key financial metrics visible on the screen
+function extractMetrics(textLines) {
+  const metrics = {};
+  const fullText = textLines.join('\n');
+
+  // Price match (e.g. ₹2,950.45 or 2950.45 or $150.20)
+  const priceMatch = fullText.match(/(?:₹|\$|INR)\s*([\d,]+\.?\d*)/i);
+  if (priceMatch) metrics.price = priceMatch[1];
+
+  // Change % match (e.g. +1.24% or -0.85%)
+  const changeMatch = fullText.match(/([+-]?\d+\.?\d*)\s*%/);
+  if (changeMatch) metrics.change = changeMatch[0];
+
+  // P/E ratio match
+  const peMatch = fullText.match(/P\/E(?:\s*Ratio)?[:\s]+([\d\.]+)/i);
+  if (peMatch) metrics.pe_ratio = peMatch[1];
+
+  // RSI match
+  const rsiMatch = fullText.match(/RSI(?:\s*\(14\))?[:\s]+([\d\.]+)/i);
+  if (rsiMatch) metrics.rsi = rsiMatch[1];
+
+  // Volume match
+  const volumeMatch = fullText.match(/Volume[:\s]+([\d,\.]+\s*[KMBCr]?)/i);
+  if (volumeMatch) metrics.volume = volumeMatch[1];
+
+  return metrics;
+}
+
 /**
- * Returns a compact plain-text description of the current page: title, active
- * tab/route hint, and the visible text content of the main content area.
+ * Returns a compact description of the current page along with structured
+ * visual context for the Stockbuzz AI Guardian.
  */
 export function getVisiblePageContext() {
   const main = document.querySelector('main') || document.body;
@@ -96,5 +152,20 @@ export function getVisiblePageContext() {
     body = body.slice(0, MAX_CHARS) + '\n…(truncated)';
   }
 
-  return { title, url: window.location.pathname, body };
+  const visibleTickers = extractVisibleTickers(deduped);
+  const extractedMetrics = extractMetrics(deduped);
+
+  const visual_context = {
+    current_url: window.location.href,
+    visible_tickers: visibleTickers,
+    extracted_metrics: extractedMetrics,
+    body_snapshot: body.slice(0, 1500)
+  };
+
+  return {
+    title,
+    url: window.location.pathname,
+    body,
+    visual_context
+  };
 }

@@ -234,7 +234,7 @@ export default function Navbar({ onToggleAIChat }) {
               <Link
                 key={item.id || item.path}
                 to={item.path}
-                className={`px-3.5 py-2 rounded-full text-[0.87rem] font-medium transition-all duration-200 ${active(item.path)
+                className={`px-3.5 py-2 rounded-full text-[0.87rem] font-medium whitespace-nowrap transition-all duration-200 ${active(item.path)
                   ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
                   : 'text-textMuted dark:text-gray-400 hover:text-textMain dark:hover:text-gray-100 hover:bg-gray-100/50 dark:hover:bg-gray-800/50'
                   }`}
@@ -248,7 +248,7 @@ export default function Navbar({ onToggleAIChat }) {
               <div className="relative" ref={othersRef} onMouseEnter={() => setShowOthers(true)} onMouseLeave={() => setShowOthers(false)}>
                 <button
                   onClick={() => setShowOthers(!showOthers)}
-                  className={`flex items-center gap-1 px-3.5 py-2 rounded-full text-[0.87rem] font-medium transition-all duration-200 ${isOtherActive
+                  className={`flex items-center gap-1 px-3.5 py-2 rounded-full text-[0.87rem] font-medium whitespace-nowrap transition-all duration-200 ${isOtherActive
                     ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
                     : 'text-textMuted dark:text-gray-400 hover:text-textMain dark:hover:text-gray-100 hover:bg-gray-100/50 dark:hover:bg-gray-800/50'
                     }`}

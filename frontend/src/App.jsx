@@ -84,12 +84,16 @@ function Layout() {
       {loc.pathname !== '/chat' && <Footer />}
 
       {/* Global Context-Aware AI Chat Sidebar */}
-      <AIChatSidebar isOpen={isAIChatOpen} onClose={() => setIsAIChatOpen(false)} />
+      <AIChatSidebar 
+        isOpen={isAIChatOpen} 
+        onClose={() => setIsAIChatOpen(false)} 
+        onOpenVisualSearch={() => { setIsAIChatOpen(false); setIsScreenShareOpen(true); }}
+      />
 
       {/* "Circle to Search"-style visual assistant — screenshots the page so the user can point at anything and ask */}
       <AIScreenShare isOpen={isScreenShareOpen} onClose={() => setIsScreenShareOpen(false)} />
 
-      {/* Floating draggable AI pet — visible on every page, opens the visual screen-search assistant */}
+      {/* Floating draggable AI pet — visible on every page, opens the Visual Screen Search assistant */}
       <AIPet onOpen={() => setIsScreenShareOpen(true)} hidden={isAIChatOpen || isScreenShareOpen || isChat} />
 
       <BackToTop />

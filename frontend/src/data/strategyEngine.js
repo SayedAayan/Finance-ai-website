@@ -139,29 +139,32 @@ function passesFilter(strategyId, stock) {
   switch (strategyId) {
     case 'buffett':
     case 'munger':
-      return stock.peRatio < 25 && stock.debtToEquity < 0.6;
+      return stock.peRatio <= 32 && stock.debtToEquity <= 0.6;
     case 'lynch':
     case 'fisher':
-      return stock.peRatio > 0 && stock.changePercent > 0;
+      return stock.peRatio > 0 && (stock.changePercent > 0 || stock.dividendYield > 0.5);
     case 'graham':
     case 'greenblatt':
-      return stock.peRatio < 15 || stock.pbRatio < 2;
+      return stock.peRatio < 28 || stock.pbRatio < 3.5;
     case 'dalio':
     case 'bogle':
-      return stock.dividendYield > 0.5 && stock.debtToEquity < 0.8;
+      return stock.dividendYield >= 0.3 && stock.debtToEquity < 0.9;
     case 'soros':
     case 'ackman':
-      return stock.changePercent > 1.0 || stock.price > 1000;
+      return Math.abs(stock.changePercent) > 0.5 || stock.price > 800;
     default:
       return true;
   }
 }
 
 export function getMatchedStocks(strategyId, stocks) {
-  return stocks
-    .filter(s => passesFilter(strategyId, s))
-    .map(s => ({ ...s, matchScore: Math.round(scoreStock(strategyId, s)) }))
-    .sort((a, b) => b.matchScore - a.matchScore);
+  const scored = (stocks || []).map(s => ({
+    ...s,
+    matchScore: Math.round(scoreStock(strategyId, s))
+  }));
+  const filtered = scored.filter(s => passesFilter(strategyId, s));
+  const results = filtered.length > 0 ? filtered : scored;
+  return results.sort((a, b) => b.matchScore - a.matchScore);
 }
 
 function clamp(n, min, max) {

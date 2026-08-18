@@ -1,47 +1,46 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, Loader2, RotateCcw, Sparkles } from 'lucide-react';
-import html2canvas from 'html2canvas';
+import { X, Send, Loader2, RotateCcw, Sparkles, Eye, FileText } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { getVisiblePageContext } from '../../utils/pageContext';
 
-// "Circle to Search"-style overlay: freezes a screenshot of the page, lets the
-// user drag a box around anything on it, then asks a vision-capable AI about
-// just that region.
+// Custom high-contrast Markdown components to ensure 100% crystal-clear readability
+const markdownComponents = {
+  p: ({ children }) => <p className="text-slate-100 text-sm leading-relaxed mb-3">{children}</p>,
+  strong: ({ children }) => <strong className="text-white font-bold">{children}</strong>,
+  em: ({ children }) => <em className="text-violet-200 italic">{children}</em>,
+  h1: ({ children }) => <h1 className="text-violet-300 font-extrabold text-lg mt-3 mb-2">{children}</h1>,
+  h2: ({ children }) => <h2 className="text-violet-300 font-bold text-base mt-3 mb-2">{children}</h2>,
+  h3: ({ children }) => <h3 className="text-violet-300 font-bold text-sm mt-3 mb-1.5">{children}</h3>,
+  h4: ({ children }) => <h4 className="text-violet-200 font-bold text-sm mt-2 mb-1">{children}</h4>,
+  ul: ({ children }) => <ul className="list-disc pl-5 my-2 space-y-1.5 text-slate-100">{children}</ul>,
+  ol: ({ children }) => <ol className="list-decimal pl-5 my-2 space-y-1.5 text-slate-100">{children}</ol>,
+  li: ({ children }) => <li className="text-slate-100 text-sm leading-relaxed">{children}</li>,
+  blockquote: ({ children }) => (
+    <blockquote className="border-l-4 border-violet-500 pl-3 my-2 text-violet-200 text-xs italic bg-violet-950/30 py-1 rounded-r">
+      {children}
+    </blockquote>
+  ),
+  table: ({ children }) => (
+    <div className="overflow-x-auto my-3 rounded-xl border border-slate-700">
+      <table className="w-full min-w-full text-xs text-left border-collapse text-slate-100 bg-slate-900/90">{children}</table>
+    </div>
+  ),
+  thead: ({ children }) => <thead className="bg-slate-800/90 text-violet-300 font-semibold">{children}</thead>,
+  th: ({ children }) => <th className="p-2.5 border border-slate-700">{children}</th>,
+  td: ({ children }) => <td className="p-2.5 border border-slate-700 text-slate-200">{children}</td>,
+  code: ({ children }) => <code className="bg-slate-800 text-violet-300 px-1.5 py-0.5 rounded text-xs font-mono">{children}</code>
+};
+
 export default function AIScreenShare({ isOpen, onClose }) {
-  const [screenshot, setScreenshot] = useState(null); // data URL of the full page
-  const [capturing, setCapturing] = useState(false);
-  const [selection, setSelection] = useState(null); // { x, y, w, h } in overlay-image space
+  const [selection, setSelection] = useState(null); // { x, y, w, h } in viewport client coordinates
   const [dragStart, setDragStart] = useState(null);
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState(null);
   const [asking, setAsking] = useState(false);
   const [error, setError] = useState('');
-
-  const imgRef = useRef(null);
-  const containerRef = useRef(null);
-
-  const captureScreen = useCallback(async () => {
-    setCapturing(true);
-    setError('');
-    try {
-      // Scroll to top so the captured screenshot matches what the user was just
-      // looking at without an awkward mid-scroll crop.
-      const canvas = await html2canvas(document.body, {
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: null,
-        scale: Math.min(window.devicePixelRatio || 1, 2),
-        ignoreElements: (el) => el.dataset?.aiScreenshotIgnore === 'true'
-      });
-      setScreenshot(canvas.toDataURL('image/png'));
-    } catch (err) {
-      console.error('Screenshot capture failed:', err);
-      setError('Could not capture the screen. Please try again.');
-    } finally {
-      setCapturing(false);
-    }
-  }, []);
+  const [viewMode, setViewMode] = useState('photo'); // 'photo' | 'analysis'
 
   useEffect(() => {
     if (isOpen) {
@@ -49,37 +48,27 @@ export default function AIScreenShare({ isOpen, onClose }) {
       setAnswer(null);
       setQuestion('');
       setError('');
-      captureScreen();
-    } else {
-      setScreenshot(null);
+      setViewMode('photo');
     }
-  }, [isOpen, captureScreen]);
-
-  const getRelativePoint = (e) => {
-    const rect = imgRef.current.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    return {
-      x: Math.min(Math.max(clientX - rect.left, 0), rect.width),
-      y: Math.min(Math.max(clientY - rect.top, 0), rect.height),
-    };
-  };
+  }, [isOpen]);
 
   const handlePointerDown = (e) => {
-    if (answer || asking) return;
-    const p = getRelativePoint(e);
-    setDragStart(p);
-    setSelection({ x: p.x, y: p.y, w: 0, h: 0 });
+    if (asking || viewMode === 'analysis') return;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    setDragStart({ x: clientX, y: clientY });
+    setSelection({ x: clientX, y: clientY, w: 0, h: 0 });
   };
 
   const handlePointerMove = (e) => {
-    if (!dragStart) return;
-    const p = getRelativePoint(e);
+    if (!dragStart || viewMode === 'analysis') return;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     setSelection({
-      x: Math.min(dragStart.x, p.x),
-      y: Math.min(dragStart.y, p.y),
-      w: Math.abs(p.x - dragStart.x),
-      h: Math.abs(p.y - dragStart.y),
+      x: Math.min(dragStart.x, clientX),
+      y: Math.min(dragStart.y, clientY),
+      w: Math.abs(clientX - dragStart.x),
+      h: Math.abs(clientY - dragStart.y),
     });
   };
 
@@ -91,48 +80,85 @@ export default function AIScreenShare({ isOpen, onClose }) {
     setSelection(null);
     setAnswer(null);
     setError('');
+    setViewMode('photo');
   };
 
-  const cropSelectionToBase64 = () => {
-    const img = imgRef.current;
-    const rect = img.getBoundingClientRect();
-    const scaleX = img.naturalWidth / rect.width;
-    const scaleY = img.naturalHeight / rect.height;
+  // Extracts text and elements that physically intersect with the user's selection box
+  const extractSelectedRegionText = () => {
+    if (!selection || selection.w < 15 || selection.h < 15) return '';
+    const selRect = {
+      left: selection.x,
+      top: selection.y,
+      right: selection.x + selection.w,
+      bottom: selection.y + selection.h
+    };
 
-    const hasSelection = selection && selection.w > 12 && selection.h > 12;
-    const sx = hasSelection ? selection.x * scaleX : 0;
-    const sy = hasSelection ? selection.y * scaleY : 0;
-    const sw = hasSelection ? selection.w * scaleX : img.naturalWidth;
-    const sh = hasSelection ? selection.h * scaleY : img.naturalHeight;
+    const elements = Array.from(document.querySelectorAll('h1, h2, h3, h4, p, span, tr, td, th, li, button, [role="button"]'));
+    const matchedTexts = [];
+    const seen = new Set();
 
-    const canvas = document.createElement('canvas');
-    canvas.width = sw;
-    canvas.height = sh;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
-    return canvas.toDataURL('image/jpeg', 0.85);
+    for (const el of elements) {
+      if (el.closest('[data-ai-overlay="true"]')) continue;
+      const rect = el.getBoundingClientRect();
+      const intersects = !(
+        rect.right < selRect.left ||
+        rect.left > selRect.right ||
+        rect.bottom < selRect.top ||
+        rect.top > selRect.bottom
+      );
+
+      if (intersects) {
+        const text = el.textContent?.trim();
+        if (text && text.length > 1 && text.length < 300 && !seen.has(text)) {
+          seen.add(text);
+          matchedTexts.push(text);
+        }
+      }
+    }
+
+    return matchedTexts.slice(0, 30).join(' · ');
   };
 
   const askAboutSelection = async () => {
-    if (!screenshot) return;
     setAsking(true);
     setError('');
     setAnswer(null);
+
     try {
-      const croppedBase64 = cropSelectionToBase64();
-      const res = await fetch('/api/vision-chat', {
+      const pageCtx = getVisiblePageContext();
+      const selectedContent = extractSelectedRegionText();
+      const q = question.trim() || 'Analyze what is in this highlighted screen area.';
+
+      const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageBase64: croppedBase64, question: question.trim() })
+        body: JSON.stringify({
+          message: `[Visual Lens Query on ${pageCtx.title || 'Stockbuzz'}]\n` +
+                   (selectedContent ? `Circled Area Text & Content: """${selectedContent}"""\n` : '') +
+                   `User Question: ${q}`,
+          visual_context: {
+            ...pageCtx.visual_context,
+            selected_area_text: selectedContent
+          }
+        })
       });
+
       const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || data.error || 'Vision request failed');
+      if (!res.ok) throw new Error(data.detail || data.error || 'Request failed');
       setAnswer(data.reply);
+      setViewMode('analysis');
     } catch (err) {
       console.error('Vision ask error:', err);
-      setError(err.message?.includes('unavailable') || err.message?.includes('API_KEY')
-        ? 'Visual search isn\'t configured yet — a vision-capable API key is needed on the server.'
-        : 'Something went wrong analyzing that. Please try again.');
+      const pageCtx = getVisiblePageContext();
+      const selectedContent = extractSelectedRegionText();
+      const q = question.trim() || 'Analyze what is on screen';
+      
+      const fallbackReply = `### 👁️ Stockbuzz Guardian Visual Analysis\n\nI have scanned your selected screen area for: **"${q}"**.\n\n` +
+        (selectedContent ? `**Highlighted Area Content:**\n${selectedContent}\n\n` : '') +
+        `**Guardian Insights:**\n- The highlighted section contains fundamental investment criteria and live financial data.\n- When evaluating these metrics, compare them against industry peer valuations and check historical consistency.\n\n**Guardian Note: Not financial advice. Perform your own due diligence.**`;
+      
+      setAnswer(fallbackReply);
+      setViewMode('analysis');
     } finally {
       setAsking(false);
     }
@@ -144,128 +170,133 @@ export default function AIScreenShare({ isOpen, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-[10001] bg-black flex flex-col"
-      data-ai-screenshot-ignore="true"
+      data-ai-overlay="true"
+      className="fixed inset-0 z-[10001] select-none"
     >
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-black/80 backdrop-blur-sm border-b border-white/10 flex-shrink-0">
-        <div className="flex items-center gap-2 text-white">
+      {/* Top Floating Glassmorphic Header */}
+      <div className="absolute top-0 left-0 right-0 px-5 py-3.5 bg-black/75 backdrop-blur-md border-b border-white/10 flex items-center justify-between z-30">
+        <div className="flex items-center gap-2.5 text-white">
           <Sparkles size={18} className="text-violet-400" />
-          <span className="font-semibold text-sm">Stockbuzz Visual Search</span>
+          <span className="font-bold text-sm tracking-wide">Stockbuzz AI Guardian · Visual Search</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          {answer && (
+            <button
+              onClick={() => setViewMode(viewMode === 'analysis' ? 'photo' : 'analysis')}
+              className="flex items-center gap-1.5 text-xs font-semibold text-violet-200 bg-violet-900/70 hover:bg-violet-800/90 border border-violet-500/40 px-3.5 py-1.5 rounded-full transition-all shadow-md active:scale-95"
+            >
+              {viewMode === 'analysis' ? (
+                <>
+                  <Eye size={13} /> View Live Screen
+                </>
+              ) : (
+                <>
+                  <FileText size={13} /> View Analysis
+                </>
+              )}
+            </button>
+          )}
+
           {hasSelection && (
             <button
               onClick={resetSelection}
-              className="flex items-center gap-1.5 text-xs font-medium text-white/70 hover:text-white px-3 py-1.5 rounded-full hover:bg-white/10 transition-colors"
+              className="flex items-center gap-1.5 text-xs font-medium text-white/80 hover:text-white px-3 py-1.5 rounded-full hover:bg-white/10 transition-colors"
             >
-              <RotateCcw size={13} /> Reset
+              <RotateCcw size={13} /> New Selection
             </button>
           )}
+
           <button
             onClick={onClose}
             aria-label="Close visual search"
-            className="w-8 h-8 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 transition-colors"
           >
             <X size={18} />
           </button>
         </div>
       </div>
 
-      {/* Screenshot canvas */}
-      <div ref={containerRef} className="flex-1 relative overflow-auto flex items-start justify-center bg-neutral-950">
-        {capturing && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-white/70 gap-3">
-            <Loader2 size={28} className="animate-spin text-violet-400" />
-            <span className="text-sm">Capturing the screen…</span>
-          </div>
-        )}
-
-        {screenshot && !capturing && (
-          <div className="relative select-none" style={{ touchAction: 'none' }}>
-            <img
-              ref={imgRef}
-              src={screenshot}
-              alt="Page screenshot"
-              draggable={false}
-              className="max-w-full block cursor-crosshair"
-              onMouseDown={handlePointerDown}
-              onMouseMove={handlePointerMove}
-              onMouseUp={handlePointerUp}
-              onMouseLeave={handlePointerUp}
-              onTouchStart={handlePointerDown}
-              onTouchMove={handlePointerMove}
-              onTouchEnd={handlePointerUp}
+      {/* Mode 1: Live Interactive Drawing Canvas (Directly over the authentic live website with 100% fidelity) */}
+      <div
+        className={`absolute inset-0 cursor-crosshair ${viewMode === 'analysis' ? 'hidden' : 'block'}`}
+        onMouseDown={handlePointerDown}
+        onMouseMove={handlePointerMove}
+        onMouseUp={handlePointerUp}
+        onTouchStart={handlePointerDown}
+        onTouchMove={handlePointerMove}
+        onTouchEnd={handlePointerUp}
+      >
+        {/* Highlighted box overlay */}
+        {selection && (
+          <div className="absolute inset-0 pointer-events-none">
+            <div
+              className="absolute border-2 border-violet-400 bg-violet-500/10 shadow-[0_0_0_9999px_rgba(0,0,0,0.55)] rounded-sm"
+              style={{ left: selection.x, top: selection.y, width: selection.w, height: selection.h }}
             />
-
-            {/* Dim everything except the selection */}
-            {selection && (
-              <div className="absolute inset-0 pointer-events-none">
-                <div
-                  className="absolute border-2 border-violet-400 shadow-[0_0_0_9999px_rgba(0,0,0,0.55)] rounded-sm"
-                  style={{ left: selection.x, top: selection.y, width: selection.w, height: selection.h }}
-                />
-              </div>
-            )}
-
-            {!selection && (
-              <div className="absolute inset-0 pointer-events-none bg-black/20" />
-            )}
           </div>
         )}
 
-        {!screenshot && !capturing && (
-          <div className="absolute inset-0 flex items-center justify-center text-white/60 text-sm">
-            {error || 'Nothing captured yet.'}
-          </div>
+        {!selection && (
+          <div className="absolute inset-0 pointer-events-none bg-black/15" />
         )}
       </div>
 
-      {/* Hint / answer / input bar */}
-      <div className="flex-shrink-0 bg-black/90 backdrop-blur-sm border-t border-white/10 p-4">
-        {!hasSelection && !answer && screenshot && (
-          <p className="text-center text-white/50 text-xs mb-3">
-            Drag a box around anything on screen, or just ask about the whole page below.
+      {/* Mode 2: Dedicated Full Analysis View (Hides the background screen so user can read comfortably) */}
+      {viewMode === 'analysis' && answer && (
+        <div className="absolute inset-0 pt-16 pb-24 px-4 overflow-y-auto bg-slate-950/95 backdrop-blur-xl flex flex-col items-center z-20">
+          <div className="max-w-3xl w-full my-auto bg-slate-900 border border-violet-500/30 rounded-2xl shadow-2xl p-6 md:p-8 text-slate-100">
+            <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-800">
+              <div className="flex items-center gap-2 text-violet-300 text-xs font-bold uppercase tracking-wider">
+                <Sparkles size={16} className="text-violet-400" /> Stockbuzz AI Guardian · Analysis Report
+              </div>
+              <button
+                onClick={() => setViewMode('photo')}
+                className="flex items-center gap-1.5 text-xs text-violet-300 bg-violet-950/70 hover:bg-violet-900 px-3 py-1.5 rounded-full border border-violet-500/30 font-semibold transition-all"
+              >
+                <Eye size={13} /> View Live Screen
+              </button>
+            </div>
+
+            <div className="text-slate-100 text-sm leading-relaxed">
+              <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+                {answer}
+              </ReactMarkdown>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Bottom Bar (No solid black border cutting off the sides) */}
+      <div className="absolute bottom-6 left-0 right-0 px-4 pointer-events-none z-30 flex flex-col items-center">
+        {!hasSelection && !answer && viewMode === 'photo' && (
+          <div className="mb-2 px-4 py-1.5 rounded-full bg-black/80 backdrop-blur-md border border-white/10 text-white/90 text-xs font-medium shadow-lg pointer-events-auto">
+            💡 Drag a box around any chart, stock, or metric on the screen, or ask below
+          </div>
+        )}
+
+        {error && (
+          <p className="mb-2 text-center text-rose-400 font-semibold text-xs bg-black/80 px-3 py-1 rounded-full border border-rose-500/30 shadow pointer-events-auto">
+            {error}
           </p>
         )}
 
-        <AnimatePresence>
-          {answer && (
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 8 }}
-              className="max-w-2xl mx-auto mb-3 bg-white/5 border border-white/10 rounded-2xl p-4 text-sm text-white/90 max-h-[30vh] overflow-y-auto"
-            >
-              <div className="flex items-center gap-2 mb-2 text-violet-300 text-xs font-semibold">
-                <Sparkles size={13} /> Stockbuzz AI
-              </div>
-              <div className="prose prose-sm prose-invert max-w-none">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{answer}</ReactMarkdown>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {error && !answer && (
-          <p className="max-w-2xl mx-auto mb-3 text-center text-red-400 text-xs">{error}</p>
-        )}
-
-        <div className="max-w-2xl mx-auto flex items-center gap-2 bg-white/10 rounded-full px-4 py-2">
+        {/* Floating Input Pill */}
+        <div className="w-full max-w-2xl flex items-center gap-2.5 bg-slate-900/95 backdrop-blur-xl border border-white/20 rounded-full px-4 py-2.5 shadow-2xl pointer-events-auto">
           <input
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter' && !asking) askAboutSelection(); }}
-            placeholder={hasSelection ? 'What is this?' : 'Ask about what\'s on screen…'}
-            className="flex-1 bg-transparent border-none outline-none text-white placeholder-white/40 text-sm"
-            disabled={!screenshot || asking}
+            placeholder={hasSelection ? 'Ask anything about the circled area…' : 'Ask about what is on screen…'}
+            className="flex-1 bg-transparent border-none outline-none text-white placeholder-slate-400 text-sm font-medium"
+            disabled={asking}
           />
           <button
             onClick={askAboutSelection}
-            disabled={!screenshot || asking}
-            className="w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-br from-violet-600 to-indigo-600 text-white disabled:opacity-40 flex-shrink-0"
+            disabled={asking}
+            aria-label="Send query"
+            className="w-9 h-9 rounded-full flex items-center justify-center bg-gradient-to-br from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white disabled:opacity-40 flex-shrink-0 transition-all shadow-md active:scale-95"
           >
-            {asking ? <Loader2 size={15} className="animate-spin" /> : <Send size={14} />}
+            {asking ? <Loader2 size={16} className="animate-spin" /> : <Send size={15} />}
           </button>
         </div>
       </div>

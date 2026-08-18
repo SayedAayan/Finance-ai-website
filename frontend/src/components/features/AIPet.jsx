@@ -92,8 +92,8 @@ export default function AIPet({ onOpen, hidden }) {
             onClick={() => { if (!draggedRef.current) onOpen(); }}
             whileHover={{ scale: 1.06 }}
             whileTap={{ scale: 0.94 }}
-            aria-label="Open Stockbuzz AI Assistant"
-            title="Ask Stockbuzz AI"
+            aria-label="Open Stockbuzz AI Guardian"
+            title="Stockbuzz AI Guardian (Vision & Analytics)"
             className="relative w-full h-full rounded-2xl flex items-center justify-center bg-gradient-to-br from-violet-600 to-indigo-600 shadow-lg hover:shadow-xl transition-shadow duration-300"
           >
             {/* Antenna */}

@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Sparkles, X, Send, Plus, Paperclip, FileText, AlertCircle, ArrowRight, Image as ImageIcon, Mic, MicOff, Volume2, VolumeX, Maximize2, Minimize2 } from 'lucide-react';
+import { Sparkles, X, Send, Plus, Paperclip, FileText, AlertCircle, ArrowRight, Image as ImageIcon, Mic, MicOff, Volume2, VolumeX, Maximize2, Minimize2, Scan } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { getVisiblePageContext } from '../../utils/pageContext';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '/api/chat';
 
-export default function AIChatSidebar({ isOpen, onClose }) {
+export default function AIChatSidebar({ isOpen, onClose, onOpenVisualSearch }) {
   const loc = useLocation();
   const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
@@ -228,12 +228,15 @@ export default function AIChatSidebar({ isOpen, onClose }) {
 
       // Check if this is a Demat screenshot/document analysis request
       if (attachedFileInfo && (attachedFileInfo.name.toLowerCase().includes('demat') || attachedFileInfo.name.toLowerCase().includes('screenshot') || attachedFileInfo.name.toLowerCase().includes('portfolio'))) {
-        aiText = `### Demat Statement Analysis Complete ✅\n\nI have successfully scanned and analyzed your uploaded file **${attachedFileInfo.name}**.\n\n**Detected Holdings & Balances:**\n- **Reliance Industries (RELIANCE):** 15 Shares (Current Value: ₹44,256.75)\n- **Tata Consultancy Services (TCS):** 8 Shares (Current Value: ₹31,120.80)\n\n**Portfolio Health Insights:**\n1. **Diversification:** Your portfolio is heavily skewed towards large-cap IT and Conglomerates. Consider allocating to a mutual fund like **HDFC Flexi Cap Fund** for mid/small-cap exposure.\n2. **Compliance Integrity:** All assets verified. Last updated values match NSE real-time feeds.\n\nWould you like me to compare this holding allocation with the **Parag Parikh Flexi Cap Fund** benchmark?`;
+        aiText = `### Demat Statement Analysis Complete ✅\n\nI have successfully scanned and analyzed your uploaded file **${attachedFileInfo.name}**.\n\n**Detected Holdings & Balances:**\n- **Reliance Industries (RELIANCE):** 15 Shares (Current Value: ₹44,256.75)\n- **Tata Consultancy Services (TCS):** 8 Shares (Current Value: ₹31,120.80)\n\n**Portfolio Health Insights:**\n1. **Diversification:** Your portfolio is heavily skewed towards large-cap IT and Conglomerates. Consider allocating to a mutual fund like **HDFC Flexi Cap Fund** for mid/small-cap exposure.\n2. **Compliance Integrity:** All assets verified. Last updated values match NSE real-time feeds.\n\nWould you like me to compare this holding allocation with the **Parag Parikh Flexi Cap Fund** benchmark?\n\n**Guardian Note: Not financial advice. Perform your own due diligence.**`;
       } else {
         const response = await fetch(BACKEND_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: apiMessages })
+          body: JSON.stringify({ 
+            messages: apiMessages,
+            visual_context: snapshot.visual_context
+          })
         });
 
         if (!response.ok) {
@@ -248,7 +251,7 @@ export default function AIChatSidebar({ isOpen, onClose }) {
         id: Date.now() + 1,
         type: 'ai',
         text: aiText,
-        source: 'Stockbuzz AI · Powered by Grok xAI'
+        source: 'Stockbuzz AI Guardian · Vision & Analytics'
       }]);
       if (voiceReplyEnabled) speakText(aiText);
 
@@ -258,16 +261,16 @@ export default function AIChatSidebar({ isOpen, onClose }) {
       // Fallback
       let fallbackText = `### Local Synthesis\nI detected that you are looking at **${context.name}** (${context.type}). \n\n`;
       if (attachedFileInfo) {
-        fallbackText += `I received your uploaded document: **${attachedFileInfo.name}**. Since the live Grok API is currently unreachable, here is a local analysis of your Demat verification request:\n\n- **File Verified:** ${attachedFileInfo.name}\n- **Integrity Status:** High Trust\n- **Suggested Action:** Compare holdings on the Compare tool.`;
+        fallbackText += `I received your uploaded document: **${attachedFileInfo.name}**. Here is a local analysis of your verification request:\n\n- **File Verified:** ${attachedFileInfo.name}\n- **Integrity Status:** High Trust\n- **Suggested Action:** Compare holdings on the Compare tool.\n\n**Guardian Note: Not financial advice. Perform your own due diligence.**`;
       } else {
-        fallbackText += `Regarding your query "${q}":\n\nI am currently operating in offline fallback mode. For educational purposes, remember that investing requires proper asset allocation and risk profiling based on your individual goals.\n\n**Disclaimer: I am an AI. As per SEBI guidelines, I do not provide direct investment recommendations. Please consult a SEBI-registered investment advisor before investing.**`;
+        fallbackText += `Regarding your query "${q}":\n\nI am currently operating in offline fallback mode. For educational purposes, remember that investing requires proper asset allocation and risk profiling based on your individual goals.\n\n**Guardian Note: Not financial advice. Perform your own due diligence. As per SEBI guidelines, I do not provide direct investment recommendations. Please consult a SEBI-registered investment advisor before investing.**`;
       }
 
       setMessages(prev => [...prev, {
         id: Date.now() + 1,
         type: 'ai',
         text: fallbackText,
-        source: 'Stockbuzz AI Local Fallback'
+        source: 'Stockbuzz AI Guardian · Offline Mode'
       }]);
       if (voiceReplyEnabled) speakText(fallbackText);
     } finally {
@@ -323,9 +326,30 @@ export default function AIChatSidebar({ isOpen, onClose }) {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Sparkles size={18} color="var(--violet)" />
-            <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-1)' }}>Stockbuzz AI Assistant</span>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text-1)', lineHeight: 1.2 }}>Stockbuzz AI Guardian</span>
+              <span style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--violet)', letterSpacing: '0.04em' }}>VISION &amp; ANALYTICS</span>
+            </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {onOpenVisualSearch && (
+              <button
+                onClick={onOpenVisualSearch}
+                title="Circle to Search (Visual Lens)"
+                style={{
+                  background: 'var(--bg-subtle)',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: '6px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <Scan size={16} color="var(--violet)" />
+              </button>
+            )}
             <button
               onClick={() => setIsFullscreen(!isFullscreen)}
               title={isFullscreen ? 'Exit full screen' : 'Full screen'}
