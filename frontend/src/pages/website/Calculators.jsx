@@ -355,7 +355,27 @@ export default function Calculators() {
   }, [principal, compoundRate, compoundYears, frequency]);
 
   // UI Helpers
-  const formatNum = (val) => Number(val).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+  const formatNum = (val) => {
+    const n = Number(val);
+    if (isNaN(n)) return '0';
+    return n.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+  };
+
+  const handleInputChange = (e, setter, isCurrency) => {
+    const raw = e.target.value;
+    if (isCurrency) {
+      const clean = raw.replace(/,/g, '').replace(/[^0-9]/g, '');
+      const num = clean === '' ? 0 : Number(clean);
+      setter(num);
+    } else {
+      if (raw === '' || raw === '.') {
+        setter(0);
+      } else {
+        const num = parseFloat(raw);
+        if (!isNaN(num)) setter(num);
+      }
+    }
+  };
 
   const renderTakeaway = (text, accentClass) => (
     <p className="text-sm text-textMuted dark:text-gray-400 mt-5 pt-5 border-t border-gray-200 dark:border-gray-700 leading-relaxed">
@@ -363,33 +383,42 @@ export default function Calculators() {
     </p>
   );
 
-  const renderSliderInput = (label, value, setter, min, max, step, unit, accentClass, accentHex) => (
-    <div className="mb-7">
-      <div className="flex justify-between items-center mb-3">
-        <label className="text-sm font-semibold text-textMain dark:text-gray-200">{label}</label>
-        <div className="bg-gray-50 dark:bg-gray-800 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center gap-1 min-w-[120px]">
-          {unit === 'currency' && <span className="text-textMuted dark:text-gray-500 font-medium">{symbol}</span>}
-          <input
-            type="number"
-            value={value}
-            onChange={(e) => setter(Number(e.target.value))}
-            className={`w-full bg-transparent border-none outline-none text-right font-bold ${accentClass} focus:ring-0 p-0`}
-          />
-          {unit !== 'currency' && <span className="text-textMuted dark:text-gray-500 font-medium ml-1">{unit}</span>}
+  const renderSliderInput = (label, value, setter, min, max, step, unit, accentClass, accentHex) => {
+    const isCurrency = unit === 'currency';
+    const displayValue = isCurrency 
+      ? (value === 0 ? '' : formatNum(value)) 
+      : value;
+
+    return (
+      <div className="mb-7">
+        <div className="flex justify-between items-center mb-3">
+          <label className="text-sm font-semibold text-textMain dark:text-gray-200">{label}</label>
+          <div className="bg-gray-50 dark:bg-gray-800 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center gap-1 min-w-[130px]">
+            {isCurrency && <span className="text-textMuted dark:text-gray-500 font-medium">{symbol}</span>}
+            <input
+              type="text"
+              inputMode={isCurrency ? "numeric" : "decimal"}
+              value={displayValue}
+              onChange={(e) => handleInputChange(e, setter, isCurrency)}
+              placeholder="0"
+              className={`w-full bg-transparent border-none outline-none text-right font-bold ${accentClass} focus:ring-0 p-0`}
+            />
+            {!isCurrency && <span className="text-textMuted dark:text-gray-500 font-medium ml-1">{unit}</span>}
+          </div>
         </div>
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={value || 0}
+          onChange={(e) => setter(Number(e.target.value))}
+          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+          style={{ accentColor: accentHex }}
+        />
       </div>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onChange={(e) => setter(Number(e.target.value))}
-        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-        style={{ accentColor: accentHex }}
-      />
-    </div>
-  );
+    );
+  };
 
   const renderChart = (data, colors) => (
     <div className="h-[280px] w-full mt-4">
