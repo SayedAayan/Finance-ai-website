@@ -544,16 +544,38 @@
       "currencySymbol": "₹",
       "createdAt": "2026-08-19T06:05:15.246Z",
       "streakDays": 1,
-      "totalPoints": 50,
+      "totalPoints": 550,
       "parentEmail": "parent@stockbuzz.kids",
       "parentConsentVerified": true,
       "portfolio": {
-        "cash": 100000,
+        "cash": 86100,
         "startingCash": 100000,
-        "investedValue": 0,
-        "holdings": []
+        "investedValue": 13900,
+        "holdings": [
+          {
+            "symbol": "RELIANCE.NS",
+            "name": "Reliance Industries",
+            "shares": 5,
+            "avgPrice": 2780,
+            "totalCost": 13900,
+            "currentPrice": 2780,
+            "currency": "₹"
+          }
+        ]
       },
       "ledger": [
+        {
+          "id": "tx_mszqokyh",
+          "timestamp": "2026-08-19T06:57:28.601Z",
+          "type": "BUY",
+          "symbol": "RELIANCE.NS",
+          "name": "Reliance Industries",
+          "shares": 5,
+          "price": 2780,
+          "totalCost": 13900,
+          "currency": "₹",
+          "reasonNote": "to learn"
+        },
         {
           "id": "tx_init",
           "timestamp": "2026-08-19T06:05:15.246Z",
@@ -564,7 +586,12 @@
         }
       ],
       "completedLessons": [
-        "lesson-1-1"
+        "lesson-1-1",
+        "lesson-3-1",
+        "lesson-3-2",
+        "lesson-1-2",
+        "lesson-2-1",
+        "lesson-2-2"
       ],
       "badges": [
         {
@@ -573,13 +600,27 @@
           "icon": "Sparkles",
           "unlockedAt": "2026-08-19T06:05:15.246Z",
           "description": "Joined StockBuzz Junior!"
+        },
+        {
+          "id": "b_scholar",
+          "name": "Knowledge Bee",
+          "icon": "Award",
+          "unlockedAt": "2026-08-19T06:55:33.789Z",
+          "description": "Completed 3 learning lessons!"
+        },
+        {
+          "id": "b_first_trade",
+          "name": "First Market Trade",
+          "icon": "TrendingUp",
+          "unlockedAt": "2026-08-19T06:57:28.601Z",
+          "description": "Placed your first paper investment!"
         }
       ],
       "parentControls": {
-        "dailyTradeLimit": 5,
-        "tradesToday": 0,
+        "dailyTradeLimit": 20,
+        "tradesToday": 1,
         "requireParentNoteApproval": false,
-        "maxSingleStockPercent": 25
+        "maxSingleStockPercent": 50
       }
     }
   },
