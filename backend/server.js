@@ -1576,7 +1576,9 @@ app.get('/api/market-overview', async (req, res) => {
   const indices = [
     { symbol: '^NSEI', label: 'NIFTY 50' },
     { symbol: '^BSESN', label: 'SENSEX' },
-    { symbol: '^NSEBANK', label: 'NIFTY BANK' },
+    { symbol: '^GSPC', label: 'S&P 500' },
+    { symbol: '^IXIC', label: 'NASDAQ' },
+    { symbol: '^FTSE', label: 'FTSE 100' },
     { symbol: 'USDINR=X', label: 'USD/INR' }
   ];
   const settled = await Promise.allSettled(indices.map(i => yfQuote(i.symbol)));

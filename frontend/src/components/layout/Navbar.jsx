@@ -38,9 +38,6 @@ export default function Navbar({ onToggleAIChat }) {
   const [showCurrency, setShowCurrency] = useState(false);
   const currencyRef = useRef(null);
 
-  const { selectedMarket, setSelectedMarket, marketsData } = useMarket();
-  const [showMarketMenu, setShowMarketMenu] = useState(false);
-  const marketRef = useRef(null);
   const { currentUser, logout } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef(null);
@@ -63,16 +60,6 @@ export default function Navbar({ onToggleAIChat }) {
     }
     document.addEventListener('mousedown', handleClickOutsideCurrency);
     return () => document.removeEventListener('mousedown', handleClickOutsideCurrency);
-  }, []);
-
-  useEffect(() => {
-    function handleClickOutsideMarket(event) {
-      if (marketRef.current && !marketRef.current.contains(event.target)) {
-        setShowMarketMenu(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutsideMarket);
-    return () => document.removeEventListener('mousedown', handleClickOutsideMarket);
   }, []);
 
   useEffect(() => {
@@ -368,65 +355,6 @@ export default function Navbar({ onToggleAIChat }) {
               <span className="text-sm">🐝</span>
               <span className="hidden sm:inline">Junior</span>
             </Link>
-
-            {/* International Market Switcher */}
-            <div className="relative" ref={marketRef}>
-              <button
-                onClick={() => setShowMarketMenu(!showMarketMenu)}
-                className="flex items-center gap-1.5 px-3 h-[38px] rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-textMuted dark:text-gray-400 hover:text-textMain dark:hover:text-gray-100 text-[0.85rem] font-semibold whitespace-nowrap border border-gray-200 dark:border-gray-800"
-                title="Switch Market (India / US / UK / Global)"
-              >
-                <span>{MARKET_OPTIONS.find(m => m.code === selectedMarket)?.flag || '🇮🇳'}</span>
-                <span className="hidden xl:inline text-xs font-bold">{MARKET_OPTIONS.find(m => m.code === selectedMarket)?.name || 'India'}</span>
-                <ChevronDown size={13} className={`transition-transform duration-200 ${showMarketMenu ? 'rotate-180' : ''}`} />
-              </button>
-
-              <AnimatePresence>
-                {showMarketMenu && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 8 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute top-[calc(100%+8px)] right-0 w-[240px] z-50 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl p-1.5"
-                  >
-                    <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-textMuted dark:text-gray-500">
-                      Select Active Market
-                    </div>
-                    {MARKET_OPTIONS.map((m) => {
-                      const liveStatus = marketsData.find(md => md.code === m.code)?.status;
-                      const isSelected = selectedMarket === m.code;
-                      return (
-                        <button
-                          key={m.code}
-                          onClick={() => { setSelectedMarket(m.code); setShowMarketMenu(false); }}
-                          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-[0.85rem] font-medium transition-colors text-left ${isSelected ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400' : 'text-textMuted dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-textMain dark:hover:text-gray-100'}`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="text-base">{m.flag}</span>
-                            <div>
-                              <div className="font-bold text-xs text-textMain dark:text-gray-100">{m.name}</div>
-                              <div className="text-[10px] opacity-70">{m.exchange}</div>
-                            </div>
-                          </div>
-                          {liveStatus && (
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                              liveStatus.status === 'OPEN'
-                                ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10'
-                                : liveStatus.status === 'PRE_MARKET'
-                                ? 'bg-amber-50 text-amber-600 dark:bg-amber-500/10'
-                                : 'bg-gray-100 text-gray-500 dark:bg-gray-800'
-                            }`}>
-                              {liveStatus.status === 'OPEN' ? '🟢 Open' : liveStatus.status === 'PRE_MARKET' ? '🟡 Pre' : '🔴 Closed'}
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
 
             {/* Currency Selector */}
             <div className="relative" ref={currencyRef}>
