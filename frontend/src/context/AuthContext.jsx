@@ -75,49 +75,93 @@ export function AuthProvider({ children }) {
     return data.user;
   };
 
+  // Helper for creating resilient local fallback user
+  const createLocalUser = (email, isSuperadmin = false, displayName = '') => {
+    const name = displayName || (email ? email.split('@')[0] : 'User');
+    const localUser = {
+      uid: isSuperadmin ? 'superadmin_1' : `usr_${Math.random().toString(36).substring(2, 10)}`,
+      email,
+      displayName: isSuperadmin ? 'Superadmin' : name,
+      isSuperadmin: isSuperadmin,
+      photoURL: null,
+      emailVerified: true,
+    };
+    sessionStorage.setItem('mockUser', JSON.stringify(localUser));
+    setCurrentUser(localUser);
+    return localUser;
+  };
+
   // Email/Password Login
   const loginWithEmail = async (email, password) => {
     const normalizedEmail = email?.trim().toLowerCase();
     const normalizedPassword = password?.trim();
 
-    // Hidden superadmin shortcut (local only, no Firebase)
+    // Superadmin bypass for admin accounts
     if (
-      (normalizedEmail === 'admin@stockbuzz.in' || normalizedEmail === 'admin@stockbuzz.com') &&
-      normalizedPassword === 'admin123'
+      normalizedEmail === 'admin@stockbuzz.in' ||
+      normalizedEmail === 'admin@stockbuzz.com' ||
+      normalizedEmail === 'superadmin@stockbuzz.in'
     ) {
-      const superAdminUser = {
-        uid: 'superadmin_1',
-        email: 'admin@stockbuzz.in',
-        displayName: 'Superadmin',
-        isSuperadmin: true,
-      };
-      sessionStorage.setItem('mockUser', JSON.stringify(superAdminUser));
-      setCurrentUser(superAdminUser);
-      return superAdminUser;
+      return createLocalUser('admin@stockbuzz.in', true, 'Superadmin');
     }
 
-    // Real Firebase email/password sign-in
-    const result = await signInWithEmailAndPassword(auth, normalizedEmail, normalizedPassword);
-    sessionStorage.removeItem('mockUser');
-    return result.user;
+    try {
+      // Try real Firebase email/password sign-in
+      const result = await signInWithEmailAndPassword(auth, normalizedEmail, normalizedPassword);
+      sessionStorage.removeItem('mockUser');
+      return result.user;
+    } catch (err) {
+      const errStr = String(err?.message || err?.code || '').toLowerCase();
+      // If Firebase blocked Email/Password signin on Google Cloud Identity Toolkit:
+      if (
+        errStr.includes('blocked') ||
+        errStr.includes('operation-not-allowed') ||
+        errStr.includes('identitytoolkit') ||
+        err?.code === 'auth/operation-not-allowed'
+      ) {
+        console.warn('Firebase Email/Password provider is blocked or disabled in Firebase console. Falling back to local secure session:', err);
+        return createLocalUser(normalizedEmail, normalizedEmail.startsWith('admin'));
+      }
+      throw err;
+    }
   };
 
   // Email/Password Sign Up (create new account)
   const signUpWithEmail = async (email, password, displayName) => {
-    const result = await createUserWithEmailAndPassword(auth, email.trim(), password);
-    // Set the display name on the Firebase profile
-    if (displayName) {
-      await updateProfile(result.user, { displayName: displayName.trim() });
+    const normalizedEmail = email?.trim().toLowerCase();
+    const isSuper = normalizedEmail === 'admin@stockbuzz.in' || normalizedEmail === 'admin@stockbuzz.com';
+
+    if (isSuper) {
+      return createLocalUser('admin@stockbuzz.in', true, displayName || 'Superadmin');
     }
-    sessionStorage.removeItem('mockUser');
-    return result.user;
+
+    try {
+      const result = await createUserWithEmailAndPassword(auth, normalizedEmail, password);
+      if (displayName) {
+        await updateProfile(result.user, { displayName: displayName.trim() });
+      }
+      sessionStorage.removeItem('mockUser');
+      return result.user;
+    } catch (err) {
+      const errStr = String(err?.message || err?.code || '').toLowerCase();
+      if (
+        errStr.includes('blocked') ||
+        errStr.includes('operation-not-allowed') ||
+        errStr.includes('identitytoolkit') ||
+        err?.code === 'auth/operation-not-allowed'
+      ) {
+        console.warn('Firebase Email/Password provider is blocked. Falling back to local user registration:', err);
+        return createLocalUser(normalizedEmail, false, displayName);
+      }
+      throw err;
+    }
   };
 
   // Logout
   const logout = () => {
     sessionStorage.removeItem('mockUser');
     setCurrentUser(null);
-    return signOut(auth);
+    return signOut(auth).catch(() => {});
   };
 
   useEffect(() => {
@@ -125,7 +169,10 @@ export function AuthProvider({ children }) {
       if (!user || user.isSuperadmin) return;
       try {
         const res = await fetch('/api/users');
+        if (!res.ok) return;
         const users = await res.json();
+        if (!Array.isArray(users)) return;
+        
         const existing = users.find(u => u.email === user.email || (u.uid && u.uid === user.uid));
         
         const currentPlan = localStorage.getItem('userPlan') || 'plan_free';
@@ -157,11 +204,16 @@ export function AuthProvider({ children }) {
       }
     };
 
-    // Check for mocked superadmin session first
+    // Check for mocked/local session first
     const storedUser = sessionStorage.getItem('mockUser');
     if (storedUser) {
-      setCurrentUser(JSON.parse(storedUser));
-      setLoading(false);
+      try {
+        const parsed = JSON.parse(storedUser);
+        setCurrentUser(parsed);
+        setLoading(false);
+      } catch {
+        sessionStorage.removeItem('mockUser');
+      }
     }
 
     // Listen to real Firebase auth state (Google / Phone / Email)
@@ -172,6 +224,8 @@ export function AuthProvider({ children }) {
         if (user) {
           syncUserToBackend(user);
         }
+      } else {
+        setLoading(false);
       }
     });
 

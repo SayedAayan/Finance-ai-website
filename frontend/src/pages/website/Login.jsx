@@ -67,12 +67,16 @@ export default function Login() {
   // Map Firebase errors to friendly messages
   const friendlyError = (err) => {
     const code = err?.code || '';
+    const msg = String(err?.message || '').toLowerCase();
     if (code === 'auth/user-not-found') return 'No account found with this email. Please create an account.';
     if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') return 'Incorrect password. Please try again.';
     if (code === 'auth/email-already-in-use') return 'An account already exists with this email. Switch to Login.';
     if (code === 'auth/weak-password') return 'Password must be at least 6 characters.';
     if (code === 'auth/invalid-email') return 'Please enter a valid email address.';
     if (code === 'auth/too-many-requests') return 'Too many attempts. Please try again later.';
+    if (msg.includes('blocked') || msg.includes('identitytoolkit')) {
+      return 'Email/Password sign-in is disabled in your Firebase console. We have enabled local fallback session.';
+    }
     return err.message || 'Authentication failed. Please try again.';
   };
 
