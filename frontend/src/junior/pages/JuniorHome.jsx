@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Flame, BookOpen, TrendingUp, Trophy, ArrowRight, Shield, Zap, CheckCircle2, Award, PieChart, Coins, HelpCircle, Gift, Star, Target, ChevronRight, Activity } from 'lucide-react';
-import BuzzyMascot from '../components/BuzzyMascot';
+import { Sparkles, Flame, BookOpen, TrendingUp, Trophy, ArrowRight, Shield, Zap, CheckCircle2, Award, PieChart, Coins, HelpCircle, Gift, Star, Target, ChevronRight, Activity, Compass, ShieldCheck } from 'lucide-react';
+import { BullMascot, BearMascot } from '../components/BuzzyMascot';
 import JuniorCompanyLogo from '../components/JuniorCompanyLogo';
 
 const MASCOT_TIPS = [
@@ -99,10 +99,7 @@ export default function JuniorHome({ account, onUpdateAccount }) {
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
           <div className="flex items-center gap-4 md:gap-6">
             <div className="relative flex-shrink-0">
-              <BuzzyMascot size={84} mood={claimedReward ? "celebrate" : "happy"} />
-              <div className="absolute -bottom-1 -right-1 bg-amber-400 text-slate-950 font-black text-[10px] px-2 py-0.5 rounded-full shadow-md border border-white">
-                PRO ⚡
-              </div>
+              <BullMascot size={72} />
             </div>
 
             <div>
@@ -395,6 +392,34 @@ export default function JuniorHome({ account, onUpdateAccount }) {
             <span>Spot on! When you own a share, you are an authentic co-owner of the company!</span>
           </div>
         )}
+      </div>
+
+      {/* Barry the Bear's Wisdom & Safety Card */}
+      <div className="jr-card-3d p-6 md:p-7 bg-gradient-to-r from-orange-50/70 via-amber-50/50 to-white border-2 border-amber-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+        <div className="flex items-center gap-4">
+          <BearMascot size={56} />
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[11px] font-black uppercase text-amber-900 bg-amber-200/80 px-2.5 py-0.5 rounded-full">
+                Barry's Risk Wisdom 🐻
+              </span>
+              <span className="text-xs font-bold text-slate-500">Guardian Tip</span>
+            </div>
+            <h4 className="text-base font-black text-slate-900 junior-font-heading">
+              Rule of Patience & Diversification
+            </h4>
+            <p className="text-xs text-slate-600 font-medium max-w-lg mt-0.5">
+              "When markets take a dip, that's when patient investors thrive. StockBuzz limits any single stock to max 25% of your portfolio so you never take unnecessary risks!"
+            </p>
+          </div>
+        </div>
+
+        <Link
+          to="/junior/learn"
+          className="junior-btn-gold text-xs py-2.5 px-4 rounded-2xl flex-shrink-0 self-start sm:self-auto shadow-xs"
+        >
+          <span>Learn Safety Rules →</span>
+        </Link>
       </div>
 
       {/* Trophy Room Badge Showcase */}

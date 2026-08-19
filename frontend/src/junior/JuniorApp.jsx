@@ -9,7 +9,7 @@ import JuniorLearn from './pages/JuniorLearn';
 import JuniorTrade from './pages/JuniorTrade';
 import JuniorMissions from './pages/JuniorMissions';
 import JuniorParent from './pages/JuniorParent';
-import BuzzyMascot from './components/BuzzyMascot';
+import { BullMascot, BearMascot } from './components/BuzzyMascot';
 
 export const DEFAULT_JUNIOR_ACCOUNT = {
   id: 'demo_jr_1',
@@ -130,7 +130,7 @@ export default function JuniorApp() {
           </Link>
 
           <Link to="/junior/home" className="flex items-center gap-2.5 select-none group">
-            <BuzzyMascot size={42} mood="happy" className="group-hover:scale-105 transition-transform" />
+            <BullMascot size={36} className="group-hover:scale-105 transition-transform" />
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="font-black text-xl text-blue-600 junior-font-heading tracking-tight">

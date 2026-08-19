@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, TrendingUp, AlertCircle, CheckCircle2, ShieldAlert, Sparkles, Send, RefreshCw, DollarSign, Globe, Search, Loader2, X, Filter } from 'lucide-react';
-import BuzzyMascot from '../components/BuzzyMascot';
+import { BullMascot, BearMascot } from '../components/BuzzyMascot';
 import JuniorCompanyLogo from '../components/JuniorCompanyLogo';
 import { useMarket } from '../../context/MarketContext';
 
@@ -552,10 +552,10 @@ export default function JuniorTrade({ account, onUpdateAccount }) {
               </div>
 
               {/* Guardian Safety Tip */}
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-900 mb-4 flex items-start gap-2">
-                <ShieldAlert size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50/60 border border-amber-200/90 rounded-2xl p-3 text-xs text-amber-950 mb-4 flex items-center gap-3">
+                <BearMascot size={36} />
                 <span>
-                  <strong>Diversification Cap:</strong> StockBuzz limits any single stock to max 25% of your portfolio so you never lose too much from one company!
+                  <strong>Barry's 25% Guardrail:</strong> StockBuzz limits single stocks to max 25% of your portfolio to protect your virtual funds from oversized risks!
                 </span>
               </div>
 

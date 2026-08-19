@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldCheck, Sliders, AlertTriangle, RotateCcw, CheckCircle2, Lock, Eye } from 'lucide-react';
-import BuzzyMascot from '../components/BuzzyMascot';
+import BearMascot from '../components/BearMascot';
 
 export default function JuniorParent({ account, onUpdateAccount }) {
   const [parentData, setParentData] = useState(null);
@@ -82,7 +82,7 @@ export default function JuniorParent({ account, onUpdateAccount }) {
             Supervise {account?.nickname}'s progress, review their investment reason notes, and set risk limits.
           </p>
         </div>
-        <BuzzyMascot size={64} mood="happy" />
+        <BearMascot size={64} />
       </div>
 
       {/* Safety Controls Card */}
