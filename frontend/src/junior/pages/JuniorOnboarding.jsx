@@ -175,7 +175,7 @@ export default function JuniorOnboarding({ onFinish }) {
               Select an avatar persona to represent you in your portfolio and missions!
             </p>
 
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 max-h-64 overflow-y-auto p-2 scrollbar-none border border-slate-100 rounded-3xl bg-slate-50/60 mb-6">
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 max-h-72 overflow-y-auto p-2.5 scrollbar-none border border-slate-100 rounded-3xl bg-slate-50/70 mb-6">
               {JUNIOR_AVATARS.map((av) => {
                 const isSelected = selectedAvatar === av.id;
                 return (
@@ -189,10 +189,15 @@ export default function JuniorOnboarding({ onFinish }) {
                         : 'border-transparent bg-white/70 hover:bg-white hover:border-slate-200'
                     }`}
                   >
-                    <JuniorAvatar avatarId={av.id} size={46} />
-                    <span className="text-[11px] font-black text-slate-800 text-center truncate w-full">
-                      {av.name}
-                    </span>
+                    <JuniorAvatar avatarId={av.id} size={50} />
+                    <div className="text-center w-full">
+                      <div className="text-[11px] font-black text-slate-900 truncate">
+                        {av.name}
+                      </div>
+                      <div className="text-[9px] font-bold text-slate-400 truncate">
+                        {av.category}
+                      </div>
+                    </div>
                   </button>
                 );
               })}

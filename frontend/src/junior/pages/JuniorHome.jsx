@@ -491,13 +491,13 @@ export default function JuniorHome({ account, onUpdateAccount }) {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white rounded-[32px] max-w-md w-full p-6 md:p-8 shadow-2xl border-2 border-blue-100 relative"
+              className="bg-white rounded-[32px] max-w-lg w-full p-6 md:p-8 shadow-2xl border-2 border-blue-100 relative"
             >
               <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
                 <div className="flex items-center gap-2">
                   <Palette size={20} className="text-blue-600" />
                   <h3 className="text-lg font-black text-slate-900 junior-font-heading">
-                    Choose Your Avatar Persona
+                    Choose Your Avatar Persona 🎮
                   </h3>
                 </div>
                 <button
@@ -508,23 +508,28 @@ export default function JuniorHome({ account, onUpdateAccount }) {
                 </button>
               </div>
 
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 max-h-72 overflow-y-auto p-2 scrollbar-none border border-slate-100 rounded-2xl bg-slate-50/60 mb-5">
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 max-h-80 overflow-y-auto p-2 scrollbar-none border border-slate-100 rounded-3xl bg-slate-50/70 mb-5">
                 {JUNIOR_AVATARS.map((av) => {
-                  const isCurrent = (acc.avatar || 'rocket') === av.id;
+                  const isCurrent = (acc.avatar || 'ninja') === av.id;
                   return (
                     <button
                       key={av.id}
                       onClick={() => handleSelectAvatar(av.id)}
-                      className={`p-3 rounded-2xl border-2 flex flex-col items-center gap-1.5 transition-all ${
+                      className={`p-3 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${
                         isCurrent
                           ? 'border-blue-600 bg-white shadow-md scale-105'
-                          : 'border-transparent bg-white/80 hover:bg-white hover:border-slate-200'
+                          : 'border-transparent bg-white/70 hover:bg-white hover:border-slate-200'
                       }`}
                     >
-                      <JuniorAvatar avatarId={av.id} size={44} />
-                      <span className="text-[11px] font-black text-slate-800 text-center truncate w-full">
-                        {av.name}
-                      </span>
+                      <JuniorAvatar avatarId={av.id} size={54} />
+                      <div className="text-center w-full">
+                        <div className="text-xs font-black text-slate-900 truncate">
+                          {av.name}
+                        </div>
+                        <div className="text-[9px] font-bold text-slate-400 truncate">
+                          {av.category}
+                        </div>
+                      </div>
                     </button>
                   );
                 })}
