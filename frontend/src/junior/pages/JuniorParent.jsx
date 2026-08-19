@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldCheck, Sliders, AlertTriangle, RotateCcw, CheckCircle2, Lock, Eye } from 'lucide-react';
-import BearMascot from '../components/BearMascot';
+import JuniorAvatar from '../components/JuniorAvatar';
 
 export default function JuniorParent({ account, onUpdateAccount }) {
   const [parentData, setParentData] = useState(null);
@@ -82,7 +82,7 @@ export default function JuniorParent({ account, onUpdateAccount }) {
             Supervise {account?.nickname}'s progress, review their investment reason notes, and set risk limits.
           </p>
         </div>
-        <BearMascot size={64} />
+        <JuniorAvatar avatarId={account?.avatar || 'ren'} size={68} />
       </div>
 
       {/* Safety Controls Card */}

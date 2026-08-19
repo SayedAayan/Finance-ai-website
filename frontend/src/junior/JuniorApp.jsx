@@ -10,6 +10,7 @@ import JuniorTrade from './pages/JuniorTrade';
 import JuniorMissions from './pages/JuniorMissions';
 import JuniorParent from './pages/JuniorParent';
 import { BullMascot, BearMascot } from './components/BuzzyMascot';
+import JuniorAvatar from './components/JuniorAvatar';
 
 export const DEFAULT_JUNIOR_ACCOUNT = {
   id: 'demo_jr_1',
@@ -177,6 +178,18 @@ export default function JuniorApp() {
             <Sparkles size={14} className="text-emerald-500" />
             <span>{currentAcc.currencySymbol}{(currentAcc.portfolio.cash + (currentAcc.portfolio.investedValue || 0)).toLocaleString('en-IN')}</span>
           </div>
+
+          {/* User Anime Avatar Pill */}
+          <Link
+            to="/junior/home"
+            className="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/90 pl-1 pr-3 py-1 rounded-2xl hover:border-blue-400 shadow-xs transition-all group"
+            title="Your Anime Avatar Persona (Click to switch)"
+          >
+            <JuniorAvatar avatarId={currentAcc.avatar || 'ren'} size={30} />
+            <span className="text-xs font-black text-slate-800 group-hover:text-blue-600 hidden sm:inline truncate max-w-[90px]">
+              {currentAcc.nickname || 'Explorer'}
+            </span>
+          </Link>
 
           {/* Parent Mode Link */}
           <Link

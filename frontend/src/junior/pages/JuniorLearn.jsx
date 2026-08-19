@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, CheckCircle2, Lock, Sparkles, ArrowRight, RotateCcw, Award, Zap, Coins, Check, HelpCircle } from 'lucide-react';
-import BuzzyMascot from '../components/BuzzyMascot';
+import JuniorAvatar from '../components/JuniorAvatar';
 import PizzaShareWidget from '../components/PizzaShareWidget';
 
 const DEFAULT_TRACKS = [
@@ -172,7 +172,7 @@ export default function JuniorLearn({ account, onUpdateAccount }) {
               Complete fun missions, test your smarts, and earn shiny investor badges!
             </p>
           </div>
-          <BuzzyMascot size={74} mood="happy" />
+          <JuniorAvatar avatarId={account?.avatar || 'ren'} size={76} />
         </div>
       </div>
 

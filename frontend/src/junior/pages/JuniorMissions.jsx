@@ -1,7 +1,7 @@
 import React from 'react';
 import { Trophy, Award, Sparkles, CheckCircle2, Flame, Star, Shield, Zap, Lock, Compass, Coins, Target } from 'lucide-react';
 import { motion } from 'framer-motion';
-import BuzzyMascot from '../components/BuzzyMascot';
+import JuniorAvatar from '../components/JuniorAvatar';
 
 export default function JuniorMissions({ account }) {
   const acc = account || {
@@ -95,7 +95,7 @@ export default function JuniorMissions({ account }) {
               Complete missions, level up your rank, and collect shiny investor medals!
             </p>
           </div>
-          <BuzzyMascot size={74} mood="celebrate" />
+          <JuniorAvatar avatarId={account?.avatar || 'ren'} size={76} />
         </div>
       </div>
 
