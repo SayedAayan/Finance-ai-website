@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { TrendingUp, TrendingDown, Info, Sparkles, AlertTriangle, ArrowRight, Home, LineChart as LineChartIcon, Calculator } from 'lucide-react';
+import { TrendingUp, TrendingDown, Info, Sparkles, AlertTriangle, ArrowRight, Home, LineChart as LineChartIcon, Calculator, Globe } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import SearchBar from '../../components/ui/SearchBar';
 import { useCurrency } from '../../context/CurrencyContext';
@@ -11,16 +11,30 @@ const DEFAULT_DATA = {
   price: '...', change: '...', up: true,
   name: 'Loading...', ticker: '...', sector: 'Company',
   metrics: [
-    { label: 'Market Cap', val: '-', isPrimary: true },
-    { label: 'P/E Ratio', val: '-', hint: 'Price to Earnings', isPrimary: true },
-    { label: 'P/B Ratio', val: '-', hint: 'Price to Book' },
-    { label: 'Div Yield', val: '-' },
-    { label: 'ROE', val: '-', hint: 'Return on Equity' },
-    { label: 'Debt/Eq', val: '-' },
+    { label: 'Volume', val: '-', isPrimary: true },
+    { label: 'Exchange', val: '-', hint: 'Primary Exchange', isPrimary: true },
+    { label: 'Currency', val: '-', hint: 'Base Currency' },
+    { label: 'Settlement', val: 'T+1' },
+    { label: 'Trading Hours', val: 'Regular Session' },
+    { label: 'Market Region', val: 'Domestic / Global' },
     { label: '52W High', val: '-' },
     { label: '52W Low', val: '-' },
   ]
 };
+
+const US_PEERS = [
+  { name: 'Apple Inc.', ticker: 'AAPL', price: '$224.23', mcap: '$3.42T', pe: '34.2', roe: '147.2%', ret: '+28.4%' },
+  { name: 'Microsoft Corp.', ticker: 'MSFT', price: '$448.50', mcap: '$3.33T', pe: '36.8', roe: '38.5%', ret: '+22.1%' },
+  { name: 'NVIDIA Corp.', ticker: 'NVDA', price: '$128.80', mcap: '$3.15T', pe: '62.4', roe: '115.0%', ret: '+142.5%' },
+  { name: 'Alphabet Inc.', ticker: 'GOOGL', price: '$180.20', mcap: '$2.24T', pe: '25.6', roe: '29.8%', ret: '+31.4%' }
+];
+
+const IN_PEERS = [
+  { name: 'Reliance Industries', ticker: 'RELIANCE.NS', price: '₹1,314.60', mcap: '₹17.8T', pe: '24.5', roe: '9.8%', ret: '+14.5%' },
+  { name: 'Tata Consultancy Services', ticker: 'TCS.NS', price: '₹3,890.10', mcap: '₹14.2T', pe: '30.2', roe: '47.2%', ret: '+18.2%' },
+  { name: 'HDFC Bank', ticker: 'HDFCBANK.NS', price: '₹1,640.50', mcap: '₹12.5T', pe: '18.9', roe: '16.4%', ret: '+11.8%' },
+  { name: 'Infosys Limited', ticker: 'INFY.NS', price: '₹1,612.55', mcap: '₹6.7T', pe: '24.1', roe: '31.8%', ret: '+12.4%' }
+];
 
 export default function StockProfile() {
   const { id: routeId } = useParams();
@@ -38,41 +52,57 @@ export default function StockProfile() {
   useEffect(() => {
     let cancelled = false;
     setHistoryLoading(true);
+    setQuote(null);
+    setCompanyMeta(null);
 
-    const fetchId = id.includes('.') ? id : `${id}.NS`;
+    const loadStock = async () => {
+      let resolvedTicker = id;
+      let fetchedMeta = null;
 
-    // Fetch live quote
-    fetch(`/api/quotes?symbols=${fetchId}`)
-      .then(r => r.json())
-      .then(data => {
-        if (!cancelled && data.quotes && data.quotes[0] && !data.quotes[0].error) {
-          setQuote(data.quotes[0]);
+      try {
+        const res = await fetch(`/api/company/${encodeURIComponent(id)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.company && !cancelled) {
+            fetchedMeta = data.company;
+            setCompanyMeta(fetchedMeta);
+            resolvedTicker = fetchedMeta.ticker || id;
+          }
         }
-      })
-      .catch(console.error);
+      } catch (err) {
+        console.error('Company meta fetch failed:', err);
+      }
 
-    // Fetch company metadata (settlement cycle, ADR, trading hours)
-    fetch(`/api/company/${fetchId}`)
-      .then(r => r.json())
-      .then(data => {
-        if (!cancelled && data.company) {
-          setCompanyMeta(data.company);
-        }
-      })
-      .catch(() => {});
+      // If no dot and not identified as US/UK, default to .NS for Indian stocks
+      if (!resolvedTicker.includes('.') && (!fetchedMeta || fetchedMeta.marketCode === 'IN')) {
+        resolvedTicker = `${resolvedTicker}.NS`;
+      }
 
-    // Fetch history
-    fetch(`/api/history?symbol=${fetchId}&range=${range}`)
-      .then(r => r.json())
-      .then((data) => {
-        if (cancelled) return;
-        setHistory((Array.isArray(data.points) ? data.points : []).map(p => ({
-          time: new Date(p.time).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }),
-          price: p.price
-        })));
-      })
-      .catch(() => { if (!cancelled) setHistory([]); })
-      .finally(() => { if (!cancelled) setHistoryLoading(false); });
+      // Fetch live quote
+      fetch(`/api/quotes?symbols=${encodeURIComponent(resolvedTicker)}`)
+        .then(r => r.json())
+        .then(data => {
+          if (!cancelled && data.quotes && data.quotes[0] && !data.quotes[0].error) {
+            setQuote(data.quotes[0]);
+          }
+        })
+        .catch(console.error);
+
+      // Fetch history
+      fetch(`/api/history?symbol=${encodeURIComponent(resolvedTicker)}&range=${range}`)
+        .then(r => r.json())
+        .then((data) => {
+          if (cancelled) return;
+          setHistory((Array.isArray(data.points) ? data.points : []).map(p => ({
+            time: new Date(p.time).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }),
+            price: p.price
+          })));
+        })
+        .catch(() => { if (!cancelled) setHistory([]); })
+        .finally(() => { if (!cancelled) setHistoryLoading(false); });
+    };
+
+    loadStock();
     return () => { cancelled = true; };
   }, [id, range]);
 
@@ -83,30 +113,33 @@ export default function StockProfile() {
     return `${sign}${numC.toFixed(2)} (${sign}${cp}%)`;
   };
 
-  const isUS = quote?.currency === 'USD' || id.endsWith('.US') || companyMeta?.marketCode === 'US';
-  const isUK = quote?.currency === 'GBP' || id.endsWith('.L') || companyMeta?.marketCode === 'UK';
+  const isUS = quote?.currency === 'USD' || id.endsWith('.US') || companyMeta?.marketCode === 'US' || companyMeta?.exchange === 'NASDAQ' || companyMeta?.exchange === 'NYSE';
+  const isUK = quote?.currency === 'GBP' || id.endsWith('.L') || companyMeta?.marketCode === 'UK' || companyMeta?.exchange === 'LSE';
   const exchangeCountry = isUS ? '🇺🇸' : isUK ? '🇬🇧' : '🇮🇳';
-  const exchangeName = isUS ? 'NASDAQ / NYSE' : isUK ? 'LSE' : 'NSE';
+  const exchangeName = companyMeta?.exchange || (isUS ? 'NASDAQ / NYSE' : isUK ? 'LSE' : 'NSE');
   const currencySign = isUS ? '$' : isUK ? '£' : '₹';
   const sourceCurrency = isUS ? 'USD' : isUK ? 'GBP' : 'INR';
 
   const d = {
     ...DEFAULT_DATA,
-    ticker: id,
-    name: quote ? quote.name : id,
-    price: quote ? formatMarketPrice(quote.currentPrice, sourceCurrency) : '...',
-    change: quote ? formatChange(quote.change, quote.changePercent) : '...',
+    ticker: companyMeta?.symbol || id,
+    name: companyMeta?.name || quote?.name || id,
+    price: quote?.currentPrice ? formatMarketPrice(quote.currentPrice, sourceCurrency) : '—',
+    change: quote ? formatChange(quote.change, quote.changePercent) : '—',
     up: quote ? quote.change >= 0 : true,
-    metrics: JSON.parse(JSON.stringify(DEFAULT_DATA.metrics))
+    metrics: [
+      { label: 'Volume', val: quote?.volume ? quote.volume.toLocaleString('en-IN') : '—', isPrimary: true },
+      { label: 'Exchange', val: `${exchangeCountry} ${exchangeName}`, hint: 'Primary Exchange', isPrimary: true },
+      { label: 'Currency', val: `${currencySign} ${sourceCurrency}`, hint: 'Base Currency' },
+      { label: 'Settlement', val: companyMeta?.settlementCycle || (isUS || isUK ? 'T+1' : 'T+1') },
+      { label: 'Trading Hours', val: companyMeta?.tradingHours || 'Regular Session' },
+      { label: 'Market Region', val: isUS ? 'United States' : isUK ? 'United Kingdom' : 'India' },
+      { label: '52W High', val: quote?.fiftyTwoWeekHigh ? formatMarketPrice(quote.fiftyTwoWeekHigh, sourceCurrency) : '—' },
+      { label: '52W Low', val: quote?.fiftyTwoWeekLow ? formatMarketPrice(quote.fiftyTwoWeekLow, sourceCurrency) : '—' },
+    ]
   };
-  if (quote) {
-    d.metrics[6].val = quote.fiftyTwoWeekHigh ? formatMarketPrice(quote.fiftyTwoWeekHigh, sourceCurrency) : '-';
-    d.metrics[7].val = quote.fiftyTwoWeekLow ? formatMarketPrice(quote.fiftyTwoWeekLow, sourceCurrency) : '-';
-    if (quote.volume) {
-      d.metrics[0].label = 'Volume';
-      d.metrics[0].val = quote.volume.toLocaleString('en-IN');
-    }
-  }
+
+  const peers = isUS ? US_PEERS : IN_PEERS;
 
   return (
     <div style={{ paddingBottom: '4rem' }}>
@@ -128,33 +161,42 @@ export default function StockProfile() {
               <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
                 <span className="badge badge-grey">{exchangeCountry} {exchangeName} · {currencySign}</span>
                 <span style={{ fontSize: '0.8rem', color: 'var(--text-3)', fontWeight: 500 }}>
-                  Settlement: {companyMeta?.settlementCycle || (isUK ? 'T+2' : 'T+1')}
+                  {companyMeta?.sector || 'Public Company'}
                 </span>
+                {companyMeta?.settlementCycle && (
+                  <span className="badge badge-outline" style={{ fontSize: '0.75rem' }}>
+                    ⚡ {companyMeta.settlementCycle} Settlement
+                  </span>
+                )}
                 {companyMeta?.adrLink && (
                   <Link
-                    to={`/stock/${encodeURIComponent(companyMeta.adrLink.symbol)}`}
-                    className="badge badge-blue"
-                    style={{ textDecoration: 'none', cursor: 'pointer' }}
+                    to={`/stock/${companyMeta.adrLink.crossTicker}`}
+                    className="badge badge-blue hover:underline cursor-pointer"
+                    style={{ fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                   >
-                    Cross-Listing ADR: {companyMeta.adrLink.name} ({companyMeta.adrLink.exchange}) →
+                    <Globe size={11} /> Cross-listed: {companyMeta.adrLink.label} ({companyMeta.adrLink.ratio})
                   </Link>
                 )}
               </div>
             </div>
-            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
-              <button
-                onClick={toggleCurrencyMode}
-                className="btn btn-outline btn-sm"
-                title={`FX Rate USD/INR: ₹${fxRates.pairs['USD/INR'] || 86.2}`}
-                style={{ fontSize: '0.78rem', padding: '6px 12px' }}
-              >
-                💱 {currencyMode === 'NATIVE' ? 'Convert to INR' : 'Show Native Currency'}
-              </button>
+            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
               <div className="trust-mark">
-                <div className="live-dot"></div> Live Data
+                <div className="live-dot"></div> Live Exchange Feed
               </div>
+              
+              {/* Currency Toggle for foreign stocks */}
+              {(isUS || isUK) && (
+                <button
+                  onClick={toggleCurrencyMode}
+                  className="btn btn-outline btn-sm"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', borderRadius: '20px' }}
+                >
+                  💱 {currencyMode === 'NATIVE' ? `Show in INR (₹)` : `Show Native (${currencySign})`}
+                </button>
+              )}
+
               <Link
-                to={`/calculators?calc=lumpsum&type=stock&name=${encodeURIComponent(d.name)}&ticker=${encodeURIComponent(id.includes('.') ? id : `${id}.NS`)}`}
+                to={`/calculators?calc=lumpsum&type=stock&name=${encodeURIComponent(d.name)}&ticker=${encodeURIComponent(d.ticker)}`}
                 className="btn btn-outline btn-sm"
                 style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
               >
@@ -164,11 +206,10 @@ export default function StockProfile() {
           </div>
 
           <div className="profile-price-row">
-            <div className="profile-price num" style={{ transition: 'all 150ms ease' }}>{d.price}</div>
+            <div className="profile-price num">{d.price}</div>
             <div className={`profile-change ${d.up ? 'text-green' : 'text-red'}`}>
               <span className={`badge ${d.up ? 'badge-green' : 'badge-red'}`} style={{ fontSize: '0.9rem', padding: '6px 12px' }}>
-                {d.up ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-                {d.change}
+                {d.up ? <TrendingUp size={14} /> : <TrendingDown size={14} />} {d.change}
               </span>
             </div>
           </div>
@@ -179,23 +220,22 @@ export default function StockProfile() {
           <div className="container profile-metrics">
             {d.metrics.map((m, i) => (
               <div key={i} className="profile-metric-item">
-                <div className="stat-label" style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                  {m.label} {m.hint && <Info size={11} />}
+                <div className="stat-label">{m.label}</div>
+                <div className="stat-value num" style={{ fontSize: m.isPrimary ? '1.25rem' : '1.1rem', marginTop: '2px' }}>
+                  {m.val}
                 </div>
-                <div className="stat-value num" style={{ fontSize: m.isPrimary ? '1.25rem' : '1.1rem', marginTop: '2px' }}>{m.val}</div>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="container profile-body">
         
-        {/* Left Column */}
+        {/* Left Column: Charts and Details */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           
-          {/* Chart */}
+          {/* Main Chart */}
           <div className="chart-wrap">
             <div className="chart-header">
               <h4 style={{ margin: 0 }}>Price Trend</h4>
@@ -255,7 +295,7 @@ export default function StockProfile() {
           {/* Peer Comparison */}
           <div className="chart-wrap">
             <div className="chart-header">
-              <h4 style={{ margin: 0 }}>Peer Comparison</h4>
+              <h4 style={{ margin: 0 }}>Peer Comparison ({isUS ? 'US Tech Leaders' : 'Domestic Leaders'})</h4>
               <Link to="/compare" className="btn btn-ghost btn-sm">Full Compare <ArrowRight size={13} /></Link>
             </div>
             <div className="overflow-x-auto w-full">
@@ -279,22 +319,20 @@ export default function StockProfile() {
                   <td className="num">{d.metrics[4].val}</td>
                   <td className="num text-green fw-6">+24.5%</td>
                 </tr>
-                <tr>
-                  <td style={{ textAlign: 'left' }}>TCS</td>
-                  <td className="num">₹3,890.10</td>
-                  <td className="num">₹14.2T</td>
-                  <td className="num">30.2</td>
-                  <td className="num">47.2%</td>
-                  <td className="num text-green fw-6">+18.2%</td>
-                </tr>
-                <tr>
-                  <td style={{ textAlign: 'left' }}>Infosys</td>
-                  <td className="num">₹1,612.55</td>
-                  <td className="num">₹6.7T</td>
-                  <td className="num">24.1</td>
-                  <td className="num">31.8%</td>
-                  <td className="num text-green fw-6">+12.4%</td>
-                </tr>
+                {peers.filter(p => p.ticker !== companyMeta?.ticker).slice(0, 3).map((peer, idx) => (
+                  <tr key={idx}>
+                    <td style={{ textAlign: 'left' }}>
+                      <Link to={`/stock/${peer.ticker}`} className="hover:underline text-blue-600 dark:text-blue-400">
+                        {peer.name}
+                      </Link>
+                    </td>
+                    <td className="num">{peer.price}</td>
+                    <td className="num">{peer.mcap}</td>
+                    <td className="num">{peer.pe}</td>
+                    <td className="num">{peer.roe}</td>
+                    <td className="num text-green fw-6">{peer.ret}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
             </div>
@@ -310,21 +348,22 @@ export default function StockProfile() {
               <span className="badge badge-violet" style={{ marginLeft: 'auto', fontSize: '0.65rem' }}>Research</span>
             </div>
             <p>
-              <strong className="text-1">{d.name}</strong> is currently trading at {d.price}. The price has moved by {d.change} recently.
+              <strong className="text-1">{d.name}</strong> ({d.ticker}) is trading at {d.price} on {exchangeCountry} {exchangeName}.
             </p>
             <p style={{ marginTop: '12px' }}>
-              The 52-week high is {d.metrics[6].val} and 52-week low is {d.metrics[7].val}. {quote && quote.volume ? `The recent volume is ${quote.volume.toLocaleString('en-IN')}.` : ''}
+              The 52-week range spans from {d.metrics[7].val} to {d.metrics[6].val}. {quote && quote.volume ? `Latest reported volume is ${quote.volume.toLocaleString('en-IN')}.` : ''}
             </p>
             <div className="ai-disclaimer">
               <AlertTriangle size={14} color="var(--text-3)" />
-              <span>This is automated analysis based on latest filings. Not investment advice.</span>
+              <span>Automated analysis based on real-time market feeds. Not financial advice.</span>
             </div>
           </div>
 
           <div className="card card-pad">
-            <h4 style={{ marginBottom: '16px' }}>About the Company</h4>
-            <p style={{ fontSize: '0.85rem' }}>
-              {d.name} is a publicly traded company listed on the stock exchange. It is currently trading under the ticker symbol {d.ticker}. Please consult detailed financial reports for comprehensive information about the company's operations, subsidiaries, and market performance.
+            <h4 style={{ marginBottom: '16px' }}>About {d.name}</h4>
+            <p style={{ fontSize: '0.85rem', lineHeight: 1.6 }}>
+              {d.name} is listed under ticker symbol <strong>{d.ticker}</strong> on the {exchangeCountry} {exchangeName} stock exchange. 
+              {isUS || isUK ? ' International shares are settled under the standard T+1 market clearing cycle.' : ' Domestic Indian equities are cleared via Indian depository participant rules.'}
             </p>
           </div>
         </div>

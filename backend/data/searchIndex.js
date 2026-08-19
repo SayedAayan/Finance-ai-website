@@ -102,8 +102,21 @@ export async function search(query, { limit = 8 } = {}) {
 }
 
 export async function getCompanyById(id) {
+  if (!id) return null;
   const { companies } = await ensureIndexReady();
-  return companies.find(c => c.id === id) || null;
+  const raw = String(id).trim();
+  const clean = raw.replace(/\.(NS|BO|L|US)$/i, '');
+
+  return companies.find(c => 
+    c.id === raw ||
+    c.ticker === raw ||
+    c.symbol?.toLowerCase() === raw.toLowerCase() ||
+    c.symbol?.toLowerCase() === clean.toLowerCase() ||
+    c.id === `NASDAQ:${clean}` ||
+    c.id === `NYSE:${clean}` ||
+    c.id === `NSE:${clean}` ||
+    c.id === `BSE:${clean}`
+  ) || null;
 }
 
 export async function getSchemeById(id) {

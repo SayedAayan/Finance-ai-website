@@ -346,16 +346,6 @@ export default function Navbar({ onToggleAIChat }) {
               </AnimatePresence>
             </div>
 
-            {/* StockBuzz Junior Entry Button */}
-            <Link
-              to="/junior"
-              className="flex items-center gap-1.5 px-3 h-[36px] rounded-full bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 font-bold text-xs shadow-sm transition-all hover:scale-105 active:scale-95 whitespace-nowrap"
-              title="StockBuzz Junior - Kid-Safe Paper Trading & Learning"
-            >
-              <span className="text-sm">🐝</span>
-              <span className="hidden sm:inline">Junior</span>
-            </Link>
-
             {/* Currency Selector */}
             <div className="relative" ref={currencyRef}>
               <button
@@ -404,13 +394,15 @@ export default function Navbar({ onToggleAIChat }) {
 
 
 
-            {/* Ask AI Button */}
-            <button
-              onClick={onToggleAIChat}
-              className="flex items-center justify-center whitespace-nowrap bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white px-3.5 h-[38px] rounded-full font-semibold text-[0.82rem] shadow-md hover:shadow-lg transition-all duration-300"
+            {/* Stockbuzz Junior Button */}
+            <Link
+              to="/junior"
+              className="flex items-center justify-center gap-1.5 whitespace-nowrap bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-500 hover:to-amber-600 text-slate-950 px-4 h-[38px] rounded-full font-bold text-[0.84rem] shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 active:scale-95"
+              title="Stockbuzz Junior - Kid-Safe Paper Trading & Learning"
             >
-              {askAiLabel}
-            </button>
+              <span className="text-base">🐝</span>
+              <span>Stockbuzz Junior</span>
+            </Link>
 
             {/* Auth: Sign In button or user avatar menu */}
             {currentUser ? (
