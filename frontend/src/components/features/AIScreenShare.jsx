@@ -33,6 +33,8 @@ const markdownComponents = {
   code: ({ children }) => <code className="bg-slate-800 text-violet-300 px-1.5 py-0.5 rounded text-xs font-mono">{children}</code>
 };
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '/api/chat';
+
 export default function AIScreenShare({ isOpen, onClose }) {
   const [selection, setSelection] = useState(null); // { x, y, w, h } in viewport client coordinates
   const [dragStart, setDragStart] = useState(null);
@@ -129,7 +131,7 @@ export default function AIScreenShare({ isOpen, onClose }) {
       const selectedContent = extractSelectedRegionText();
       const q = question.trim() || 'Analyze what is in this highlighted screen area.';
 
-      const res = await fetch('/api/chat', {
+      const res = await fetch(BACKEND_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
