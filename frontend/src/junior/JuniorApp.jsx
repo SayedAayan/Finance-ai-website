@@ -10,11 +10,69 @@ import JuniorMissions from './pages/JuniorMissions';
 import JuniorParent from './pages/JuniorParent';
 import BuzzyMascot from './components/BuzzyMascot';
 
+export const DEFAULT_JUNIOR_ACCOUNT = {
+  id: 'demo_jr_1',
+  nickname: 'Junior Rocket',
+  age: 12,
+  mode: 'explorer',
+  parentEmail: 'parent@stockbuzz.in',
+  currency: 'INR',
+  currencySymbol: '₹',
+  streakDays: 3,
+  totalPoints: 150,
+  portfolio: {
+    cash: 95000,
+    startingCash: 100000,
+    investedValue: 5000,
+    holdings: [
+      {
+        ticker: 'TCS.NS',
+        name: 'Tata Consultancy Services',
+        shares: 1,
+        avgPrice: 3890,
+        currentPrice: 3950,
+        reason: 'They build great software for the whole world!'
+      }
+    ]
+  },
+  tracksProgress: {
+    'track-1': { completed: true, score: 100 },
+    'track-2': { completed: false, score: 0 },
+    'track-3': { completed: false, score: 0 }
+  },
+  completedLessons: ['t1_l1', 't1_l2'],
+  badges: ['badge-first-step', 'badge-streak-3'],
+  ledger: [
+    {
+      id: 'tx-0',
+      type: 'DEPOSIT',
+      amount: 100000,
+      description: 'Starter virtual piggy bank',
+      timestamp: Date.now() - 86400000 * 2
+    },
+    {
+      id: 'tx-1',
+      type: 'BUY',
+      ticker: 'TCS.NS',
+      name: 'Tata Consultancy Services',
+      shares: 1,
+      price: 3890,
+      reason: 'They build great software for the whole world!',
+      timestamp: Date.now() - 86400000
+    }
+  ],
+  controls: {
+    maxDailyTrades: 3,
+    maxSingleStockPct: 25,
+    allowSelling: true
+  }
+};
+
 export default function JuniorApp() {
   const loc = useLocation();
   const navigate = useNavigate();
-  const [account, setAccount] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [account, setAccount] = useState(DEFAULT_JUNIOR_ACCOUNT);
+  const [loading, setLoading] = useState(false);
 
   const accountId = localStorage.getItem('stockbuzz_junior_account_id') || 'demo_jr_1';
 
@@ -28,9 +86,7 @@ export default function JuniorApp() {
         }
       }
     } catch (err) {
-      console.warn('Junior account fetch error:', err);
-    } finally {
-      setLoading(false);
+      console.warn('Junior account fetch error, using default account:', err);
     }
   };
 
@@ -44,6 +100,8 @@ export default function JuniorApp() {
     return <JuniorOnboarding onFinish={(newAcc) => setAccount(newAcc)} />;
   }
 
+  const currentAcc = account || DEFAULT_JUNIOR_ACCOUNT;
+
   const navTabs = [
     { path: '/junior/home', label: 'Home', icon: Home },
     { path: '/junior/learn', label: 'Learn', icon: BookOpen },
@@ -53,11 +111,11 @@ export default function JuniorApp() {
   ];
 
   return (
-    <div className="junior-body min-h-screen flex flex-col pb-24 md:pb-12">
+    <div className="junior-body min-h-screen flex flex-col pb-24 md:pb-12 bg-[#F8FAFC]">
       {/* Top Junior Navigation Bar */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b-2 border-blue-100 px-4 md:px-8 py-3.5 flex items-center justify-between shadow-xs">
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b-2 border-blue-100 px-4 md:px-8 py-3.5 flex items-center justify-between shadow-xs">
         <div className="flex items-center gap-3">
-          <Link to="/" className="text-slate-400 hover:text-slate-700 transition-colors p-1.5 rounded-xl hover:bg-slate-100" title="Back to StockBuzz Adult App">
+          <Link to="/" className="text-slate-400 hover:text-slate-700 transition-colors p-1.5 rounded-xl hover:bg-slate-100" title="Back to StockBuzz Main Website">
             <ArrowLeft size={20} />
           </Link>
 
@@ -76,19 +134,17 @@ export default function JuniorApp() {
 
         {/* Right Info Chips */}
         <div className="flex items-center gap-3">
-          {account && (
-            <div className="hidden sm:flex items-center gap-2 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-full text-xs font-extrabold text-amber-900">
-              <Sparkles size={14} className="text-amber-500" />
-              <span>{account.currencySymbol}{(account.portfolio.cash + (account.portfolio.investedValue || 0)).toLocaleString('en-IN')}</span>
-            </div>
-          )}
+          <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-full text-xs font-extrabold text-amber-900 shadow-xs">
+            <Sparkles size={14} className="text-amber-500" />
+            <span>{currentAcc.currencySymbol}{(currentAcc.portfolio.cash + (currentAcc.portfolio.investedValue || 0)).toLocaleString('en-IN')}</span>
+          </div>
 
           <Link
             to="/junior/parent"
             className="flex items-center gap-1.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 px-3.5 py-1.5 rounded-full transition-colors"
           >
             <Shield size={14} className="text-blue-600" />
-            <span>Parent Mode</span>
+            <span className="hidden sm:inline">Parent Mode</span>
           </Link>
         </div>
       </header>
@@ -96,19 +152,26 @@ export default function JuniorApp() {
       {/* Main Page Content */}
       <main className="flex-1 max-w-5xl w-full mx-auto p-4 md:p-8">
         <Routes>
-          <Route path="/" element={<JuniorHome account={account} />} />
-          <Route path="/home" element={<JuniorHome account={account} />} />
-          <Route path="/learn" element={<JuniorLearn account={account} onUpdateAccount={setAccount} />} />
-          <Route path="/trade" element={<JuniorTrade account={account} onUpdateAccount={setAccount} />} />
-          <Route path="/missions" element={<JuniorMissions account={account} />} />
-          <Route path="/parent" element={<JuniorParent account={account} onUpdateAccount={setAccount} />} />
+          <Route path="/" element={<JuniorHome account={currentAcc} />} />
+          <Route path="/home" element={<JuniorHome account={currentAcc} />} />
+          <Route path="/learn" element={<JuniorLearn account={currentAcc} onUpdateAccount={setAccount} />} />
+          <Route path="/trade" element={<JuniorTrade account={currentAcc} onUpdateAccount={setAccount} />} />
+          <Route path="/missions" element={<JuniorMissions account={currentAcc} />} />
+          <Route path="/parent" element={<JuniorParent account={currentAcc} onUpdateAccount={setAccount} />} />
+          <Route path="/junior" element={<JuniorHome account={currentAcc} />} />
+          <Route path="/junior/home" element={<JuniorHome account={currentAcc} />} />
+          <Route path="/junior/learn" element={<JuniorLearn account={currentAcc} onUpdateAccount={setAccount} />} />
+          <Route path="/junior/trade" element={<JuniorTrade account={currentAcc} onUpdateAccount={setAccount} />} />
+          <Route path="/junior/missions" element={<JuniorMissions account={currentAcc} />} />
+          <Route path="/junior/parent" element={<JuniorParent account={currentAcc} onUpdateAccount={setAccount} />} />
+          <Route path="*" element={<JuniorHome account={currentAcc} />} />
         </Routes>
       </main>
 
       {/* Tablet-First Bottom Navigation Bar */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t-2 border-slate-100 px-4 py-2 flex items-center justify-around shadow-lg">
         {navTabs.map((tab) => {
-          const isActive = loc.pathname === tab.path || (tab.path === '/junior/home' && loc.pathname === '/junior');
+          const isActive = loc.pathname === tab.path || (tab.path === '/junior/home' && (loc.pathname === '/junior' || loc.pathname === '/junior/'));
           const Icon = tab.icon;
           return (
             <Link

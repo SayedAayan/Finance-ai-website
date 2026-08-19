@@ -5,10 +5,18 @@ import { Sparkles, Flame, BookOpen, TrendingUp, Trophy, ArrowRight, Shield } fro
 import BuzzyMascot from '../components/BuzzyMascot';
 
 export default function JuniorHome({ account }) {
-  if (!account) return null;
+  const acc = account || {
+    nickname: 'Junior Explorer',
+    mode: 'explorer',
+    currencySymbol: '₹',
+    streakDays: 3,
+    totalPoints: 150,
+    portfolio: { cash: 95000, startingCash: 100000, investedValue: 5000, holdings: [] },
+    badges: ['badge-first-step', 'badge-streak-3']
+  };
 
-  const totalWealth = (account.portfolio.cash + (account.portfolio.investedValue || 0));
-  const startingWealth = account.portfolio.startingCash || 100000;
+  const totalWealth = (acc.portfolio.cash + (acc.portfolio.investedValue || 0));
+  const startingWealth = acc.portfolio.startingCash || 100000;
   const growth = totalWealth - startingWealth;
   const isUp = growth >= 0;
 
@@ -24,14 +32,14 @@ export default function JuniorHome({ account }) {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-xs font-extrabold uppercase tracking-wider bg-white/20 px-2.5 py-0.5 rounded-full">
-                  {account.mode === 'trader' ? 'Junior Trader (13-17)' : 'Junior Explorer (8-12)'}
+                  {acc.mode === 'trader' ? 'Junior Trader (13-17)' : 'Junior Explorer (8-12)'}
                 </span>
                 <span className="flex items-center gap-1 text-xs font-bold text-amber-300 bg-amber-950/40 px-2.5 py-0.5 rounded-full">
-                  <Flame size={13} className="text-amber-400" /> {account.streakDays || 1}-Day Streak!
+                  <Flame size={13} className="text-amber-400" /> {acc.streakDays || 1}-Day Streak!
                 </span>
               </div>
               <h1 className="text-2xl md:text-3xl font-extrabold junior-font-heading">
-                Hey {account.nickname}! 👋
+                Hey {acc.nickname}! 👋
               </h1>
               <p className="text-blue-100 text-xs md:text-sm">
                 Ready to learn something awesome about the money world today?
@@ -43,7 +51,7 @@ export default function JuniorHome({ account }) {
             <div>
               <div className="text-xs text-blue-200 font-semibold">Junior Score</div>
               <div className="text-xl font-extrabold text-amber-300 flex items-center gap-1.5">
-                <Sparkles size={18} /> {account.totalPoints || 50} pts
+                <Sparkles size={18} /> {acc.totalPoints || 50} pts
               </div>
             </div>
           </div>
@@ -51,14 +59,14 @@ export default function JuniorHome({ account }) {
       </div>
 
       {/* Big Plain-Language Portfolio Card */}
-      <div className="junior-card p-6 md:p-8 bg-white border-2 border-blue-100">
+      <div className="junior-card p-6 md:p-8 bg-white border-2 border-blue-100 shadow-sm rounded-3xl">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-100">
           <div>
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
               Your Virtual Piggy Bank
             </span>
             <div className="text-3xl md:text-4xl font-extrabold text-slate-900 junior-font-heading mt-1">
-              {account.currencySymbol}{totalWealth.toLocaleString('en-IN')}
+              {acc.currencySymbol}{totalWealth.toLocaleString('en-IN')}
             </div>
           </div>
 
@@ -68,8 +76,8 @@ export default function JuniorHome({ account }) {
             <span>{isUp ? '🎉' : '💡'}</span>
             <span>
               {isUp
-                ? `You have grown your funds by ${account.currencySymbol}${growth.toLocaleString('en-IN')}!`
-                : `Your funds dipped by ${account.currencySymbol}${Math.abs(growth).toLocaleString('en-IN')}. Good time to learn patience!`}
+                ? `You have grown your funds by ${acc.currencySymbol}${growth.toLocaleString('en-IN')}!`
+                : `Your funds dipped by ${acc.currencySymbol}${Math.abs(growth).toLocaleString('en-IN')}. Good time to learn patience!`}
             </span>
           </div>
         </div>
@@ -78,19 +86,19 @@ export default function JuniorHome({ account }) {
           <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
             <span className="text-xs text-slate-500 font-medium">Available to Invest</span>
             <div className="text-base font-bold text-slate-800 mt-0.5">
-              {account.currencySymbol}{account.portfolio.cash.toLocaleString('en-IN')}
+              {acc.currencySymbol}{acc.portfolio.cash.toLocaleString('en-IN')}
             </div>
           </div>
           <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
             <span className="text-xs text-slate-500 font-medium">Invested in Companies</span>
             <div className="text-base font-bold text-slate-800 mt-0.5">
-              {account.currencySymbol}{(account.portfolio.investedValue || 0).toLocaleString('en-IN')}
+              {acc.currencySymbol}{(acc.portfolio.investedValue || 0).toLocaleString('en-IN')}
             </div>
           </div>
           <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 col-span-2 md:col-span-1">
             <span className="text-xs text-slate-500 font-medium">Companies Owned</span>
             <div className="text-base font-bold text-slate-800 mt-0.5">
-              {account.portfolio.holdings.length} companies
+              {acc.portfolio.holdings?.length || 0} companies
             </div>
           </div>
         </div>
@@ -101,7 +109,7 @@ export default function JuniorHome({ account }) {
         {/* Next Lesson Card */}
         <Link
           to="/junior/learn"
-          className="junior-card p-6 bg-gradient-to-br from-amber-500/10 via-amber-50/50 to-white border-2 border-amber-200 flex flex-col justify-between group cursor-pointer"
+          className="junior-card p-6 bg-gradient-to-br from-amber-500/10 via-amber-50/50 to-white border-2 border-amber-200 flex flex-col justify-between group cursor-pointer shadow-sm rounded-3xl"
         >
           <div>
             <div className="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-bold mb-4 shadow-md group-hover:scale-105 transition-transform">
@@ -129,7 +137,7 @@ export default function JuniorHome({ account }) {
         {/* Paper Trade Card */}
         <Link
           to="/junior/trade"
-          className="junior-card p-6 bg-gradient-to-br from-blue-500/10 via-blue-50/50 to-white border-2 border-blue-200 flex flex-col justify-between group cursor-pointer"
+          className="junior-card p-6 bg-gradient-to-br from-blue-500/10 via-blue-50/50 to-white border-2 border-blue-200 flex flex-col justify-between group cursor-pointer shadow-sm rounded-3xl"
         >
           <div>
             <div className="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold mb-4 shadow-md group-hover:scale-105 transition-transform">
@@ -156,12 +164,12 @@ export default function JuniorHome({ account }) {
       </div>
 
       {/* Badges unlocked */}
-      <div className="junior-card p-6">
+      <div className="junior-card p-6 bg-white border-2 border-slate-100 shadow-sm rounded-3xl">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Trophy size={20} className="text-amber-500" />
             <h2 className="font-extrabold text-base text-slate-900 junior-font-heading">
-              Your Trophy Room ({account.badges?.length || 1} Badges)
+              Your Trophy Room ({acc.badges?.length || 1} Badges)
             </h2>
           </div>
           <Link to="/junior/missions" className="text-xs font-bold text-blue-600 hover:underline">
@@ -170,15 +178,19 @@ export default function JuniorHome({ account }) {
         </div>
 
         <div className="flex flex-wrap gap-3">
-          {account.badges?.map(b => (
-            <div key={b.id} className="flex items-center gap-2.5 bg-amber-50/80 border border-amber-200 rounded-2xl px-4 py-2.5">
-              <span className="text-xl">🏆</span>
-              <div>
-                <div className="text-xs font-bold text-amber-950">{b.name}</div>
-                <div className="text-[11px] text-amber-800/80">{b.description}</div>
+          {(acc.badges || ['badge-first-step']).map((b, idx) => {
+            const name = typeof b === 'string' ? b.replace('badge-', '').replace(/-/g, ' ').toUpperCase() : (b.name || 'Achievement');
+            const desc = typeof b === 'object' ? b.description : 'Earned for taking the first step into learning!';
+            return (
+              <div key={idx} className="flex items-center gap-2.5 bg-amber-50/80 border border-amber-200 rounded-2xl px-4 py-2.5">
+                <span className="text-xl">🏆</span>
+                <div>
+                  <div className="text-xs font-bold text-amber-950">{name}</div>
+                  <div className="text-[11px] text-amber-800/80">{desc}</div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

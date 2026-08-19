@@ -4,8 +4,103 @@ import { BookOpen, CheckCircle2, Lock, Sparkles, ArrowRight, RotateCcw, Award } 
 import BuzzyMascot from '../components/BuzzyMascot';
 import PizzaShareWidget from '../components/PizzaShareWidget';
 
+const DEFAULT_TRACKS = [
+  {
+    id: 'track-1',
+    title: 'What is a Company?',
+    description: 'Discover how everyday brands like Apple, Tata, and Nike make products and earn money.',
+    targetAge: '8-12',
+    icon: 'Building2',
+    color: '#2F6FED',
+    lessons: [
+      {
+        id: 'lesson-1-1',
+        title: 'Meet Buzzy & The Candy Shop',
+        summary: 'How a simple idea turns into a real company.',
+        duration: '3 min',
+        points: 50,
+        content: [
+          { type: 'text', value: 'Imagine your friend Mia wants to sell the crispiest homemade cookies in school. She needs flour, sugar, and an oven.' },
+          { type: 'highlight', value: 'A Company is simply a team of people working together to create something helpful or fun for others!' },
+          { type: 'quiz', question: 'What does a company do?', options: ['Makes products or services people love', 'Only plays video games', 'Hides cookies in a tree'], correctIndex: 0 }
+        ]
+      },
+      {
+        id: 'lesson-1-2',
+        title: 'Where Does the Money Go?',
+        summary: 'Understanding Revenue, Costs, and Profits.',
+        duration: '4 min',
+        points: 75,
+        content: [
+          { type: 'text', value: 'When customers buy cookies for ₹100, and it cost ₹60 to bake them, the remaining ₹40 is Profit!' },
+          { type: 'highlight', value: 'Revenue - Costs = Profit 🎉' },
+          { type: 'quiz', question: 'If you sell lemonade for ₹50 and lemons cost ₹20, what is your profit?', options: ['₹20', '₹30', '₹70'], correctIndex: 1 }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'track-2',
+    title: 'What is a Share?',
+    description: 'Learn how companies divide ownership like slices of a giant pizza.',
+    targetAge: '8-12',
+    icon: 'PieChart',
+    color: '#FFB020',
+    lessons: [
+      {
+        id: 'lesson-2-1',
+        title: 'The Great Pizza Slice Secret',
+        summary: 'A share is your personal slice of a company.',
+        duration: '4 min',
+        points: 100,
+        interactive: 'PIZZA_SLICE',
+        content: [
+          { type: 'text', value: 'When a company grows big, it cuts its ownership into millions of tiny pieces called **Shares**.' },
+          { type: 'highlight', value: 'When you own 1 share of a company, you are a co-owner of that company!' },
+          { type: 'interactive_prompt', value: 'Slice the pizza below to see how owning 1, 2, or 5 slices makes you a co-owner!' },
+          { type: 'quiz', question: 'When you buy 1 share of a company, you are a:', options: ['Customer only', 'Part-owner (Shareholder)', 'Security guard'], correctIndex: 1 }
+        ]
+      },
+      {
+        id: 'lesson-2-2',
+        title: 'Why Do Share Prices Change?',
+        summary: 'Supply, demand, and how popularity moves prices.',
+        duration: '5 min',
+        points: 100,
+        content: [
+          { type: 'text', value: 'If everyone suddenly wants Mia’s cookies because they are super tasty, more people want to buy her shares. The price goes UP!' },
+          { type: 'highlight', value: 'More buyers than sellers = Price rises 📈. More sellers than buyers = Price dips 📉.' },
+          { type: 'quiz', question: 'What happens to a stock price when many people want to buy it?', options: ['Price goes up', 'Price vanishes', 'Price turns green forever'], correctIndex: 0 }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'track-3',
+    title: 'First Steps in Paper Trading',
+    description: 'Put on your Junior Investor cape and build your very first virtual portfolio.',
+    targetAge: '8-17',
+    icon: 'TrendingUp',
+    color: '#12B76A',
+    lessons: [
+      {
+        id: 'lesson-3-1',
+        title: 'Rule #1: The Golden Egg Rule',
+        summary: 'Never put all your eggs in one basket (Diversification).',
+        duration: '4 min',
+        points: 100,
+        content: [
+          { type: 'text', value: 'If you put all your virtual money into just 1 company and it has a bad day, your whole portfolio hurts. Smart investors spread their money across multiple great companies!' },
+          { type: 'highlight', value: 'StockBuzz Guardian Rule: You cannot invest more than 25% of your money into a single company.' },
+          { type: 'quiz', question: 'Why is diversification helpful?', options: ['It protects your money from big single drops', 'It makes your computer run faster', 'It guarantees 1000% profit in 1 day'], correctIndex: 0 }
+        ]
+      }
+    ]
+  }
+];
+
 export default function JuniorLearn({ account, onUpdateAccount }) {
-  const [tracks, setTracks] = useState([]);
+  const [tracks, setTracks] = useState(DEFAULT_TRACKS);
   const [activeLesson, setActiveLesson] = useState(null);
   const [selectedQuizAnswer, setSelectedQuizAnswer] = useState(null);
   const [quizSubmitted, setQuizSubmitted] = useState(false);
@@ -15,7 +110,7 @@ export default function JuniorLearn({ account, onUpdateAccount }) {
     fetch('/api/junior/tracks')
       .then(res => res.json())
       .then(data => {
-        if (data.tracks) setTracks(data.tracks);
+        if (data.tracks && data.tracks.length > 0) setTracks(data.tracks);
       })
       .catch(err => console.error('Error fetching tracks:', err));
   }, []);

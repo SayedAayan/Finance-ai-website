@@ -3,8 +3,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, TrendingUp, AlertCircle, CheckCircle2, ShieldAlert, Sparkles, Send, RefreshCw } from 'lucide-react';
 import BuzzyMascot from '../components/BuzzyMascot';
 
+const DEFAULT_JUNIOR_COMPANIES = [
+  { id: 'TCS', symbol: 'TCS.NS', name: 'Tata Consultancy Services', category: 'Tech & Code', icon: '💻', price: 3890, changePercent: 1.2, description: 'Builds super smart computer software and mobile apps used worldwide.' },
+  { id: 'RELIANCE', symbol: 'RELIANCE.NS', name: 'Reliance Industries', category: 'Energy & Jio', icon: '📱', price: 1314, changePercent: -0.4, description: 'Brings high-speed 5G mobile internet and grocery stores to millions.' },
+  { id: 'INFY', symbol: 'INFY.NS', name: 'Infosys Limited', category: 'Software & AI', icon: '⚡', price: 1612, changePercent: 0.8, description: 'Helps planes fly safely and banks work smoothly with cloud software.' },
+  { id: 'TATAMOTORS', symbol: 'TATAMOTORS.NS', name: 'Tata Motors', category: 'Electric Cars', icon: '🚗', price: 920, changePercent: 2.1, description: 'Makes electric cars, trucks, and futuristic Jaguar Land Rover vehicles.' },
+  { id: 'AAPL', symbol: 'AAPL', name: 'Apple Inc.', category: 'iPhones & Macs', icon: '🍎', price: 224, changePercent: 1.5, description: 'Designs iPhones, iPads, and MacBooks that kids and creators love.' },
+  { id: 'DIS', symbol: 'DIS', name: 'Walt Disney Company', category: 'Movies & Parks', icon: '🏰', price: 95, changePercent: -0.2, description: 'Creates magical cartoon movies, theme parks, and Disney+ shows.' }
+];
+
 export default function JuniorTrade({ account, onUpdateAccount }) {
-  const [companies, setCompanies] = useState([]);
+  const [companies, setCompanies] = useState(DEFAULT_JUNIOR_COMPANIES);
   const [selectedStock, setSelectedStock] = useState(null);
   const [tradeShares, setTradeShares] = useState(1);
   const [reasonNote, setReasonNote] = useState('');
@@ -18,7 +27,7 @@ export default function JuniorTrade({ account, onUpdateAccount }) {
     fetch(`/api/junior/companies?market=${account?.market || 'IN'}`)
       .then(res => res.json())
       .then(data => {
-        if (data.companies) setCompanies(data.companies);
+        if (data.companies && data.companies.length > 0) setCompanies(data.companies);
       })
       .catch(err => console.error('Error fetching junior companies:', err));
   }, [account?.market]);
