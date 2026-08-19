@@ -344,17 +344,17 @@ export default function JuniorTrade({ account, onUpdateAccount }) {
                 const priceInfo = getCompanyDisplayPrice(company);
 
                 return (
-                  <div key={company.symbol} className="junior-card p-5 bg-white border-2 border-slate-100 hover:border-blue-200 transition-all rounded-3xl shadow-sm flex flex-col justify-between">
+                  <div key={company.symbol} className="jr-card-3d p-6 bg-white flex flex-col justify-between">
                     <div>
                       <div className="flex items-start justify-between gap-3 mb-3">
                         <JuniorCompanyLogo
                           ticker={cleanTicker}
                           symbol={company.symbol}
                           name={company.name}
-                          size={46}
+                          size={48}
                         />
                         <div className="flex flex-col items-end gap-1">
-                          <span className="text-[11px] font-extrabold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
+                          <span className="text-[11px] font-black text-slate-600 bg-slate-100 px-3 py-0.5 rounded-full border border-slate-200/60">
                             {company.category}
                           </span>
                           <span className="text-[10px] font-bold text-slate-400">
@@ -363,52 +363,52 @@ export default function JuniorTrade({ account, onUpdateAccount }) {
                         </div>
                       </div>
 
-                      <h3 className="font-extrabold text-base text-slate-900 junior-font-heading mt-1">
+                      <h3 className="font-black text-base md:text-lg text-slate-900 junior-font-heading mt-1">
                         {company.name}
                       </h3>
-                      <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+                      <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed font-medium">
                         {company.description}
                       </p>
 
                       <div className="flex items-baseline justify-between mt-4 pb-3 border-b border-slate-100">
                         <div>
-                          <div className="text-xl font-extrabold text-slate-900">
+                          <div className="text-xl md:text-2xl font-black text-slate-900">
                             {priceInfo.formatted}
                           </div>
                           {priceInfo.subtitle && (
-                            <div className="text-[11px] font-semibold text-slate-400">
+                            <div className="text-[11px] font-bold text-slate-400">
                               {priceInfo.subtitle}
                             </div>
                           )}
                         </div>
-                        <div className={`text-xs font-bold px-2 py-0.5 rounded-md ${
+                        <div className={`text-xs font-black px-2.5 py-1 rounded-xl shadow-xs ${
                           String(company.change || '').startsWith('-')
-                            ? 'text-rose-700 bg-rose-50'
-                            : 'text-emerald-700 bg-emerald-50'
+                            ? 'text-rose-700 bg-rose-50 border border-rose-200/80'
+                            : 'text-emerald-700 bg-emerald-50 border border-emerald-200/80'
                         }`}>
                           {company.change || '+0.0%'}
                         </div>
                       </div>
 
                       {holding && (
-                        <div className="mt-3 text-xs font-bold text-blue-700 bg-blue-50/70 p-2.5 rounded-2xl flex items-center justify-between">
+                        <div className="mt-3 text-xs font-black text-blue-700 bg-blue-50/80 p-2.5 rounded-2xl flex items-center justify-between border border-blue-100">
                           <span>You own: <strong>{holding.shares} shares</strong></span>
                           <span>₹{(holding.shares * priceInfo.numericInr).toLocaleString('en-IN')}</span>
                         </div>
                       )}
                     </div>
 
-                    <div className="flex gap-2 mt-4 pt-2">
+                    <div className="flex gap-2 mt-5 pt-1">
                       <button
                         onClick={() => handleOpenTrade(company, 'BUY')}
-                        className="flex-1 junior-btn-primary text-xs py-2.5 px-3 justify-center shadow-xs"
+                        className="flex-1 junior-btn-primary text-xs py-2.5 px-3 justify-center shadow-sm"
                       >
                         Buy Slices
                       </button>
                       {holding && holding.shares > 0 && (
                         <button
                           onClick={() => handleOpenTrade(company, 'SELL')}
-                          className="px-3.5 py-2.5 rounded-2xl border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-50 transition-colors"
+                          className="px-4 py-2.5 rounded-2xl border-2 border-slate-200 text-slate-700 text-xs font-black hover:bg-slate-50 transition-colors"
                         >
                           Sell
                         </button>

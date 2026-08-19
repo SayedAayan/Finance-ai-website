@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
 
 :root {
   --jr-primary: #2563EB;
@@ -9,14 +9,16 @@
   --jr-emerald: #10B981;
   --jr-purple: #8B5CF6;
   --jr-coral: #F43F5E;
-  --jr-bg-slate: #F8FAFC;
-  --jr-card-bg: #FFFFFF;
 }
 
 .junior-body {
-  font-family: 'Plus Jakarta Sans', 'Baloo 2', system-ui, sans-serif;
+  font-family: 'Plus Jakarta Sans', 'Outfit', system-ui, sans-serif;
   color: #0F172A;
-  background: radial-gradient(circle at 10% 10%, #EFF6FF 0%, #F8FAFC 50%, #F1F5F9 100%);
+  background: 
+    radial-gradient(circle at 15% 15%, rgba(59, 130, 246, 0.1) 0%, transparent 40%),
+    radial-gradient(circle at 85% 20%, rgba(245, 158, 11, 0.08) 0%, transparent 45%),
+    radial-gradient(circle at 50% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
+    #F8FAFC;
   min-height: 100vh;
   -webkit-tap-highlight-color: transparent;
 }
@@ -24,60 +26,73 @@
 .junior-font-heading {
   font-family: 'Baloo 2', 'Outfit', sans-serif;
   font-weight: 800;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.02em;
 }
 
-/* Premium 3D & Glassmorphic Cards */
-.jr-glass-card {
+/* 3D Floating Glassmorphic Cards */
+.jr-card-3d {
   background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(16px);
-  border: 2px solid rgba(226, 232, 240, 0.85);
-  border-radius: 28px;
-  box-shadow: 0 12px 32px -8px rgba(37, 99, 235, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(20px);
+  border: 2px solid rgba(241, 245, 249, 0.9);
+  border-radius: 32px;
+  box-shadow: 
+    0 20px 40px -15px rgba(37, 99, 235, 0.07),
+    0 1px 3px 0 rgba(15, 23, 42, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
 }
 
-.jr-glass-card:hover {
-  transform: translateY(-3px);
-  border-color: rgba(96, 165, 250, 0.6);
-  box-shadow: 0 20px 40px -10px rgba(37, 99, 235, 0.16), 0 8px 16px -4px rgba(15, 23, 42, 0.06);
+.jr-card-3d:hover {
+  transform: translateY(-4px);
+  border-color: rgba(147, 197, 253, 0.7);
+  box-shadow: 
+    0 25px 50px -12px rgba(37, 99, 235, 0.15),
+    0 4px 12px -2px rgba(15, 23, 42, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
 }
 
-/* Glow Effects */
+/* Neon & Ambient Glow Accents */
 .jr-glow-blue {
-  box-shadow: 0 0 35px -5px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 0 35px -5px rgba(37, 99, 235, 0.28);
 }
 
 .jr-glow-gold {
-  box-shadow: 0 0 35px -5px rgba(245, 158, 11, 0.3);
+  box-shadow: 0 0 35px -5px rgba(245, 158, 11, 0.35);
 }
 
-/* Vibrant Action Buttons */
+.jr-glow-emerald {
+  box-shadow: 0 0 35px -5px rgba(16, 185, 129, 0.3);
+}
+
+/* Vibrant Action Buttons with 3D Depth */
 .junior-btn-primary {
   background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
   color: #FFFFFF;
   font-family: 'Baloo 2', sans-serif;
   font-weight: 800;
-  font-size: 1rem;
+  font-size: 0.95rem;
   border-radius: 20px;
   padding: 10px 22px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  box-shadow: 0 6px 20px -2px rgba(37, 99, 235, 0.35);
+  box-shadow: 0 6px 18px -2px rgba(37, 99, 235, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  cursor: pointer;
 }
 
 .junior-btn-primary:hover {
   background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px -2px rgba(37, 99, 235, 0.45);
+  box-shadow: 0 10px 24px -2px rgba(37, 99, 235, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 .junior-btn-primary:active {
-  transform: scale(0.96);
+  transform: scale(0.96) translateY(0);
 }
 
 .junior-btn-gold {
@@ -85,43 +100,44 @@
   color: #FFFFFF;
   font-family: 'Baloo 2', sans-serif;
   font-weight: 800;
-  font-size: 1rem;
+  font-size: 0.95rem;
   border-radius: 20px;
   padding: 10px 22px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  box-shadow: 0 6px 20px -2px rgba(245, 158, 11, 0.35);
+  box-shadow: 0 6px 18px -2px rgba(245, 158, 11, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  cursor: pointer;
 }
 
 .junior-btn-gold:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px -2px rgba(245, 158, 11, 0.45);
+  box-shadow: 0 10px 24px -2px rgba(245, 158, 11, 0.5);
 }
 
 .junior-btn-gold:active {
   transform: scale(0.96);
 }
 
-/* Floating Animation */
-@keyframes floatGentle {
+/* Floating Animations */
+@keyframes floatBob {
   0%, 100% {
     transform: translateY(0px) rotate(0deg);
   }
   50% {
-    transform: translateY(-6px) rotate(1.5deg);
+    transform: translateY(-8px) rotate(1.5deg);
   }
 }
 
-.animate-float-gentle {
-  animation: floatGentle 3.5s ease-in-out infinite;
+.animate-float-bob {
+  animation: floatBob 3.2s ease-in-out infinite;
 }
 
 /* Shimmer Light effect */
-@keyframes shimmerWave {
+@keyframes shimmerPass {
   0% {
     background-position: -200% 0;
   }
@@ -133,5 +149,14 @@
 .jr-shimmer {
   background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
   background-size: 200% 100%;
-  animation: shimmerWave 2.5s infinite;
+  animation: shimmerPass 2.5s infinite;
+}
+
+/* Custom Scrollbar for Chips */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
