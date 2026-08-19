@@ -51,7 +51,7 @@ export default function Markets() {
 
   return (
     <div className="flex-1 bg-[#F8FAFC] dark:bg-gray-950 min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+      <div className="container py-8 md:py-12">
         
         {/* Header & Market Switcher Tabs */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">

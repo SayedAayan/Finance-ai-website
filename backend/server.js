@@ -1000,6 +1000,7 @@ async function readDB() {
     if (!db.trending) db.trending = {};
     if (!db.juniorAccounts) db.juniorAccounts = {};
     if (!db.juniorTracks) db.juniorTracks = DEFAULT_TRACKS;
+    if (!db.juniorCompanies) db.juniorCompanies = JUNIOR_COMPANIES;
     if (!db.cms) db.cms = {
       pages: {
         home: { title: "Home Page", content: {}, features: { showMarketSnapshot: true, showTrendingStocks: true, showMarketMovers: true, showMarketPulse: true, showFeaturedNews: true } },
@@ -1014,7 +1015,7 @@ async function readDB() {
     if (err.code === 'ENOENT') {
       return {
         chats: {}, watchlist: [], trending: {},
-        juniorAccounts: {}, juniorTracks: DEFAULT_TRACKS,
+        juniorAccounts: {}, juniorTracks: DEFAULT_TRACKS, juniorCompanies: JUNIOR_COMPANIES,
         cms: {
           pages: {
             home: { title: "Home Page", content: {}, features: { showMarketSnapshot: true, showTrendingStocks: true, showMarketMovers: true, showMarketPulse: true, showFeaturedNews: true } },
@@ -1133,9 +1134,37 @@ app.get('/api/junior/tracks', async (req, res) => {
 app.get('/api/junior/companies', async (req, res) => {
   try {
     const { market } = req.query;
-    let list = JUNIOR_COMPANIES;
+    const db = await readDB();
+    let list = db.juniorCompanies || JUNIOR_COMPANIES;
     if (market) list = list.filter(c => c.market.toUpperCase() === String(market).toUpperCase());
     res.json({ companies: list });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── StockBuzz Junior — Admin (Superadmin) Content Management ────────────────
+app.put('/api/junior/tracks', async (req, res) => {
+  try {
+    const { tracks } = req.body || {};
+    if (!Array.isArray(tracks)) return res.status(400).json({ error: 'tracks must be an array' });
+    const db = await readDB();
+    db.juniorTracks = tracks;
+    await writeDB(db);
+    res.json({ success: true, tracks: db.juniorTracks });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/junior/companies', async (req, res) => {
+  try {
+    const { companies } = req.body || {};
+    if (!Array.isArray(companies)) return res.status(400).json({ error: 'companies must be an array' });
+    const db = await readDB();
+    db.juniorCompanies = companies;
+    await writeDB(db);
+    res.json({ success: true, companies: db.juniorCompanies });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -1234,7 +1263,8 @@ app.post('/api/junior/accounts/:id/trades', async (req, res) => {
     if (!account) return res.status(404).json({ error: 'Junior account not found' });
 
     // Find company quote
-    const company = JUNIOR_COMPANIES.find(c => c.symbol === symbol) || {
+    const companyList = db.juniorCompanies || JUNIOR_COMPANIES;
+    const company = companyList.find(c => c.symbol === symbol) || {
       symbol, name: name || symbol, price: 100, currency: account.currencySymbol
     };
     const tradePrice = company.price;

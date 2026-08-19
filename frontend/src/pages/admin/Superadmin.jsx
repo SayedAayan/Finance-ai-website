@@ -3,7 +3,7 @@ import { Navigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useCms, defaultCmsConfig } from '../../context/CmsContext';
-import { LayoutDashboard, Users, FileEdit, Settings, Search, Edit2, Trash2, Shield, Activity, TrendingUp, ChevronDown, Home, LogOut, Sun, Moon, Image as ImageIcon, RotateCcw, AlertCircle, CheckCircle2, MessageSquare, Plus, BarChart3, DollarSign, Newspaper, ScrollText, Database, ArrowRight, LineChart, ArrowUpRight, ArrowDownRight, ArrowUp, ArrowDown, Eye, Filter, MousePointerClick, UserPlus, CreditCard, Crown, Star, RefreshCcw, Ticket, Tag, Check, X, Pin, EyeOff, XCircle, Clock, Link as LinkIcon, CalendarDays, Server, Globe, Cpu, Zap, Network, User, Bell, Key, Smartphone, Mail } from 'lucide-react';
+import { LayoutDashboard, Users, FileEdit, Settings, Search, Edit2, Trash2, Shield, Activity, TrendingUp, ChevronDown, Home, LogOut, Sun, Moon, Image as ImageIcon, RotateCcw, AlertCircle, CheckCircle2, MessageSquare, Plus, BarChart3, DollarSign, Newspaper, ScrollText, Database, ArrowRight, LineChart, ArrowUpRight, ArrowDownRight, ArrowUp, ArrowDown, Eye, Filter, MousePointerClick, UserPlus, CreditCard, Crown, Star, RefreshCcw, Ticket, Tag, Check, X, Pin, EyeOff, XCircle, Clock, Link as LinkIcon, CalendarDays, Server, Globe, Cpu, Zap, Network, User, Bell, Key, Smartphone, Mail, Baby } from 'lucide-react';
 
 const ImageUploadField = ({ label, value, onChange, variant = 'rectangular', caption }) => {
   const fileInputRef = useRef(null);
@@ -246,6 +246,11 @@ export default function Superadmin() {
   const [newPromo, setNewPromo] = useState({ code: '', discount: '', usage: '0 / ∞', expiry: 'Never', status: 'Active' });
   const [editingPromoOriginal, setEditingPromoOriginal] = useState(null);
 
+  const [juniorTracks, setJuniorTracks] = useState([]);
+  const [juniorCompanies, setJuniorCompanies] = useState([]);
+  const [isSavingJunior, setIsSavingJunior] = useState(false);
+  const [juniorSubTab, setJuniorSubTab] = useState('tracks');
+
   useEffect(() => {
     if (remoteCms) setCmsConfig(remoteCms);
   }, [remoteCms]);
@@ -257,6 +262,7 @@ export default function Superadmin() {
     fetchSettings();
     fetchAdminNews();
     fetchPromoCodes();
+    fetchJuniorContent();
 
     const healthInterval = setInterval(() => {
       fetchSystemHealth();
@@ -511,6 +517,53 @@ export default function Superadmin() {
     if (confirm('Are you sure you want to reset all configurations to their original defaults? Any unsaved changes will be lost.')) {
       setCmsConfig(defaultCmsConfig);
     }
+  };
+
+  const fetchJuniorContent = () => {
+    fetch('/api/junior/tracks').then(res => res.json()).then(data => {
+      if (data.tracks) setJuniorTracks(data.tracks);
+    }).catch(console.error);
+    fetch('/api/junior/companies').then(res => res.json()).then(data => {
+      if (data.companies) setJuniorCompanies(data.companies);
+    }).catch(console.error);
+  };
+
+  const handleSaveJuniorTracks = async (nextTracks) => {
+    setIsSavingJunior(true);
+    try {
+      const res = await fetch('/api/junior/tracks', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tracks: nextTracks })
+      });
+      if (!res.ok) throw new Error('Failed to save');
+      const data = await res.json();
+      setJuniorTracks(data.tracks);
+      await logAuditAction('StockBuzz Junior', 'Updated Curriculum', 'Junior learning tracks modified', 'text-violet-600 dark:text-violet-400');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to save StockBuzz Junior tracks');
+    }
+    setIsSavingJunior(false);
+  };
+
+  const handleSaveJuniorCompanies = async (nextCompanies) => {
+    setIsSavingJunior(true);
+    try {
+      const res = await fetch('/api/junior/companies', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ companies: nextCompanies })
+      });
+      if (!res.ok) throw new Error('Failed to save');
+      const data = await res.json();
+      setJuniorCompanies(data.companies);
+      await logAuditAction('StockBuzz Junior', 'Updated Companies', 'Junior tradeable company list modified', 'text-violet-600 dark:text-violet-400');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to save StockBuzz Junior companies');
+    }
+    setIsSavingJunior(false);
   };
 
   const updateNestedConfig = (section, path, value) => {
@@ -2083,6 +2136,259 @@ export default function Superadmin() {
     </div>
   );
 
+  const updateJuniorTrack = (trackIdx, patch) => {
+    const next = juniorTracks.map((t, i) => i === trackIdx ? { ...t, ...patch } : t);
+    setJuniorTracks(next);
+  };
+
+  const updateJuniorLesson = (trackIdx, lessonIdx, patch) => {
+    const next = juniorTracks.map((t, i) => {
+      if (i !== trackIdx) return t;
+      const lessons = t.lessons.map((l, j) => j === lessonIdx ? { ...l, ...patch } : l);
+      return { ...t, lessons };
+    });
+    setJuniorTracks(next);
+  };
+
+  const addJuniorTrack = () => {
+    const id = 'track-' + Date.now();
+    setJuniorTracks([...juniorTracks, {
+      id, title: 'New Track', description: 'Describe what kids will learn.', targetAge: '8-12',
+      icon: 'BookOpen', color: '#2F6FED', lessons: []
+    }]);
+  };
+
+  const deleteJuniorTrack = (trackIdx) => {
+    if (!confirm('Delete this entire track and its lessons?')) return;
+    setJuniorTracks(juniorTracks.filter((_, i) => i !== trackIdx));
+  };
+
+  const addJuniorLesson = (trackIdx) => {
+    const next = juniorTracks.map((t, i) => {
+      if (i !== trackIdx) return t;
+      const id = `${t.id}-lesson-${Date.now()}`;
+      return { ...t, lessons: [...t.lessons, { id, title: 'New Lesson', summary: '', duration: '3 min', points: 50, content: [] }] };
+    });
+    setJuniorTracks(next);
+  };
+
+  const deleteJuniorLesson = (trackIdx, lessonIdx) => {
+    const next = juniorTracks.map((t, i) => {
+      if (i !== trackIdx) return t;
+      return { ...t, lessons: t.lessons.filter((_, j) => j !== lessonIdx) };
+    });
+    setJuniorTracks(next);
+  };
+
+  const updateJuniorCompany = (idx, patch) => {
+    setJuniorCompanies(juniorCompanies.map((c, i) => i === idx ? { ...c, ...patch } : c));
+  };
+
+  const addJuniorCompany = () => {
+    setJuniorCompanies([...juniorCompanies, {
+      symbol: '', name: 'New Company', ticker: '', price: 100, change: '+0.0%',
+      market: 'IN', currency: '₹', category: 'General', emoji: '🏢', description: ''
+    }]);
+  };
+
+  const deleteJuniorCompany = (idx) => {
+    if (!confirm('Remove this company from StockBuzz Junior?')) return;
+    setJuniorCompanies(juniorCompanies.filter((_, i) => i !== idx));
+  };
+
+  const renderJunior = () => (
+    <div className="flex flex-col flex-1 min-h-0 space-y-5 animate-in fade-in duration-500 pb-6">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-end gap-3 mb-1">
+        <div>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">StockBuzz Junior</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage the learning curriculum and tradeable companies shown to kids.</p>
+        </div>
+        <button
+          onClick={() => juniorSubTab === 'tracks' ? handleSaveJuniorTracks(juniorTracks) : handleSaveJuniorCompanies(juniorCompanies)}
+          disabled={isSavingJunior}
+          className="bg-violet-600 hover:bg-violet-700 disabled:opacity-60 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm flex items-center gap-2 justify-center"
+        >
+          {isSavingJunior ? 'Saving...' : 'Save Changes'}
+        </button>
+      </div>
+
+      <div className="flex gap-1 bg-gray-100 dark:bg-gray-900 p-1 rounded-lg w-full sm:w-fit shrink-0 overflow-x-auto">
+        {[
+          { id: 'tracks', label: 'Curriculum Tracks' },
+          { id: 'companies', label: 'Tradeable Companies' }
+        ].map(t => (
+          <button
+            key={t.id}
+            onClick={() => setJuniorSubTab(t.id)}
+            className={`px-3.5 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap transition-colors ${juniorSubTab === t.id ? 'bg-white dark:bg-black text-violet-700 dark:text-violet-400 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'}`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {juniorSubTab === 'tracks' && (
+        <div className="flex-1 min-h-0 overflow-y-auto space-y-4">
+          {juniorTracks.map((track, trackIdx) => (
+            <div key={track.id} className="bg-white dark:bg-black rounded-2xl border border-gray-100 dark:border-gray-800/80 shadow-[0_4px_24px_-4px_rgba(0,0,0,0.02)] p-5">
+              <div className="flex flex-col md:flex-row gap-3 md:items-start mb-4">
+                <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Track Title</label>
+                    <input
+                      value={track.title}
+                      onChange={e => updateJuniorTrack(trackIdx, { title: e.target.value })}
+                      className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-lg text-sm font-semibold focus:outline-none focus:border-violet-500 text-gray-900 dark:text-gray-100"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Target Age</label>
+                    <input
+                      value={track.targetAge}
+                      onChange={e => updateJuniorTrack(trackIdx, { targetAge: e.target.value })}
+                      placeholder="e.g. 8-12"
+                      className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-lg text-sm focus:outline-none focus:border-violet-500 text-gray-900 dark:text-gray-100"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Description</label>
+                    <textarea
+                      value={track.description}
+                      onChange={e => updateJuniorTrack(trackIdx, { description: e.target.value })}
+                      rows={2}
+                      className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-lg text-sm focus:outline-none focus:border-violet-500 text-gray-900 dark:text-gray-100 resize-none"
+                    />
+                  </div>
+                </div>
+                <button
+                  onClick={() => deleteJuniorTrack(trackIdx)}
+                  className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors shrink-0"
+                  title="Delete track"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+
+              <div className="space-y-3 pl-0 md:pl-2 border-t border-gray-50 dark:border-gray-800/50 pt-4">
+                {track.lessons.map((lesson, lessonIdx) => (
+                  <div key={lesson.id} className="bg-gray-50 dark:bg-gray-900/40 rounded-xl p-3.5 flex flex-col sm:flex-row gap-3">
+                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="sm:col-span-2">
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Lesson Title</label>
+                        <input
+                          value={lesson.title}
+                          onChange={e => updateJuniorLesson(trackIdx, lessonIdx, { title: e.target.value })}
+                          className="w-full px-2.5 py-1.5 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-lg text-sm focus:outline-none focus:border-violet-500 text-gray-900 dark:text-gray-100"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Points</label>
+                        <input
+                          type="number"
+                          value={lesson.points}
+                          onChange={e => updateJuniorLesson(trackIdx, lessonIdx, { points: parseInt(e.target.value, 10) || 0 })}
+                          className="w-full px-2.5 py-1.5 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-lg text-sm focus:outline-none focus:border-violet-500 text-gray-900 dark:text-gray-100"
+                        />
+                      </div>
+                      <div className="sm:col-span-3">
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Summary</label>
+                        <input
+                          value={lesson.summary}
+                          onChange={e => updateJuniorLesson(trackIdx, lessonIdx, { summary: e.target.value })}
+                          className="w-full px-2.5 py-1.5 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-lg text-sm focus:outline-none focus:border-violet-500 text-gray-900 dark:text-gray-100"
+                        />
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => deleteJuniorLesson(trackIdx, lessonIdx)}
+                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors self-start shrink-0"
+                      title="Delete lesson"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  onClick={() => addJuniorLesson(trackIdx)}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-violet-600 dark:text-violet-400 hover:text-violet-700 px-2 py-1"
+                >
+                  <Plus size={14} /> Add Lesson
+                </button>
+              </div>
+            </div>
+          ))}
+
+          <button
+            onClick={addJuniorTrack}
+            className="w-full py-3 border-2 border-dashed border-gray-200 dark:border-gray-800 hover:border-violet-400 dark:hover:border-violet-700 rounded-2xl text-sm font-semibold text-gray-500 hover:text-violet-600 dark:hover:text-violet-400 transition-colors flex items-center justify-center gap-2"
+          >
+            <Plus size={16} /> Add Track
+          </button>
+        </div>
+      )}
+
+      {juniorSubTab === 'companies' && (
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <div className="bg-white dark:bg-black rounded-2xl border border-gray-100 dark:border-gray-800/80 shadow-[0_4px_24px_-4px_rgba(0,0,0,0.02)] overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[820px]">
+                <thead>
+                  <tr className="border-b border-gray-100 dark:border-gray-800/80 text-left">
+                    <th className="px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Emoji</th>
+                    <th className="px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Symbol</th>
+                    <th className="px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Name</th>
+                    <th className="px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Market</th>
+                    <th className="px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Price</th>
+                    <th className="px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Category</th>
+                    <th className="px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {juniorCompanies.map((c, idx) => (
+                    <tr key={idx} className="border-b border-gray-50 dark:border-gray-900/60 last:border-0">
+                      <td className="px-4 py-2.5">
+                        <input value={c.emoji} onChange={e => updateJuniorCompany(idx, { emoji: e.target.value })} className="w-12 text-center px-1.5 py-1.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-lg text-sm focus:outline-none focus:border-violet-500" />
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <input value={c.symbol} onChange={e => updateJuniorCompany(idx, { symbol: e.target.value })} className="w-28 px-2 py-1.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-lg text-sm focus:outline-none focus:border-violet-500 text-gray-900 dark:text-gray-100" />
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <input value={c.name} onChange={e => updateJuniorCompany(idx, { name: e.target.value })} className="w-full min-w-[160px] px-2 py-1.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-lg text-sm focus:outline-none focus:border-violet-500 text-gray-900 dark:text-gray-100" />
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <select value={c.market} onChange={e => updateJuniorCompany(idx, { market: e.target.value })} className="px-2 py-1.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-lg text-sm focus:outline-none focus:border-violet-500 text-gray-900 dark:text-gray-100">
+                          <option value="IN">IN</option>
+                          <option value="US">US</option>
+                          <option value="UK">UK</option>
+                        </select>
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <input type="number" value={c.price} onChange={e => updateJuniorCompany(idx, { price: parseFloat(e.target.value) || 0 })} className="w-24 px-2 py-1.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-lg text-sm focus:outline-none focus:border-violet-500 text-gray-900 dark:text-gray-100" />
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <input value={c.category} onChange={e => updateJuniorCompany(idx, { category: e.target.value })} className="w-full min-w-[140px] px-2 py-1.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-lg text-sm focus:outline-none focus:border-violet-500 text-gray-900 dark:text-gray-100" />
+                      </td>
+                      <td className="px-4 py-2.5 text-right">
+                        <button onClick={() => deleteJuniorCompany(idx)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Remove company">
+                          <Trash2 size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <button
+              onClick={addJuniorCompany}
+              className="w-full py-3 border-t border-gray-100 dark:border-gray-800/80 text-sm font-semibold text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/10 transition-colors flex items-center justify-center gap-2"
+            >
+              <Plus size={16} /> Add Company
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div className="h-screen bg-[#fafafa] dark:bg-[#0a0a0a] flex font-sans antialiased overflow-hidden selection:bg-violet-200 dark:selection:bg-violet-900/50">
@@ -2148,6 +2454,7 @@ export default function Superadmin() {
             <div className="space-y-0.5">
               {[
                 { id: 'content', icon: FileEdit, label: 'Website CMS' },
+                { id: 'junior', icon: Baby, label: 'StockBuzz Junior' },
                 { id: 'api_data', icon: Database, label: 'API & Data' },
                 { id: 'settings', icon: Settings, label: 'Settings' }
               ].map(tab => (
@@ -2180,6 +2487,7 @@ export default function Superadmin() {
           {activeTab === 'overview' && renderOverview()}
           {activeTab === 'users' && renderUsers()}
           {activeTab === 'content' && renderContent()}
+          {activeTab === 'junior' && renderJunior()}
           {activeTab === 'analytics' && renderAnalytics()}
           {activeTab === 'revenue' && renderRevenue()}
           {activeTab === 'news_manager' && renderNewsManager()}

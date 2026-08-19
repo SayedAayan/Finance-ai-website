@@ -450,7 +450,7 @@ export default function Calculators() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-[#0a0a0a] pt-8 pb-20">
-      <div className="container max-w-7xl">
+      <div className="container">
         {/* Header */}
         <div className="mb-8">
           {activeTab ? (

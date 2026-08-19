@@ -57,7 +57,7 @@ export default function StrategyResults() {
     <div className="w-full bg-gray-50 dark:bg-gray-950 min-h-screen pt-12 pb-16 relative overflow-hidden">
       <div className={`absolute top-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-gradient-to-br ${strategy.gradient} opacity-10 blur-[120px] pointer-events-none`} />
 
-      <div className="max-w-6xl mx-auto px-6 relative z-10">
+      <div className="container relative z-10">
 
         <button
           onClick={() => navigate('/investors-strategy')}
