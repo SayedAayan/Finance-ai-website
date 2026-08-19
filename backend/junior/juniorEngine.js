@@ -121,7 +121,7 @@ export const JUNIOR_COMPANIES = [
 /**
  * Initializes default junior account state in database
  */
-export function createDefaultJuniorAccount(nickname = 'Junior Champ', age = 10, mode = 'explorer', market = 'IN') {
+export function createDefaultJuniorAccount(nickname = 'Junior Champ', age = 10, mode = 'explorer', market = 'IN', avatar = 'rocket') {
   const isUS = market === 'US';
   const initialCash = isUS ? 1000 : 100000;
   const currencySymbol = isUS ? '$' : '₹';
@@ -129,7 +129,7 @@ export function createDefaultJuniorAccount(nickname = 'Junior Champ', age = 10, 
   return {
     id: 'jr_' + Math.random().toString(36).substring(2, 9),
     nickname,
-    avatar: 'buzzy-star',
+    avatar: avatar || 'rocket',
     age: parseInt(age, 10) || 10,
     mode: age >= 13 ? 'trader' : (mode || 'explorer'),
     market: isUS ? 'US' : 'IN',

@@ -14,6 +14,7 @@ import { BullMascot, BearMascot } from './components/BuzzyMascot';
 export const DEFAULT_JUNIOR_ACCOUNT = {
   id: 'demo_jr_1',
   nickname: 'Junior Rocket',
+  avatar: 'rocket',
   age: 12,
   mode: 'explorer',
   parentEmail: 'parent@stockbuzz.in',

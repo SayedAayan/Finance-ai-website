@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Flame, BookOpen, TrendingUp, Trophy, ArrowRight, Shield, Zap, CheckCircle2, Award, PieChart, Coins, HelpCircle, Gift, Star, Target, ChevronRight, Activity, Compass, ShieldCheck } from 'lucide-react';
+import { Sparkles, Flame, BookOpen, TrendingUp, Trophy, ArrowRight, Shield, Zap, CheckCircle2, Award, PieChart, Coins, HelpCircle, Gift, Star, Target, ChevronRight, Activity, Compass, ShieldCheck, X, Palette } from 'lucide-react';
 import { BullMascot, BearMascot } from '../components/BuzzyMascot';
 import JuniorCompanyLogo from '../components/JuniorCompanyLogo';
+import JuniorAvatar, { JUNIOR_AVATARS } from '../components/JuniorAvatar';
 
 const FINANCIAL_WISDOM_TIPS = [
   "Cosmic Tip: When buyers are excited, market prices climb higher! 🚀 📈",
@@ -18,6 +19,7 @@ export default function JuniorHome({ account, onUpdateAccount }) {
   const [quizSelectedOption, setQuizSelectedOption] = useState(null);
   const [claimedReward, setClaimedReward] = useState(false);
   const [tipIndex, setTipIndex] = useState(0);
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -72,6 +74,27 @@ export default function JuniorHome({ account, onUpdateAccount }) {
     }
   };
 
+  const handleSelectAvatar = async (avatarId) => {
+    setShowAvatarModal(false);
+    if (onUpdateAccount) {
+      onUpdateAccount({
+        ...acc,
+        avatar: avatarId
+      });
+    }
+    try {
+      if (acc.id) {
+        await fetch(`/api/junior/accounts/${acc.id}/avatar`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ avatar: avatarId })
+        });
+      }
+    } catch (err) {
+      console.error('Error updating avatar:', err);
+    }
+  };
+
   const handleDailyQuizSubmit = (optIndex) => {
     setQuizSelectedOption(optIndex);
     setDailyQuizAnswered(true);
@@ -98,8 +121,15 @@ export default function JuniorHome({ account, onUpdateAccount }) {
 
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
           <div className="flex items-center gap-4 md:gap-6">
-            <div className="relative flex-shrink-0">
-              <BullMascot size={72} />
+            <div
+              onClick={() => setShowAvatarModal(true)}
+              className="relative flex-shrink-0 cursor-pointer group"
+              title="Click to choose your avatar persona"
+            >
+              <JuniorAvatar avatarId={acc.avatar || 'rocket'} size={78} />
+              <div className="absolute -bottom-1.5 -right-1.5 bg-amber-400 text-slate-950 font-black text-[10px] px-2 py-0.5 rounded-full shadow-md border-2 border-white group-hover:scale-110 transition-transform">
+                ✏️ Edit
+              </div>
             </div>
 
             <div>
@@ -452,6 +482,64 @@ export default function JuniorHome({ account, onUpdateAccount }) {
           })}
         </div>
       </div>
+
+      {/* Avatar Selection Modal */}
+      <AnimatePresence>
+        {showAvatarModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white rounded-[32px] max-w-md w-full p-6 md:p-8 shadow-2xl border-2 border-blue-100 relative"
+            >
+              <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <Palette size={20} className="text-blue-600" />
+                  <h3 className="text-lg font-black text-slate-900 junior-font-heading">
+                    Choose Your Avatar Persona
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setShowAvatarModal(false)}
+                  className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 max-h-72 overflow-y-auto p-2 scrollbar-none border border-slate-100 rounded-2xl bg-slate-50/60 mb-5">
+                {JUNIOR_AVATARS.map((av) => {
+                  const isCurrent = (acc.avatar || 'rocket') === av.id;
+                  return (
+                    <button
+                      key={av.id}
+                      onClick={() => handleSelectAvatar(av.id)}
+                      className={`p-3 rounded-2xl border-2 flex flex-col items-center gap-1.5 transition-all ${
+                        isCurrent
+                          ? 'border-blue-600 bg-white shadow-md scale-105'
+                          : 'border-transparent bg-white/80 hover:bg-white hover:border-slate-200'
+                      }`}
+                    >
+                      <JuniorAvatar avatarId={av.id} size={44} />
+                      <span className="text-[11px] font-black text-slate-800 text-center truncate w-full">
+                        {av.name}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                onClick={() => setShowAvatarModal(false)}
+                className="w-full junior-btn-primary text-xs py-3"
+              >
+                Close
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

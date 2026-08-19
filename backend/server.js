@@ -1186,11 +1186,26 @@ app.post('/api/junior/onboarding/parent-consent', async (req, res) => {
 
 app.post('/api/junior/accounts', async (req, res) => {
   try {
-    const { nickname, age, mode, market, parentEmail } = req.body || {};
+    const { nickname, age, mode, market, parentEmail, avatar } = req.body || {};
     const db = await readDB();
-    const account = createDefaultJuniorAccount(nickname || 'Junior Explorer', age || 10, mode, market);
+    const account = createDefaultJuniorAccount(nickname || 'Junior Explorer', age || 10, mode, market, avatar || 'rocket');
     if (parentEmail) account.parentEmail = parentEmail;
     db.juniorAccounts[account.id] = account;
+    await writeDB(db);
+    res.json({ account });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/junior/accounts/:id/avatar', async (req, res) => {
+  try {
+    const { avatar, nickname } = req.body || {};
+    const db = await readDB();
+    const account = db.juniorAccounts?.[req.params.id];
+    if (!account) return res.status(404).json({ error: 'Account not found' });
+    if (avatar) account.avatar = avatar;
+    if (nickname) account.nickname = nickname;
     await writeDB(db);
     res.json({ account });
   } catch (err) {
@@ -1204,7 +1219,7 @@ app.get('/api/junior/accounts/:id', async (req, res) => {
     let account = db.juniorAccounts?.[req.params.id];
     if (!account) {
       // If default demo account requested, auto-initialize
-      account = createDefaultJuniorAccount('Buzzy Cadet', 11, 'explorer', 'IN');
+      account = createDefaultJuniorAccount('Junior Champ', 11, 'explorer', 'IN', 'rocket');
       account.id = req.params.id;
       db.juniorAccounts[account.id] = account;
       await writeDB(db);
