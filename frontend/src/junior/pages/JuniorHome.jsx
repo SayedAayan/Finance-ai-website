@@ -160,19 +160,21 @@ export default function JuniorHome({ account, onUpdateAccount }) {
         </div>
       </motion.div>
 
-      {/* 3D Piggy Vault Card with Visual Savings Goal */}
+      {/* 3D Smart Portfolio Vault Card with Visual Savings Goal */}
       <div className="jr-card-3d p-6 md:p-8 bg-white">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-slate-100">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-2xl">🐷</span>
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center font-black text-sm shadow-xs">
+                🏦
+              </div>
               <span className="text-xs font-black uppercase tracking-wider text-slate-400">
-                Virtual Piggy Vault & Portfolio
+                Smart Portfolio Vault
               </span>
             </div>
-            <div className="text-3xl md:text-4xl lg:text-5xl font-black text-slate-900 junior-font-heading mt-1 flex items-baseline gap-2.5">
+            <div className="text-3xl md:text-4xl lg:text-5xl font-black text-slate-900 junior-font-heading mt-2 flex items-baseline gap-2.5">
               <span>{acc.currencySymbol}{totalWealth.toLocaleString('en-IN')}</span>
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">in total wealth</span>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">in total assets</span>
             </div>
           </div>
 
@@ -185,7 +187,7 @@ export default function JuniorHome({ account, onUpdateAccount }) {
               <span className="text-base">{isUp ? '📈' : '💡'}</span>
               <span>
                 {isUp
-                  ? `+${acc.currencySymbol}${growth.toLocaleString('en-IN')} (+${((growth / startingWealth) * 100).toFixed(1)}%) Virtual Growth`
+                  ? `+${acc.currencySymbol}${growth.toLocaleString('en-IN')} (+${((growth / startingWealth) * 100).toFixed(1)}%) Portfolio Growth`
                   : `Dipped by ${acc.currencySymbol}${Math.abs(growth).toLocaleString('en-IN')}`}
               </span>
             </div>
@@ -204,7 +206,7 @@ export default function JuniorHome({ account, onUpdateAccount }) {
           <div className="flex items-center justify-between text-xs mb-2">
             <span className="font-extrabold text-slate-600 flex items-center gap-1.5">
               <Target size={14} className="text-blue-600" />
-              Target Piggy Goal: <strong>{acc.currencySymbol}{goalAmount.toLocaleString('en-IN')}</strong>
+              Milestone Wealth Goal: <strong>{acc.currencySymbol}{goalAmount.toLocaleString('en-IN')}</strong>
             </span>
             <span className="font-black text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full">
               {goalProgress}% Reached 🚀

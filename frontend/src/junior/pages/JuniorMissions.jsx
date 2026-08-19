@@ -16,7 +16,7 @@ export default function JuniorMissions({ account }) {
     {
       id: 'm1',
       title: 'Join StockBuzz Junior',
-      desc: 'Set up your virtual piggy bank and start your journey',
+      desc: 'Set up your virtual portfolio vault and start your journey',
       points: 50,
       badge: 'Junior Pioneer',
       icon: '🚀',

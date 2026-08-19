@@ -241,8 +241,8 @@ export default function JuniorTrade({ account, onUpdateAccount }) {
 
           <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-2xl px-4 py-2.5 shadow-xs">
             <div>
-              <div className="text-[10px] font-bold text-emerald-800 uppercase">Available Piggy Bank</div>
-              <div className="text-base font-extrabold text-emerald-900">
+              <div className="text-[10px] font-black text-emerald-800 uppercase tracking-wider">Available Cash</div>
+              <div className="text-base font-black text-emerald-900">
                 {currencySymbol}{currentCash.toLocaleString('en-IN')}
               </div>
             </div>
