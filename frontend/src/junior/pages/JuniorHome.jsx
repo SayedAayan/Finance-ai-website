@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Sparkles, Flame, BookOpen, TrendingUp, Trophy, ArrowRight, Shield } from 'lucide-react';
 import BuzzyMascot from '../components/BuzzyMascot';
+import JuniorCompanyLogo from '../components/JuniorCompanyLogo';
 
 export default function JuniorHome({ account }) {
   const acc = account || {
@@ -11,7 +12,19 @@ export default function JuniorHome({ account }) {
     currencySymbol: '₹',
     streakDays: 3,
     totalPoints: 150,
-    portfolio: { cash: 95000, startingCash: 100000, investedValue: 5000, holdings: [] },
+    portfolio: {
+      cash: 95000,
+      startingCash: 100000,
+      investedValue: 5000,
+      holdings: [
+        {
+          symbol: 'RELIANCE.NS',
+          name: 'Reliance Industries',
+          shares: 2,
+          currentPrice: 2780
+        }
+      ]
+    },
     badges: ['badge-first-step', 'badge-streak-3']
   };
 
@@ -19,6 +32,7 @@ export default function JuniorHome({ account }) {
   const startingWealth = acc.portfolio.startingCash || 100000;
   const growth = totalWealth - startingWealth;
   const isUp = growth >= 0;
+  const holdings = acc.portfolio.holdings || [];
 
   return (
     <div className="space-y-6">
@@ -98,10 +112,35 @@ export default function JuniorHome({ account }) {
           <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 col-span-2 md:col-span-1">
             <span className="text-xs text-slate-500 font-medium">Companies Owned</span>
             <div className="text-base font-bold text-slate-800 mt-0.5">
-              {acc.portfolio.holdings?.length || 0} companies
+              {holdings.length} companies
             </div>
           </div>
         </div>
+
+        {/* Active Holdings Preview with Logos */}
+        {holdings.length > 0 && (
+          <div className="mt-6 pt-6 border-t border-slate-100">
+            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+              Your Company Co-Ownership Slices
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {holdings.map((h, i) => (
+                <div key={i} className="flex items-center justify-between p-3 rounded-2xl border border-slate-100 bg-slate-50/60">
+                  <div className="flex items-center gap-3">
+                    <JuniorCompanyLogo ticker={h.symbol || h.name} size={36} />
+                    <div>
+                      <div className="text-xs font-extrabold text-slate-900">{h.name || h.symbol}</div>
+                      <div className="text-[11px] font-semibold text-blue-600">{h.shares} Shares Owned</div>
+                    </div>
+                  </div>
+                  <div className="text-xs font-extrabold text-slate-800">
+                    {acc.currencySymbol}{((h.shares || 1) * (h.currentPrice || h.avgPrice || 1000)).toLocaleString('en-IN')}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Main Action Grid */}
