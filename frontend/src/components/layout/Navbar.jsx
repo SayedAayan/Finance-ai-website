@@ -394,22 +394,22 @@ export default function Navbar({ onToggleAIChat }) {
 
 
 
-            {/* Stockbuzz Junior Button */}
+            {/* Junior Button */}
             <Link
               to="/junior"
-              className="flex items-center justify-center gap-1.5 whitespace-nowrap bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-500 hover:to-amber-600 text-slate-950 px-4 h-[38px] rounded-full font-bold text-[0.84rem] shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 active:scale-95"
+              className="flex items-center justify-center gap-1.5 whitespace-nowrap bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 px-3 h-[34px] rounded-full font-bold text-xs shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105 active:scale-95 flex-shrink-0"
               title="Stockbuzz Junior - Kid-Safe Paper Trading & Learning"
             >
-              <span className="text-base">🐝</span>
-              <span>Stockbuzz Junior</span>
+              <span className="text-sm">🐝</span>
+              <span>Junior</span>
             </Link>
 
             {/* Auth: Sign In button or user avatar menu */}
             {currentUser ? (
-              <div className="relative" ref={userMenuRef}>
+              <div className="relative flex-shrink-0" ref={userMenuRef}>
                 <button
                   onClick={() => setShowUserMenu(s => !s)}
-                  className="flex items-center justify-center w-[38px] h-[38px] rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 text-white font-bold text-sm overflow-hidden"
+                  className="flex items-center justify-center w-[36px] h-[36px] rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 text-white font-bold text-sm overflow-hidden flex-shrink-0"
                   title={currentUser.displayName || currentUser.phoneNumber || 'Account'}
                 >
                   {currentUser.photoURL ? (
@@ -463,7 +463,7 @@ export default function Navbar({ onToggleAIChat }) {
             ) : (
               <Link
                 to="/login"
-                className="flex items-center justify-center whitespace-nowrap border border-gray-200 dark:border-gray-800 text-textMain dark:text-gray-100 px-3.5 h-[38px] rounded-full font-semibold text-[0.82rem] hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-300"
+                className="flex items-center justify-center whitespace-nowrap border border-gray-200 dark:border-gray-800 text-textMain dark:text-gray-100 px-3.5 h-[34px] rounded-full font-semibold text-xs hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200 flex-shrink-0"
               >
                 Sign in
               </Link>
