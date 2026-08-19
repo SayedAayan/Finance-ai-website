@@ -1,89 +1,137 @@
-@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 :root {
-  --junior-buzz-blue: #2F6FED;
-  --junior-coin-gold: #FFB020;
-  --junior-grow-green: #12B76A;
-  --junior-dip-coral: #FF6B6B;
-  --junior-paper-cream: #FFFDF9;
-  --junior-paper-card: #FFFFFF;
-  --junior-ink-navy: #1A2340;
-  --junior-ink-muted: #53627C;
-  --junior-border: #E8EEF8;
-  --junior-radius: 20px;
-  --junior-radius-sm: 14px;
+  --jr-primary: #2563EB;
+  --jr-primary-light: #60A5FA;
+  --jr-primary-dark: #1D4ED8;
+  --jr-gold: #F59E0B;
+  --jr-gold-light: #FDE68A;
+  --jr-emerald: #10B981;
+  --jr-purple: #8B5CF6;
+  --jr-coral: #F43F5E;
+  --jr-bg-slate: #F8FAFC;
+  --jr-card-bg: #FFFFFF;
 }
 
 .junior-body {
-  font-family: 'Baloo 2', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  color: var(--junior-ink-navy);
-  background-color: #F4F8FD;
+  font-family: 'Plus Jakarta Sans', 'Baloo 2', system-ui, sans-serif;
+  color: #0F172A;
+  background: radial-gradient(circle at 10% 10%, #EFF6FF 0%, #F8FAFC 50%, #F1F5F9 100%);
   min-height: 100vh;
   -webkit-tap-highlight-color: transparent;
 }
 
 .junior-font-heading {
-  font-family: 'Baloo 2', sans-serif;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  font-family: 'Baloo 2', 'Outfit', sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.015em;
 }
 
-.junior-card {
-  background: var(--junior-paper-card);
-  border-radius: var(--junior-radius);
-  border: 2px solid var(--junior-border);
-  box-shadow: 0 8px 24px -4px rgba(26, 35, 64, 0.06), 0 2px 6px -1px rgba(26, 35, 64, 0.04);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+/* Premium 3D & Glassmorphic Cards */
+.jr-glass-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  border: 2px solid rgba(226, 232, 240, 0.85);
+  border-radius: 28px;
+  box-shadow: 0 12px 32px -8px rgba(37, 99, 235, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.junior-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 28px -4px rgba(47, 111, 237, 0.12);
+.jr-glass-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(96, 165, 250, 0.6);
+  box-shadow: 0 20px 40px -10px rgba(37, 99, 235, 0.16), 0 8px 16px -4px rgba(15, 23, 42, 0.06);
 }
 
+/* Glow Effects */
+.jr-glow-blue {
+  box-shadow: 0 0 35px -5px rgba(37, 99, 235, 0.25);
+}
+
+.jr-glow-gold {
+  box-shadow: 0 0 35px -5px rgba(245, 158, 11, 0.3);
+}
+
+/* Vibrant Action Buttons */
 .junior-btn-primary {
-  background: linear-gradient(135deg, #2F6FED 0%, #1D55C4 100%);
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
   color: #FFFFFF;
   font-family: 'Baloo 2', sans-serif;
-  font-weight: 700;
-  font-size: 1.05rem;
-  border-radius: var(--junior-radius-sm);
-  padding: 12px 24px;
-  min-height: 48px;
+  font-weight: 800;
+  font-size: 1rem;
+  border-radius: 20px;
+  padding: 10px 22px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  box-shadow: 0 4px 14px rgba(47, 111, 237, 0.35);
-  transition: all 0.15s ease;
+  box-shadow: 0 6px 20px -2px rgba(37, 99, 235, 0.35);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.junior-btn-primary:hover {
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -2px rgba(37, 99, 235, 0.45);
 }
 
 .junior-btn-primary:active {
-  transform: scale(0.97);
+  transform: scale(0.96);
 }
 
 .junior-btn-gold {
-  background: linear-gradient(135deg, #FFB020 0%, #F59E0B 100%);
-  color: #1A2340;
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+  color: #FFFFFF;
   font-family: 'Baloo 2', sans-serif;
   font-weight: 800;
-  font-size: 1.05rem;
-  border-radius: var(--junior-radius-sm);
-  padding: 12px 24px;
-  min-height: 48px;
+  font-size: 1rem;
+  border-radius: 20px;
+  padding: 10px 22px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  box-shadow: 0 4px 14px rgba(255, 176, 32, 0.35);
+  box-shadow: 0 6px 20px -2px rgba(245, 158, 11, 0.35);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.junior-pill-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border-radius: 9999px;
-  font-size: 0.875rem;
-  font-weight: 700;
+.junior-btn-gold:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -2px rgba(245, 158, 11, 0.45);
+}
+
+.junior-btn-gold:active {
+  transform: scale(0.96);
+}
+
+/* Floating Animation */
+@keyframes floatGentle {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-6px) rotate(1.5deg);
+  }
+}
+
+.animate-float-gentle {
+  animation: floatGentle 3.5s ease-in-out infinite;
+}
+
+/* Shimmer Light effect */
+@keyframes shimmerWave {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.jr-shimmer {
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
+  background-size: 200% 100%;
+  animation: shimmerWave 2.5s infinite;
 }
