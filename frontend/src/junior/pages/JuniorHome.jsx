@@ -5,12 +5,12 @@ import { Sparkles, Flame, BookOpen, TrendingUp, Trophy, ArrowRight, Shield, Zap,
 import BuzzyMascot from '../components/BuzzyMascot';
 import JuniorCompanyLogo from '../components/JuniorCompanyLogo';
 
-const BUZZY_TIPS = [
-  "Did you know? Apple sells over 200 million iPhones every year! 📱",
-  "Owning even 1 share turns you into a real-life company co-owner! 👑",
-  "The Golden Egg Rule: Never put all your virtual money into just 1 stock! 🛡️",
-  "Disney started with a simple drawing of Mickey Mouse in 1928! 🏰",
-  "Tata Motors builds electric cars and futuristic Jaguar Land Rovers! 🚗"
+const MASCOT_TIPS = [
+  "Bully the Bull says: When buyers are excited, market prices climb up! 🐂 📈",
+  "Barry the Bear says: When markets take a nap, smart investors stay calm and patient! 🐻 💡",
+  "Bully says: Apple sells over 200 million iPhones every year! 🍏",
+  "Barry says: The Golden Egg Rule — never put all your virtual money into just 1 stock! 🛡️",
+  "Bully & Barry: Owning 1 share turns you into a real-life company co-owner! 👑"
 ];
 
 export default function JuniorHome({ account, onUpdateAccount }) {
@@ -21,7 +21,7 @@ export default function JuniorHome({ account, onUpdateAccount }) {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setTipIndex(prev => (prev + 1) % BUZZY_TIPS.length);
+      setTipIndex(prev => (prev + 1) % MASCOT_TIPS.length);
     }, 6000);
     return () => clearInterval(interval);
   }, []);
@@ -128,7 +128,7 @@ export default function JuniorHome({ account, onUpdateAccount }) {
                   className="mt-2 inline-flex items-center gap-2 bg-white/15 backdrop-blur-md border border-white/25 px-3.5 py-1.5 rounded-2xl text-xs font-semibold text-blue-50 shadow-inner"
                 >
                   <Sparkles size={14} className="text-amber-300 flex-shrink-0" />
-                  <span>{BUZZY_TIPS[tipIndex]}</span>
+                  <span>{MASCOT_TIPS[tipIndex]}</span>
                 </motion.div>
               </AnimatePresence>
             </div>

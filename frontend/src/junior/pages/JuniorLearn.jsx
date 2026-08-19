@@ -15,7 +15,7 @@ const DEFAULT_TRACKS = [
     lessons: [
       {
         id: 'lesson-1-1',
-        title: 'Meet Buzzy & The Candy Shop',
+        title: 'Meet Bully, Barry & The Candy Shop',
         summary: 'How a simple idea turns into a real company.',
         duration: '3 min',
         points: 50,
