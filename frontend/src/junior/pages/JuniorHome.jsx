@@ -5,12 +5,12 @@ import { Sparkles, Flame, BookOpen, TrendingUp, Trophy, ArrowRight, Shield, Zap,
 import { BullMascot, BearMascot } from '../components/BuzzyMascot';
 import JuniorCompanyLogo from '../components/JuniorCompanyLogo';
 
-const MASCOT_TIPS = [
-  "Bully the Bull says: When buyers are excited, market prices climb up! 🐂 📈",
-  "Barry the Bear says: When markets take a nap, smart investors stay calm and patient! 🐻 💡",
-  "Bully says: Apple sells over 200 million iPhones every year! 🍏",
-  "Barry says: The Golden Egg Rule — never put all your virtual money into just 1 stock! 🛡️",
-  "Bully & Barry: Owning 1 share turns you into a real-life company co-owner! 👑"
+const FINANCIAL_WISDOM_TIPS = [
+  "Cosmic Tip: When buyers are excited, market prices climb higher! 🚀 📈",
+  "Guardian Rule: Never put all your virtual money into just 1 stock! 🛡️",
+  "Smart Fact: Apple sells over 200 million iPhones every year! 🍏",
+  "Patience Wisdom: When markets take a nap, smart investors look for quality bargains! 💡",
+  "Ownership Truth: Owning even 1 share turns you into an authentic company co-owner! 👑"
 ];
 
 export default function JuniorHome({ account, onUpdateAccount }) {
@@ -21,7 +21,7 @@ export default function JuniorHome({ account, onUpdateAccount }) {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setTipIndex(prev => (prev + 1) % MASCOT_TIPS.length);
+      setTipIndex(prev => (prev + 1) % FINANCIAL_WISDOM_TIPS.length);
     }, 6000);
     return () => clearInterval(interval);
   }, []);
@@ -125,7 +125,7 @@ export default function JuniorHome({ account, onUpdateAccount }) {
                   className="mt-2 inline-flex items-center gap-2 bg-white/15 backdrop-blur-md border border-white/25 px-3.5 py-1.5 rounded-2xl text-xs font-semibold text-blue-50 shadow-inner"
                 >
                   <Sparkles size={14} className="text-amber-300 flex-shrink-0" />
-                  <span>{MASCOT_TIPS[tipIndex]}</span>
+                  <span>{FINANCIAL_WISDOM_TIPS[tipIndex]}</span>
                 </motion.div>
               </AnimatePresence>
             </div>
@@ -394,22 +394,22 @@ export default function JuniorHome({ account, onUpdateAccount }) {
         )}
       </div>
 
-      {/* Barry the Bear's Wisdom & Safety Card */}
+      {/* Guardian Risk Shield Wisdom & Safety Card */}
       <div className="jr-card-3d p-6 md:p-7 bg-gradient-to-r from-orange-50/70 via-amber-50/50 to-white border-2 border-amber-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
         <div className="flex items-center gap-4">
           <BearMascot size={56} />
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="text-[11px] font-black uppercase text-amber-900 bg-amber-200/80 px-2.5 py-0.5 rounded-full">
-                Barry's Risk Wisdom 🐻
+                Guardian Risk Shield 🛡️
               </span>
-              <span className="text-xs font-bold text-slate-500">Guardian Tip</span>
+              <span className="text-xs font-bold text-slate-500">Smart Safety Rule</span>
             </div>
             <h4 className="text-base font-black text-slate-900 junior-font-heading">
               Rule of Patience & Diversification
             </h4>
             <p className="text-xs text-slate-600 font-medium max-w-lg mt-0.5">
-              "When markets take a dip, that's when patient investors thrive. StockBuzz limits any single stock to max 25% of your portfolio so you never take unnecessary risks!"
+              "When markets fluctuate, patient investors stay calm. StockBuzz limits any single stock to max 25% of your portfolio so you never take unnecessary risks!"
             </p>
           </div>
         </div>
