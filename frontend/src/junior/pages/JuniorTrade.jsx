@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, TrendingUp, AlertCircle, CheckCircle2, ShieldAlert, Sparkles, Send, RefreshCw, DollarSign, Globe } from 'lucide-react';
+import { ShoppingBag, TrendingUp, AlertCircle, CheckCircle2, ShieldAlert, Sparkles, Send, RefreshCw, DollarSign, Globe, Search, Loader2, X, Filter } from 'lucide-react';
 import BuzzyMascot from '../components/BuzzyMascot';
 import JuniorCompanyLogo from '../components/JuniorCompanyLogo';
 import { useMarket } from '../../context/MarketContext';
 
-const DEFAULT_JUNIOR_COMPANIES = [
+const FEATURED_COMPANIES = [
   { symbol: 'TCS.NS', name: 'Tata Consultancy Services', ticker: 'TCS', exchange: 'NSE', market: 'IN', currency: '₹', category: 'Tech & Code', price: 3950, change: '+1.4%', description: 'Builds super smart computer software and mobile apps used by millions.' },
   { symbol: 'RELIANCE.NS', name: 'Reliance Industries', ticker: 'RELIANCE', exchange: 'NSE', market: 'IN', currency: '₹', category: 'Energy & Jio', price: 2780, change: '+0.8%', description: 'Brings high-speed 5G mobile internet and grocery stores to families.' },
   { symbol: 'HDFCBANK.NS', name: 'HDFC Bank', ticker: 'HDFCBANK', exchange: 'NSE', market: 'IN', currency: '₹', category: 'Bank & Savings', price: 1680, change: '-0.3%', description: 'Helps families save money securely and make digital payments.' },
@@ -13,12 +13,33 @@ const DEFAULT_JUNIOR_COMPANIES = [
   { symbol: 'INFY.NS', name: 'Infosys Limited', ticker: 'INFY', exchange: 'NSE', market: 'IN', currency: '₹', category: 'AI & Cloud', price: 1820, change: '+1.1%', description: 'Helps planes fly safely and banks work smoothly with smart algorithms.' },
   { symbol: 'AAPL', name: 'Apple Inc.', ticker: 'AAPL', exchange: 'NASDAQ', market: 'US', currency: '$', category: 'iPhones & Macs', price: 228, change: '+1.2%', description: 'Designs iPhones, iPads, Apple Watches, and MacBooks loved globally.' },
   { symbol: 'DIS', name: 'Walt Disney Co.', ticker: 'DIS', exchange: 'NYSE', market: 'US', currency: '$', category: 'Movies & Parks', price: 112, change: '+0.5%', description: 'Creates magical cartoon movies, superhero stories, and Disney theme parks.' },
-  { symbol: 'MSFT', name: 'Microsoft Corp.', ticker: 'MSFT', exchange: 'NASDAQ', market: 'US', currency: '$', category: 'Xbox & Windows', price: 445, change: '+0.9%', description: 'Creators of Windows, Minecraft, Xbox gaming, and artificial intelligence.' }
+  { symbol: 'MSFT', name: 'Microsoft Corp.', ticker: 'MSFT', exchange: 'NASDAQ', market: 'US', currency: '$', category: 'Xbox & Windows', price: 445, change: '+0.9%', description: 'Creators of Windows, Minecraft, Xbox gaming, and artificial intelligence.' },
+  { symbol: 'NVDA', name: 'NVIDIA Corp.', ticker: 'NVDA', exchange: 'NASDAQ', market: 'US', currency: '$', category: 'AI & Gaming Chips', price: 128, change: '+3.4%', description: 'Builds super-fast graphics processors powering video games and AI.' },
+  { symbol: 'TSLA', name: 'Tesla Inc.', ticker: 'TSLA', exchange: 'NASDAQ', market: 'US', currency: '$', category: 'Electric Vehicles', price: 215, change: '-1.1%', description: 'Pioneering electric autonomous cars, solar power, and humanoid robots.' },
+  { symbol: 'AMZN', name: 'Amazon.com', ticker: 'AMZN', exchange: 'NASDAQ', market: 'US', currency: '$', category: 'Online Shopping', price: 186, change: '+0.7%', description: 'Delivers packages to doorsteps worldwide and powers the global cloud.' },
+  { symbol: 'ZOMATO.NS', name: 'Zomato Limited', ticker: 'ZOMATO', exchange: 'NSE', market: 'IN', currency: '₹', category: 'Food Delivery', price: 260, change: '+2.8%', description: 'Connects hungry families with top neighborhood restaurants and Blinkit.' },
+  { symbol: 'SBIN.NS', name: 'State Bank of India', ticker: 'SBIN', exchange: 'NSE', market: 'IN', currency: '₹', category: 'National Banking', price: 820, change: '+0.4%', description: 'India’s largest public bank serving hundreds of millions of citizens.' },
+  { symbol: 'ITC.NS', name: 'ITC Limited', ticker: 'ITC', exchange: 'NSE', market: 'IN', currency: '₹', category: 'Snacks & Hotels', price: 495, change: '+0.3%', description: 'Makers of Sunfeast biscuits, Aashirvaad flour, Classmate notebooks, and hotels.' }
+];
+
+const CATEGORY_CHIPS = [
+  { id: 'all', label: '🌟 All Brands' },
+  { id: 'IN', label: '🇮🇳 India (NSE/BSE)' },
+  { id: 'US', label: '🇺🇸 US (NASDAQ/NYSE)' },
+  { id: 'tech', label: '💻 Tech & AI' },
+  { id: 'auto', label: '🚗 Cars & EV' },
+  { id: 'food', label: '🍔 Food & Goods' },
+  { id: 'bank', label: '🏦 Banks & Finance' }
 ];
 
 export default function JuniorTrade({ account, onUpdateAccount }) {
   const { fxRates } = useMarket();
-  const [companies, setCompanies] = useState(DEFAULT_JUNIOR_COMPANIES);
+  const [companies, setCompanies] = useState(FEATURED_COMPANIES);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [activeCategory, setActiveCategory] = useState('all');
+
   const [selectedStock, setSelectedStock] = useState(null);
   const [tradeShares, setTradeShares] = useState(1);
   const [reasonNote, setReasonNote] = useState('');
@@ -31,14 +52,71 @@ export default function JuniorTrade({ account, onUpdateAccount }) {
 
   const usdRate = fxRates?.pairs?.['USD/INR'] || 83.5;
 
+  // Search through all 18,000+ real-world companies
   useEffect(() => {
-    fetch(`/api/junior/companies?market=${account?.market || 'IN'}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.companies && data.companies.length > 0) setCompanies(data.companies);
-      })
-      .catch(err => console.error('Error fetching junior companies:', err));
-  }, [account?.market]);
+    const q = searchQuery.trim();
+    if (q.length < 2) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+    const debounceTimer = setTimeout(() => {
+      fetch(`/api/search?q=${encodeURIComponent(q)}&limit=10`)
+        .then(res => res.json())
+        .then(async data => {
+          const stocks = data.stocks || [];
+          if (stocks.length > 0) {
+            // Fetch live quote prices for top search matches
+            const symbols = stocks.map(s => s.ticker || `${s.symbol}.NS`).join(',');
+            try {
+              const quotesRes = await fetch(`/api/quotes?symbols=${encodeURIComponent(symbols)}`);
+              const quotesData = await quotesRes.json();
+              const quotesMap = new Map((quotesData.quotes || []).map(q => [q.symbol, q]));
+
+              const enriched = stocks.map(s => {
+                const qSymbol = s.ticker || `${s.symbol}.NS`;
+                const q = quotesMap.get(qSymbol) || quotesMap.get(s.symbol);
+                const isUS = s.exchange === 'NASDAQ' || s.exchange === 'NYSE' || s.country === 'United States';
+                return {
+                  symbol: s.ticker || (isUS ? s.symbol : `${s.symbol}.NS`),
+                  name: s.name,
+                  ticker: s.symbol,
+                  exchange: s.exchange || (isUS ? 'NASDAQ' : 'NSE'),
+                  market: isUS ? 'US' : 'IN',
+                  currency: isUS ? '$' : '₹',
+                  category: isUS ? 'US Stock' : 'Indian Equity',
+                  price: q?.currentPrice || (isUS ? 150 : 500),
+                  change: q?.changePercent ? `${Number(q.changePercent) >= 0 ? '+' : ''}${q.changePercent}%` : '+0.0%',
+                  description: `${s.name} is listed on ${s.exchange || 'Exchange'} and available for real-time paper trading.`
+                };
+              });
+              setSearchResults(enriched);
+            } catch {
+              setSearchResults(stocks.map(s => ({
+                symbol: s.ticker || s.symbol,
+                name: s.name,
+                ticker: s.symbol,
+                exchange: s.exchange || 'Stock',
+                market: s.exchange === 'NASDAQ' || s.exchange === 'NYSE' ? 'US' : 'IN',
+                currency: s.exchange === 'NASDAQ' || s.exchange === 'NYSE' ? '$' : '₹',
+                category: 'Public Company',
+                price: 100,
+                change: '+0.0%',
+                description: `${s.name} listed on ${s.exchange}`
+              })));
+            }
+          } else {
+            setSearchResults([]);
+          }
+        })
+        .catch(console.error)
+        .finally(() => setIsSearching(false));
+    }, 250);
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchQuery]);
 
   const handleOpenTrade = (company, type = 'BUY') => {
     setSelectedStock(company);
@@ -51,20 +129,21 @@ export default function JuniorTrade({ account, onUpdateAccount }) {
 
   const getCompanyDisplayPrice = (company) => {
     const isUSD = company.currency === '$' || company.market === 'US';
+    const rawPrice = Number(company.price) || 100;
     if (isUSD && convertToInr) {
-      const inrValue = Math.round(company.price * usdRate);
+      const inrValue = Math.round(rawPrice * usdRate);
       return {
         formatted: `₹${inrValue.toLocaleString('en-IN')}`,
-        subtitle: `≈ $${company.price} USD`,
+        subtitle: `≈ $${rawPrice} USD`,
         numericInr: inrValue,
         isConverted: true
       };
     }
     const sym = company.currency || (isUSD ? '$' : '₹');
     return {
-      formatted: `${sym}${company.price.toLocaleString('en-IN')}`,
-      subtitle: isUSD ? `≈ ₹${Math.round(company.price * usdRate).toLocaleString('en-IN')}` : null,
-      numericInr: isUSD ? Math.round(company.price * usdRate) : company.price,
+      formatted: `${sym}${rawPrice.toLocaleString('en-IN')}`,
+      subtitle: isUSD ? `≈ ₹${Math.round(rawPrice * usdRate).toLocaleString('en-IN')}` : null,
+      numericInr: isUSD ? Math.round(rawPrice * usdRate) : rawPrice,
       isConverted: false
     };
   };
@@ -115,23 +194,37 @@ export default function JuniorTrade({ account, onUpdateAccount }) {
   const modalPriceData = selectedStock ? getCompanyDisplayPrice(selectedStock) : null;
   const modalTotalCost = modalPriceData ? modalPriceData.numericInr * tradeShares : 0;
 
+  // Filter companies based on category
+  const filteredCompanies = companies.filter(c => {
+    if (activeCategory === 'all') return true;
+    if (activeCategory === 'IN') return c.market === 'IN';
+    if (activeCategory === 'US') return c.market === 'US';
+    if (activeCategory === 'tech') return c.category.toLowerCase().includes('tech') || c.category.toLowerCase().includes('ai') || c.category.toLowerCase().includes('code') || c.category.toLowerCase().includes('cloud');
+    if (activeCategory === 'auto') return c.category.toLowerCase().includes('car') || c.category.toLowerCase().includes('ev') || c.category.toLowerCase().includes('auto');
+    if (activeCategory === 'food') return c.category.toLowerCase().includes('food') || c.category.toLowerCase().includes('snack') || c.category.toLowerCase().includes('movie') || c.category.toLowerCase().includes('park');
+    if (activeCategory === 'bank') return c.category.toLowerCase().includes('bank') || c.category.toLowerCase().includes('saving') || c.category.toLowerCase().includes('finance');
+    return true;
+  });
+
+  const displayList = searchResults.length > 0 ? searchResults : filteredCompanies;
+
   return (
     <div className="space-y-6">
       {/* Top Header Card */}
       <div className="bg-white rounded-3xl p-6 border-2 border-slate-100 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <span className="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
-            Safe Paper Market
+            Real Market Quotes & Paper Portfolio
           </span>
           <h1 className="text-2xl font-extrabold text-slate-900 junior-font-heading mt-2">
-            Practice Trading & Brand Cards 🎮
+            Practice Trading with Real World Stocks 🎮
           </h1>
           <p className="text-xs md:text-sm text-slate-600">
-            Real market prices with practice coins. Remember: explain why you believe in a brand!
+            Search any Indian or Global company, trade with virtual coins, and explain your investment reasoning!
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           {/* Currency Conversion Toggle */}
           <button
             onClick={() => setConvertToInr(prev => !prev)}
@@ -157,18 +250,61 @@ export default function JuniorTrade({ account, onUpdateAccount }) {
         </div>
       </div>
 
-      {/* Tabs & Controls */}
+      {/* Global Real-World Stock Search Bar */}
+      <div className="bg-white rounded-3xl p-4 border-2 border-blue-100 shadow-sm relative">
+        <div className="relative flex items-center">
+          <Search size={18} className="absolute left-4 text-slate-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search all 18,000+ real stocks (e.g. Zomato, Nvidia, Tata Motors, Apple, Tesla, SBI, Netflix)..."
+            className="w-full pl-11 pr-10 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-900 outline-none focus:border-blue-600 focus:bg-white transition-all placeholder:text-slate-400"
+          />
+          {isSearching ? (
+            <Loader2 size={18} className="absolute right-4 text-blue-600 animate-spin" />
+          ) : searchQuery ? (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-4 text-slate-400 hover:text-slate-600 p-1"
+            >
+              <X size={16} />
+            </button>
+          ) : null}
+        </div>
+
+        {/* Category Pills (Visible when not actively searching) */}
+        {!searchQuery && (
+          <div className="flex gap-2 overflow-x-auto pt-3 pb-1 scrollbar-none">
+            {CATEGORY_CHIPS.map(chip => (
+              <button
+                key={chip.id}
+                onClick={() => setActiveCategory(chip.id)}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
+                  activeCategory === chip.id
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                {chip.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Navigation Tabs */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
         <div className="flex gap-2">
           <button
-            onClick={() => setActiveTab('explore')}
+            onClick={() => { setActiveTab('explore'); setSearchQuery(''); }}
             className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all ${
               activeTab === 'explore'
                 ? 'bg-blue-600 text-white shadow-sm'
                 : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
-            Explore Company Cards
+            {searchQuery ? `Search Results (${searchResults.length})` : 'Popular Real Companies'}
           </button>
           <button
             onClick={() => setActiveTab('ledger')}
@@ -192,87 +328,97 @@ export default function JuniorTrade({ account, onUpdateAccount }) {
 
       {activeTab === 'explore' ? (
         /* Company Cards Grid */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {companies.map((company) => {
-            const holding = account?.portfolio?.holdings?.find(h => h.symbol === company.symbol || h.ticker === company.symbol);
-            const cleanTicker = (company.ticker || company.symbol || '').replace(/\.(NS|BO|L|US)$/i, '');
-            const exchangeTag = company.exchange || (company.market === 'US' ? 'NASDAQ' : 'NSE');
-            const priceInfo = getCompanyDisplayPrice(company);
+        <div>
+          {displayList.length === 0 ? (
+            <div className="p-12 text-center bg-white rounded-3xl border-2 border-slate-100 shadow-sm">
+              <div className="text-3xl mb-2">🔍</div>
+              <h3 className="font-extrabold text-slate-800 text-base">No stocks found for "{searchQuery}"</h3>
+              <p className="text-xs text-slate-500 mt-1">Try searching by company name or ticker (e.g. Zomato, TCS, Apple, Tesla).</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {displayList.map((company) => {
+                const holding = account?.portfolio?.holdings?.find(h => h.symbol === company.symbol || h.ticker === company.symbol);
+                const cleanTicker = (company.ticker || company.symbol || '').replace(/\.(NS|BO|L|US)$/i, '');
+                const exchangeTag = company.exchange || (company.market === 'US' ? 'NASDAQ' : 'NSE');
+                const priceInfo = getCompanyDisplayPrice(company);
 
-            return (
-              <div key={company.symbol} className="junior-card p-5 bg-white border-2 border-slate-100 hover:border-blue-200 transition-all rounded-3xl shadow-sm flex flex-col justify-between">
-                <div>
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <JuniorCompanyLogo
-                      ticker={cleanTicker}
-                      symbol={company.symbol}
-                      name={company.name}
-                      size={46}
-                    />
-                    <div className="flex flex-col items-end gap-1">
-                      <span className="text-[11px] font-extrabold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
-                        {company.category}
-                      </span>
-                      <span className="text-[10px] font-bold text-slate-400">
-                        {cleanTicker} · {exchangeTag}
-                      </span>
-                    </div>
-                  </div>
-
-                  <h3 className="font-extrabold text-base text-slate-900 junior-font-heading mt-1">
-                    {company.name}
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
-                    {company.description}
-                  </p>
-
-                  <div className="flex items-baseline justify-between mt-4 pb-3 border-b border-slate-100">
+                return (
+                  <div key={company.symbol} className="junior-card p-5 bg-white border-2 border-slate-100 hover:border-blue-200 transition-all rounded-3xl shadow-sm flex flex-col justify-between">
                     <div>
-                      <div className="text-xl font-extrabold text-slate-900">
-                        {priceInfo.formatted}
+                      <div className="flex items-start justify-between gap-3 mb-3">
+                        <JuniorCompanyLogo
+                          ticker={cleanTicker}
+                          symbol={company.symbol}
+                          name={company.name}
+                          size={46}
+                        />
+                        <div className="flex flex-col items-end gap-1">
+                          <span className="text-[11px] font-extrabold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
+                            {company.category}
+                          </span>
+                          <span className="text-[10px] font-bold text-slate-400">
+                            {cleanTicker} · {exchangeTag}
+                          </span>
+                        </div>
                       </div>
-                      {priceInfo.subtitle && (
-                        <div className="text-[11px] font-semibold text-slate-400">
-                          {priceInfo.subtitle}
+
+                      <h3 className="font-extrabold text-base text-slate-900 junior-font-heading mt-1">
+                        {company.name}
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+                        {company.description}
+                      </p>
+
+                      <div className="flex items-baseline justify-between mt-4 pb-3 border-b border-slate-100">
+                        <div>
+                          <div className="text-xl font-extrabold text-slate-900">
+                            {priceInfo.formatted}
+                          </div>
+                          {priceInfo.subtitle && (
+                            <div className="text-[11px] font-semibold text-slate-400">
+                              {priceInfo.subtitle}
+                            </div>
+                          )}
+                        </div>
+                        <div className={`text-xs font-bold px-2 py-0.5 rounded-md ${
+                          String(company.change || '').startsWith('-')
+                            ? 'text-rose-700 bg-rose-50'
+                            : 'text-emerald-700 bg-emerald-50'
+                        }`}>
+                          {company.change || '+0.0%'}
+                        </div>
+                      </div>
+
+                      {holding && (
+                        <div className="mt-3 text-xs font-bold text-blue-700 bg-blue-50/70 p-2.5 rounded-2xl flex items-center justify-between">
+                          <span>You own: <strong>{holding.shares} shares</strong></span>
+                          <span>₹{(holding.shares * priceInfo.numericInr).toLocaleString('en-IN')}</span>
                         </div>
                       )}
                     </div>
-                    <div className={`text-xs font-bold px-2 py-0.5 rounded-md ${
-                      String(company.change || '').startsWith('-')
-                        ? 'text-rose-700 bg-rose-50'
-                        : 'text-emerald-700 bg-emerald-50'
-                    }`}>
-                      {company.change || '+0.0%'}
+
+                    <div className="flex gap-2 mt-4 pt-2">
+                      <button
+                        onClick={() => handleOpenTrade(company, 'BUY')}
+                        className="flex-1 junior-btn-primary text-xs py-2.5 px-3 justify-center shadow-xs"
+                      >
+                        Buy Slices
+                      </button>
+                      {holding && holding.shares > 0 && (
+                        <button
+                          onClick={() => handleOpenTrade(company, 'SELL')}
+                          className="px-3.5 py-2.5 rounded-2xl border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-50 transition-colors"
+                        >
+                          Sell
+                        </button>
+                      )}
                     </div>
                   </div>
-
-                  {holding && (
-                    <div className="mt-3 text-xs font-bold text-blue-700 bg-blue-50/70 p-2.5 rounded-2xl flex items-center justify-between">
-                      <span>You own: <strong>{holding.shares} shares</strong></span>
-                      <span>₹{(holding.shares * priceInfo.numericInr).toLocaleString('en-IN')}</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex gap-2 mt-4 pt-2">
-                  <button
-                    onClick={() => handleOpenTrade(company, 'BUY')}
-                    className="flex-1 junior-btn-primary text-xs py-2.5 px-3 justify-center shadow-xs"
-                  >
-                    Buy Slices
-                  </button>
-                  {holding && holding.shares > 0 && (
-                    <button
-                      onClick={() => handleOpenTrade(company, 'SELL')}
-                      className="px-3.5 py-2.5 rounded-2xl border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-50 transition-colors"
-                    >
-                      Sell
-                    </button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+                );
+              })}
+            </div>
+          )}
         </div>
       ) : (
         /* Immutable Ledger History */
@@ -383,7 +529,7 @@ export default function JuniorTrade({ account, onUpdateAccount }) {
                     </span>
                     {modalPriceData?.subtitle && (
                       <span className="text-xs text-slate-400 font-bold ml-2">
-                        (${selectedStock.price * tradeShares})
+                        (${Number(selectedStock.price * tradeShares).toLocaleString('en-IN')})
                       </span>
                     )}
                   </div>
