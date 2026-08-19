@@ -21,7 +21,6 @@
     "react-router-dom": "^7.18.1",
     "recharts": "^3.9.1",
     "remark-gfm": "^4.0.1",
-    "stockbuzz-workspace": "file:..",
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
