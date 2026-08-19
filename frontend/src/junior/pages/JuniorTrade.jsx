@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, TrendingUp, AlertCircle, CheckCircle2, ShieldAlert, Sparkles, Send, RefreshCw } from 'lucide-react';
+import { ShoppingBag, TrendingUp, AlertCircle, CheckCircle2, ShieldAlert, Sparkles, Send, RefreshCw, DollarSign, Globe } from 'lucide-react';
 import BuzzyMascot from '../components/BuzzyMascot';
 import JuniorCompanyLogo from '../components/JuniorCompanyLogo';
+import { useMarket } from '../../context/MarketContext';
 
 const DEFAULT_JUNIOR_COMPANIES = [
   { symbol: 'TCS.NS', name: 'Tata Consultancy Services', ticker: 'TCS', exchange: 'NSE', market: 'IN', currency: '₹', category: 'Tech & Code', price: 3950, change: '+1.4%', description: 'Builds super smart computer software and mobile apps used by millions.' },
@@ -16,6 +17,7 @@ const DEFAULT_JUNIOR_COMPANIES = [
 ];
 
 export default function JuniorTrade({ account, onUpdateAccount }) {
+  const { fxRates } = useMarket();
   const [companies, setCompanies] = useState(DEFAULT_JUNIOR_COMPANIES);
   const [selectedStock, setSelectedStock] = useState(null);
   const [tradeShares, setTradeShares] = useState(1);
@@ -25,6 +27,9 @@ export default function JuniorTrade({ account, onUpdateAccount }) {
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('explore'); // 'explore' | 'ledger'
+  const [convertToInr, setConvertToInr] = useState(true); // Default show international in INR
+
+  const usdRate = fxRates?.pairs?.['USD/INR'] || 83.5;
 
   useEffect(() => {
     fetch(`/api/junior/companies?market=${account?.market || 'IN'}`)
@@ -42,6 +47,26 @@ export default function JuniorTrade({ account, onUpdateAccount }) {
     setReasonNote('');
     setErrorMsg('');
     setSuccessMsg('');
+  };
+
+  const getCompanyDisplayPrice = (company) => {
+    const isUSD = company.currency === '$' || company.market === 'US';
+    if (isUSD && convertToInr) {
+      const inrValue = Math.round(company.price * usdRate);
+      return {
+        formatted: `₹${inrValue.toLocaleString('en-IN')}`,
+        subtitle: `≈ $${company.price} USD`,
+        numericInr: inrValue,
+        isConverted: true
+      };
+    }
+    const sym = company.currency || (isUSD ? '$' : '₹');
+    return {
+      formatted: `${sym}${company.price.toLocaleString('en-IN')}`,
+      subtitle: isUSD ? `≈ ₹${Math.round(company.price * usdRate).toLocaleString('en-IN')}` : null,
+      numericInr: isUSD ? Math.round(company.price * usdRate) : company.price,
+      isConverted: false
+    };
   };
 
   const handleExecuteTrade = async () => {
@@ -84,10 +109,11 @@ export default function JuniorTrade({ account, onUpdateAccount }) {
     }
   };
 
-  const currentPrice = selectedStock?.price || 0;
-  const totalCost = currentPrice * tradeShares;
   const currentCash = account?.portfolio?.cash || 95000;
   const currencySymbol = account?.currencySymbol || '₹';
+
+  const modalPriceData = selectedStock ? getCompanyDisplayPrice(selectedStock) : null;
+  const modalTotalCost = modalPriceData ? modalPriceData.numericInr * tradeShares : 0;
 
   return (
     <div className="space-y-6">
@@ -105,38 +131,63 @@ export default function JuniorTrade({ account, onUpdateAccount }) {
           </p>
         </div>
 
-        <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-2xl px-4 py-3 shadow-xs">
-          <div>
-            <div className="text-[11px] font-bold text-emerald-800 uppercase">Available Funds</div>
-            <div className="text-lg font-extrabold text-emerald-900">
-              {currencySymbol}{currentCash.toLocaleString('en-IN')}
+        <div className="flex items-center gap-3">
+          {/* Currency Conversion Toggle */}
+          <button
+            onClick={() => setConvertToInr(prev => !prev)}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-extrabold border shadow-xs transition-all ${
+              convertToInr
+                ? 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100'
+                : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+            }`}
+            title="Click to toggle currency conversion for International US stocks"
+          >
+            <span className="text-sm">💱</span>
+            <span>{convertToInr ? 'All in INR (₹) Active' : 'Native Currencies ($/₹)'}</span>
+          </button>
+
+          <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-2xl px-4 py-2.5 shadow-xs">
+            <div>
+              <div className="text-[10px] font-bold text-emerald-800 uppercase">Available Piggy Bank</div>
+              <div className="text-base font-extrabold text-emerald-900">
+                {currencySymbol}{currentCash.toLocaleString('en-IN')}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 border-b border-slate-200 pb-2">
-        <button
-          onClick={() => setActiveTab('explore')}
-          className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all ${
-            activeTab === 'explore'
-              ? 'bg-blue-600 text-white shadow-sm'
-              : 'text-slate-600 hover:bg-slate-100'
-          }`}
-        >
-          Explore Company Cards
-        </button>
-        <button
-          onClick={() => setActiveTab('ledger')}
-          className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all ${
-            activeTab === 'ledger'
-              ? 'bg-blue-600 text-white shadow-sm'
-              : 'text-slate-600 hover:bg-slate-100'
-          }`}
-        >
-          Trade Ledger & Notes ({account?.ledger?.length || 0})
-        </button>
+      {/* Tabs & Controls */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
+        <div className="flex gap-2">
+          <button
+            onClick={() => setActiveTab('explore')}
+            className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all ${
+              activeTab === 'explore'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            Explore Company Cards
+          </button>
+          <button
+            onClick={() => setActiveTab('ledger')}
+            className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all ${
+              activeTab === 'ledger'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            Trade Ledger & Notes ({account?.ledger?.length || 0})
+          </button>
+        </div>
+
+        {activeTab === 'explore' && (
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
+            <span>Global FX Rate:</span>
+            <span className="text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md">1 USD ≈ ₹{usdRate.toFixed(2)}</span>
+          </div>
+        )}
       </div>
 
       {activeTab === 'explore' ? (
@@ -144,9 +195,9 @@ export default function JuniorTrade({ account, onUpdateAccount }) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {companies.map((company) => {
             const holding = account?.portfolio?.holdings?.find(h => h.symbol === company.symbol || h.ticker === company.symbol);
-            const sym = company.currency || (company.market === 'US' ? '$' : '₹');
             const cleanTicker = (company.ticker || company.symbol || '').replace(/\.(NS|BO|L|US)$/i, '');
             const exchangeTag = company.exchange || (company.market === 'US' ? 'NASDAQ' : 'NSE');
+            const priceInfo = getCompanyDisplayPrice(company);
 
             return (
               <div key={company.symbol} className="junior-card p-5 bg-white border-2 border-slate-100 hover:border-blue-200 transition-all rounded-3xl shadow-sm flex flex-col justify-between">
@@ -176,8 +227,15 @@ export default function JuniorTrade({ account, onUpdateAccount }) {
                   </p>
 
                   <div className="flex items-baseline justify-between mt-4 pb-3 border-b border-slate-100">
-                    <div className="text-xl font-extrabold text-slate-900">
-                      {sym}{company.price?.toLocaleString('en-IN')}
+                    <div>
+                      <div className="text-xl font-extrabold text-slate-900">
+                        {priceInfo.formatted}
+                      </div>
+                      {priceInfo.subtitle && (
+                        <div className="text-[11px] font-semibold text-slate-400">
+                          {priceInfo.subtitle}
+                        </div>
+                      )}
                     </div>
                     <div className={`text-xs font-bold px-2 py-0.5 rounded-md ${
                       String(company.change || '').startsWith('-')
@@ -191,7 +249,7 @@ export default function JuniorTrade({ account, onUpdateAccount }) {
                   {holding && (
                     <div className="mt-3 text-xs font-bold text-blue-700 bg-blue-50/70 p-2.5 rounded-2xl flex items-center justify-between">
                       <span>You own: <strong>{holding.shares} shares</strong></span>
-                      <span>{sym}{(holding.shares * (company.price || 0)).toLocaleString('en-IN')}</span>
+                      <span>₹{(holding.shares * priceInfo.numericInr).toLocaleString('en-IN')}</span>
                     </div>
                   )}
                 </div>
@@ -319,9 +377,16 @@ export default function JuniorTrade({ account, onUpdateAccount }) {
 
                 <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-200">
                   <span className="text-slate-500 font-medium">Total Virtual Cost:</span>
-                  <span className="text-base font-extrabold text-slate-900">
-                    {selectedStock.currency || currencySymbol}{totalCost.toLocaleString('en-IN')}
-                  </span>
+                  <div>
+                    <span className="text-base font-extrabold text-slate-900">
+                      ₹{modalTotalCost.toLocaleString('en-IN')}
+                    </span>
+                    {modalPriceData?.subtitle && (
+                      <span className="text-xs text-slate-400 font-bold ml-2">
+                        (${selectedStock.price * tradeShares})
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 
