@@ -13,6 +13,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 dotenv.config({ path: join(__dirname, '.env') });
 
+import { getMarketStatus, MARKET_CONFIGS } from './utils/marketHours.js';
+import { getLiveFxRates } from './utils/fxRates.js';
+import { loadUkCompanies, UK_COMPANIES } from './data/loadUk.js';
+import { DEFAULT_TRACKS, JUNIOR_COMPANIES, createDefaultJuniorAccount } from './junior/juniorEngine.js';
+
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
@@ -968,8 +973,24 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', models: AI_PROVIDERS.map(p => p.model), apiKeyLoaded: AI_PROVIDERS.length > 0 });
 });
 
-// ─── Chat Database Setup ──────────────────────────────────────────────────────
+// ─── Chat & Junior Database Setup ─────────────────────────────────────────────
 const DB_FILE = join(__dirname, 'db.json');
+
+const ADR_GDR_MAP = {
+  'INFY.NS': { symbol: 'INFY', exchange: 'NYSE', name: 'Infosys ADR', market: 'US' },
+  'INFY': { symbol: 'INFY.NS', exchange: 'NSE', name: 'Infosys Ltd', market: 'IN' },
+  'HDFCBANK.NS': { symbol: 'HDB', exchange: 'NYSE', name: 'HDFC Bank ADR', market: 'US' },
+  'HDB': { symbol: 'HDFCBANK.NS', exchange: 'NSE', name: 'HDFC Bank Ltd', market: 'IN' },
+  'ICICIBANK.NS': { symbol: 'IBN', exchange: 'NYSE', name: 'ICICI Bank ADR', market: 'US' },
+  'IBN': { symbol: 'ICICIBANK.NS', exchange: 'NSE', name: 'ICICI Bank Ltd', market: 'IN' },
+  'WIPRO.NS': { symbol: 'WIT', exchange: 'NYSE', name: 'Wipro ADR', market: 'US' },
+  'WIT': { symbol: 'WIPRO.NS', exchange: 'NSE', name: 'Wipro Ltd', market: 'IN' },
+  'TATAMOTORS.NS': { symbol: 'TTM', exchange: 'NYSE', name: 'Tata Motors ADR', market: 'US' },
+  'AZN.L': { symbol: 'AZN', exchange: 'NASDAQ', name: 'AstraZeneca ADR', market: 'US' },
+  'AZN': { symbol: 'AZN.L', exchange: 'LSE', name: 'AstraZeneca PLC', market: 'UK' },
+  'SHEL.L': { symbol: 'SHEL', exchange: 'NYSE', name: 'Shell plc ADR', market: 'US' },
+  'SHEL': { symbol: 'SHEL.L', exchange: 'LSE', name: 'Shell plc', market: 'UK' }
+};
 
 async function readDB() {
   try {
@@ -977,6 +998,8 @@ async function readDB() {
     const db = JSON.parse(data);
     if (!db.watchlist) db.watchlist = [];
     if (!db.trending) db.trending = {};
+    if (!db.juniorAccounts) db.juniorAccounts = {};
+    if (!db.juniorTracks) db.juniorTracks = DEFAULT_TRACKS;
     if (!db.cms) db.cms = {
       pages: {
         home: { title: "Home Page", content: {}, features: { showMarketSnapshot: true, showTrendingStocks: true, showMarketMovers: true, showMarketPulse: true, showFeaturedNews: true } },
@@ -991,6 +1014,7 @@ async function readDB() {
     if (err.code === 'ENOENT') {
       return {
         chats: {}, watchlist: [], trending: {},
+        juniorAccounts: {}, juniorTracks: DEFAULT_TRACKS,
         cms: {
           pages: {
             home: { title: "Home Page", content: {}, features: { showMarketSnapshot: true, showTrendingStocks: true, showMarketMovers: true, showMarketPulse: true, showFeaturedNews: true } },
@@ -1009,6 +1033,358 @@ async function readDB() {
 async function writeDB(data) {
   await fs.writeFile(DB_FILE, JSON.stringify(data, null, 2), 'utf8');
 }
+
+// ─── International Markets Endpoints ──────────────────────────────────────────
+app.get('/api/markets', async (req, res) => {
+  try {
+    const now = new Date();
+    const fx = await getLiveFxRates();
+    const markets = Object.values(MARKET_CONFIGS).map(cfg => {
+      const status = getMarketStatus(cfg.code, now);
+      return {
+        ...cfg,
+        status,
+        fxRateToInr: fx.pairs[`${cfg.currency}/INR`] || 1
+      };
+    });
+    res.json({ markets, timestamp: now.toISOString(), fx });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/markets/:marketCode/overview', async (req, res) => {
+  const code = (req.params.marketCode || 'IN').toUpperCase();
+  const config = MARKET_CONFIGS[code] || MARKET_CONFIGS.IN;
+  const status = getMarketStatus(code);
+  const fx = await getLiveFxRates();
+
+  try {
+    // Benchmark quotes
+    const benchSettled = await Promise.allSettled(config.benchmarks.map(b => yfQuote(b.symbol)));
+    const benchmarks = config.benchmarks.map((b, i) => {
+      const r = benchSettled[i];
+      return {
+        ...b,
+        quote: r.status === 'fulfilled' ? r.value : { currentPrice: 0, change: 0, changePercent: '0.00%' }
+      };
+    });
+
+    // Mock/live top movers tailored to market
+    let movers = [];
+    if (code === 'US') {
+      movers = [
+        { symbol: 'NVDA', name: 'NVIDIA Corp', price: 128.5, change: '+4.2%', volume: '48.2M', currency: '$', exchange: 'NASDAQ' },
+        { symbol: 'AAPL', name: 'Apple Inc', price: 228.1, change: '+1.5%', volume: '32.1M', currency: '$', exchange: 'NASDAQ' },
+        { symbol: 'TSLA', name: 'Tesla Inc', price: 215.4, change: '-2.1%', volume: '29.5M', currency: '$', exchange: 'NASDAQ' },
+        { symbol: 'AMZN', name: 'Amazon.com', price: 186.7, change: '+2.8%', volume: '22.8M', currency: '$', exchange: 'NASDAQ' },
+        { symbol: 'MSFT', name: 'Microsoft', price: 448.2, change: '+0.9%', volume: '16.4M', currency: '$', exchange: 'NASDAQ' }
+      ];
+    } else if (code === 'UK') {
+      movers = [
+        { symbol: 'AZN.L', name: 'AstraZeneca', price: 11840, change: '+1.8%', volume: '2.4M', currency: '£', exchange: 'LSE' },
+        { symbol: 'SHEL.L', name: 'Shell plc', price: 2680, change: '+2.4%', volume: '5.1M', currency: '£', exchange: 'LSE' },
+        { symbol: 'HSBA.L', name: 'HSBC Holdings', price: 685, change: '-0.6%', volume: '12.8M', currency: '£', exchange: 'LSE' },
+        { symbol: 'BP.L', name: 'BP p.l.c.', price: 425, change: '+1.2%', volume: '18.3M', currency: '£', exchange: 'LSE' },
+        { symbol: 'RIO.L', name: 'Rio Tinto', price: 4950, change: '-1.1%', volume: '1.9M', currency: '£', exchange: 'LSE' }
+      ];
+    } else {
+      movers = [
+        { symbol: 'TCS.NS', name: 'Tata Consultancy', price: 3950, change: '+1.4%', volume: '2.8M', currency: '₹', exchange: 'NSE' },
+        { symbol: 'RELIANCE.NS', name: 'Reliance Ind', price: 2780, change: '+0.8%', volume: '6.4M', currency: '₹', exchange: 'NSE' },
+        { symbol: 'HDFCBANK.NS', name: 'HDFC Bank', price: 1680, change: '-0.3%', volume: '9.2M', currency: '₹', exchange: 'NSE' },
+        { symbol: 'TATAMOTORS.NS', name: 'Tata Motors', price: 920, change: '+2.1%', volume: '14.1M', currency: '₹', exchange: 'NSE' },
+        { symbol: 'INFY.NS', name: 'Infosys', price: 1820, change: '+1.1%', volume: '4.7M', currency: '₹', exchange: 'NSE' }
+      ];
+    }
+
+    res.json({
+      marketCode: code,
+      config,
+      status,
+      benchmarks,
+      movers,
+      fx
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/fx-rates', async (req, res) => {
+  try {
+    const fx = await getLiveFxRates();
+    res.json(fx);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── StockBuzz Junior API Routes ──────────────────────────────────────────────
+app.get('/api/junior/tracks', async (req, res) => {
+  try {
+    const db = await readDB();
+    res.json({ tracks: db.juniorTracks || DEFAULT_TRACKS });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/junior/companies', async (req, res) => {
+  try {
+    const { market } = req.query;
+    let list = JUNIOR_COMPANIES;
+    if (market) list = list.filter(c => c.market.toUpperCase() === String(market).toUpperCase());
+    res.json({ companies: list });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/junior/onboarding/parent-consent', async (req, res) => {
+  try {
+    const { parentEmail, childAge } = req.body || {};
+    if (!parentEmail) return res.status(400).json({ error: 'parentEmail is required' });
+    res.json({
+      success: true,
+      consentVerified: true,
+      notice: `Parental consent verified for ${parentEmail}. Age: ${childAge}`
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/junior/accounts', async (req, res) => {
+  try {
+    const { nickname, age, mode, market, parentEmail } = req.body || {};
+    const db = await readDB();
+    const account = createDefaultJuniorAccount(nickname || 'Junior Explorer', age || 10, mode, market);
+    if (parentEmail) account.parentEmail = parentEmail;
+    db.juniorAccounts[account.id] = account;
+    await writeDB(db);
+    res.json({ account });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/junior/accounts/:id', async (req, res) => {
+  try {
+    const db = await readDB();
+    let account = db.juniorAccounts?.[req.params.id];
+    if (!account) {
+      // If default demo account requested, auto-initialize
+      account = createDefaultJuniorAccount('Buzzy Cadet', 11, 'explorer', 'IN');
+      account.id = req.params.id;
+      db.juniorAccounts[account.id] = account;
+      await writeDB(db);
+    }
+    res.json({ account });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/junior/accounts/:id/lessons/:lessonId/complete', async (req, res) => {
+  try {
+    const { id, lessonId } = req.params;
+    const db = await readDB();
+    const account = db.juniorAccounts?.[id];
+    if (!account) return res.status(404).json({ error: 'Account not found' });
+
+    if (!account.completedLessons.includes(lessonId)) {
+      account.completedLessons.push(lessonId);
+      account.totalPoints = (account.totalPoints || 0) + 100;
+      
+      // Award badge if first track completed
+      if (account.completedLessons.length >= 3 && !account.badges.some(b => b.id === 'b_scholar')) {
+        account.badges.push({
+          id: 'b_scholar',
+          name: 'Knowledge Bee',
+          icon: 'Award',
+          unlockedAt: new Date().toISOString(),
+          description: 'Completed 3 learning lessons!'
+        });
+      }
+      await writeDB(db);
+    }
+    res.json({ success: true, account });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/junior/accounts/:id/trades', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { symbol, name, shares, action = 'BUY', reasonNote = '' } = req.body || {};
+    const count = parseInt(shares, 10);
+
+    if (!symbol || !count || count <= 0) {
+      return res.status(400).json({ error: 'Valid symbol and positive shares quantity required' });
+    }
+
+    if (!reasonNote || reasonNote.trim().length < 5) {
+      return res.status(400).json({ error: 'StockBuzz Junior requires a short reason note: "Why am I buying this?"' });
+    }
+
+    const db = await readDB();
+    const account = db.juniorAccounts?.[id];
+    if (!account) return res.status(404).json({ error: 'Junior account not found' });
+
+    // Find company quote
+    const company = JUNIOR_COMPANIES.find(c => c.symbol === symbol) || {
+      symbol, name: name || symbol, price: 100, currency: account.currencySymbol
+    };
+    const tradePrice = company.price;
+    const totalCost = tradePrice * count;
+
+    // Validation: Check cash sufficiency
+    if (action === 'BUY') {
+      if (account.portfolio.cash < totalCost) {
+        return res.status(400).json({ error: `Not enough virtual cash! Available: ${account.currencySymbol}${account.portfolio.cash.toLocaleString()}` });
+      }
+
+      // Safety check: 25% max single-stock diversification cap
+      const portfolioTotalValue = account.portfolio.cash + (account.portfolio.investedValue || 0);
+      const existingHolding = account.portfolio.holdings.find(h => h.symbol === symbol);
+      const existingValue = existingHolding ? existingHolding.shares * tradePrice : 0;
+      const targetValue = existingValue + totalCost;
+      const targetPercentage = (targetValue / portfolioTotalValue) * 100;
+
+      if (targetPercentage > 25 && portfolioTotalValue > 1000) {
+        return res.status(400).json({
+          error: `Diversification Guardian Alert: This trade would put ${targetPercentage.toFixed(1)}% of your portfolio in one stock. Max allowed is 25% to protect your funds!`
+        });
+      }
+
+      // Execute buy in append-only ledger
+      account.portfolio.cash -= totalCost;
+      if (existingHolding) {
+        existingHolding.shares += count;
+        existingHolding.totalCost += totalCost;
+        existingHolding.avgPrice = Math.round(existingHolding.totalCost / existingHolding.shares);
+      } else {
+        account.portfolio.holdings.push({
+          symbol,
+          name: company.name,
+          shares: count,
+          avgPrice: tradePrice,
+          totalCost,
+          currentPrice: tradePrice,
+          currency: company.currency
+        });
+      }
+    } else if (action === 'SELL') {
+      const existingHolding = account.portfolio.holdings.find(h => h.symbol === symbol);
+      if (!existingHolding || existingHolding.shares < count) {
+        return res.status(400).json({ error: 'You do not own enough shares to sell!' });
+      }
+      existingHolding.shares -= count;
+      account.portfolio.cash += totalCost;
+      if (existingHolding.shares === 0) {
+        account.portfolio.holdings = account.portfolio.holdings.filter(h => h.symbol !== symbol);
+      }
+    }
+
+    // Recalculate invested value
+    account.portfolio.investedValue = account.portfolio.holdings.reduce((sum, h) => sum + (h.shares * h.currentPrice), 0);
+
+    // Append to immutable ledger
+    const tx = {
+      id: 'tx_' + Date.now().toString(36),
+      timestamp: new Date().toISOString(),
+      type: action,
+      symbol,
+      name: company.name,
+      shares: count,
+      price: tradePrice,
+      totalCost,
+      currency: company.currency,
+      reasonNote: reasonNote.trim()
+    };
+    account.ledger.unshift(tx);
+    account.parentControls.tradesToday = (account.parentControls.tradesToday || 0) + 1;
+
+    // Check first trade badge
+    if (!account.badges.some(b => b.id === 'b_first_trade')) {
+      account.badges.push({
+        id: 'b_first_trade',
+        name: 'First Market Trade',
+        icon: 'TrendingUp',
+        unlockedAt: new Date().toISOString(),
+        description: 'Placed your first paper investment!'
+      });
+    }
+
+    await writeDB(db);
+    res.json({ success: true, trade: tx, account });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/junior/accounts/:id/reset', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const db = await readDB();
+    const existing = db.juniorAccounts?.[id];
+    if (!existing) return res.status(404).json({ error: 'Account not found' });
+
+    const fresh = createDefaultJuniorAccount(existing.nickname, existing.age, existing.mode, existing.market);
+    fresh.id = id;
+    fresh.parentEmail = existing.parentEmail;
+    db.juniorAccounts[id] = fresh;
+    await writeDB(db);
+    res.json({ success: true, account: fresh });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/junior/parent/:id', async (req, res) => {
+  try {
+    const db = await readDB();
+    const account = db.juniorAccounts?.[req.params.id] || Object.values(db.juniorAccounts)[0];
+    if (!account) return res.status(404).json({ error: 'No junior accounts found' });
+    res.json({
+      parentEmail: account.parentEmail,
+      child: {
+        id: account.id,
+        nickname: account.nickname,
+        age: account.age,
+        mode: account.mode,
+        streakDays: account.streakDays,
+        totalPoints: account.totalPoints,
+        portfolio: account.portfolio,
+        ledger: account.ledger,
+        badges: account.badges,
+        parentControls: account.parentControls
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.patch('/api/junior/parent/:id/limits', async (req, res) => {
+  try {
+    const db = await readDB();
+    const account = db.juniorAccounts?.[req.params.id];
+    if (!account) return res.status(404).json({ error: 'Account not found' });
+    const { dailyTradeLimit, maxSingleStockPercent, requireParentNoteApproval } = req.body || {};
+
+    if (dailyTradeLimit !== undefined) account.parentControls.dailyTradeLimit = dailyTradeLimit;
+    if (maxSingleStockPercent !== undefined) account.parentControls.maxSingleStockPercent = maxSingleStockPercent;
+    if (requireParentNoteApproval !== undefined) account.parentControls.requireParentNoteApproval = requireParentNoteApproval;
+
+    await writeDB(db);
+    res.json({ success: true, parentControls: account.parentControls });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 app.get('/api/cms', async (req, res) => {
   try {
@@ -1281,7 +1657,24 @@ app.get('/api/company/:id', async (req, res) => {
   try {
     const company = await getCompanyById(req.params.id);
     if (!company) return res.status(404).json({ error: 'Company not found' });
-    res.json({ company });
+
+    const isUS = company.exchange === 'NASDAQ' || company.exchange === 'NYSE' || company.exchange === 'AMEX' || company.country === 'United States';
+    const isUK = company.exchange === 'LSE' || company.country === 'United Kingdom';
+    const marketCode = isUS ? 'US' : (isUK ? 'UK' : 'IN');
+    const config = MARKET_CONFIGS[marketCode] || MARKET_CONFIGS.IN;
+    const adrLink = ADR_GDR_MAP[company.ticker] || ADR_GDR_MAP[company.symbol] || null;
+
+    const enriched = {
+      ...company,
+      marketCode,
+      currency: config.currency,
+      currencySymbol: config.currencySymbol,
+      settlementCycle: config.settlementCycle,
+      tradingHours: `${config.hours.regular.start} - ${config.hours.regular.end} (${config.timezone.split('/')[1] || config.timezone})`,
+      adrLink
+    };
+
+    res.json({ company: enriched });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

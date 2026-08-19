@@ -23,11 +23,14 @@ import Calculators from './pages/website/Calculators';
 import AIChatSidebar from './components/features/AIChatSidebar';
 import AIPet from './components/features/AIPet';
 import AIScreenShare from './components/features/AIScreenShare';
+import { MarketProvider } from './context/MarketContext';
+import JuniorApp from './junior/JuniorApp';
 
 function Layout() {
   const loc = useLocation();
   const isLogin = loc.pathname === '/login';
   const isCheckout = loc.pathname === '/checkout';
+  const isJunior = loc.pathname.startsWith('/junior');
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [isScreenShareOpen, setIsScreenShareOpen] = useState(false);
 
@@ -42,6 +45,10 @@ function Layout() {
   }, []);
 
   const isSuperadminRoute = loc.pathname === '/superadmin';
+
+  if (isJunior) {
+    return <JuniorApp />;
+  }
 
   if (isLogin || isSuperadminRoute || isCheckout) {
     return (
@@ -104,7 +111,9 @@ function Layout() {
 function App() {
   return (
     <BrowserRouter>
-      <Layout />
+      <MarketProvider>
+        <Layout />
+      </MarketProvider>
     </BrowserRouter>
   );
 }

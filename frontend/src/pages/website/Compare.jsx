@@ -4,6 +4,7 @@ import { BarChart2, TrendingUp, Sparkles, AlertCircle, ArrowRight, Search, Loade
 import { useNavigate, Link } from 'react-router-dom';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useAuth } from '../../context/AuthContext';
+import { useMarket } from '../../context/MarketContext';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -65,15 +66,15 @@ const FUND_METRICS = [
 ];
 
 const STOCK_METRICS = [
-  { key: 'exchange', label: 'Exchange', get: a => a.exchange },
-  { key: 'price', label: 'Price', get: (a, formatPrice) => a.price != null ? formatPrice(a.price, {}, a.currency === 'USD' ? 'USD' : 'INR') : '—' },
+  { key: 'exchange', label: 'Exchange', get: a => a.exchange ? `${a.exchange === 'LSE' ? '🇬🇧 LSE' : a.exchange === 'NASDAQ' || a.exchange === 'NYSE' ? '🇺🇸 ' + a.exchange : '🇮🇳 ' + a.exchange}` : '—' },
+  { key: 'price', label: 'Price', get: (a, formatPrice, formatMarketPrice) => a.price != null ? (formatMarketPrice ? formatMarketPrice(a.price, a.currency === 'USD' ? 'USD' : a.currency === 'GBP' ? 'GBP' : 'INR') : formatPrice(a.price, {}, a.currency === 'USD' ? 'USD' : 'INR')) : '—' },
   { key: 'today', label: 'Today', get: a => pct(a.changePercent != null ? Number(a.changePercent) : null) },
   { key: 'return1M', label: '1M Return', get: a => pct(a.return1M) },
   { key: 'return3M', label: '3M Return', get: a => pct(a.return3M) },
   { key: 'return6M', label: '6M Return', get: a => pct(a.return6M) },
   { key: 'return1Y', label: '1Y Return', get: a => pct(a.return1Y) },
-  { key: 'fiftyTwoWeekHigh', label: '52W High', get: (a, formatPrice) => a.fiftyTwoWeekHigh != null ? formatPrice(a.fiftyTwoWeekHigh, {}, a.currency === 'USD' ? 'USD' : 'INR') : '—' },
-  { key: 'fiftyTwoWeekLow', label: '52W Low', get: (a, formatPrice) => a.fiftyTwoWeekLow != null ? formatPrice(a.fiftyTwoWeekLow, {}, a.currency === 'USD' ? 'USD' : 'INR') : '—' },
+  { key: 'fiftyTwoWeekHigh', label: '52W High', get: (a, formatPrice, formatMarketPrice) => a.fiftyTwoWeekHigh != null ? (formatMarketPrice ? formatMarketPrice(a.fiftyTwoWeekHigh, a.currency === 'USD' ? 'USD' : 'INR') : formatPrice(a.fiftyTwoWeekHigh)) : '—' },
+  { key: 'fiftyTwoWeekLow', label: '52W Low', get: (a, formatPrice, formatMarketPrice) => a.fiftyTwoWeekLow != null ? (formatMarketPrice ? formatMarketPrice(a.fiftyTwoWeekLow, a.currency === 'USD' ? 'USD' : 'INR') : formatPrice(a.fiftyTwoWeekLow)) : '—' },
   { key: 'volume', label: 'Volume', get: a => a.volume != null ? fmt(a.volume, 0) : '—' },
 ];
 
@@ -340,6 +341,7 @@ export default function Compare() {
   const [mode, setMode] = useState('funds'); // 'funds' or 'stocks'
   const navigate = useNavigate();
   const { formatPrice } = useCurrency();
+  const { formatMarketPrice } = useMarket();
   const { userPlan } = useAuth();
 
   // State arrays for N-asset comparison (default 3)
@@ -633,7 +635,7 @@ export default function Compare() {
                 No metrics selected. Use the <strong>Metrics</strong> filter above to add some.
               </div>
             ) : activeMetrics.map((m) => {
-              const vals = preparedAssets.map(a => a ? m.get(a, formatPrice) : '—');
+              const vals = preparedAssets.map(a => a ? m.get(a, formatPrice, formatMarketPrice) : '—');
               const classes = evaluateNValues(vals, m.lowerBetter);
               return (
                 <div key={m.key} style={{ display: 'flex', borderBottom: '1px solid var(--border)' }} className="compare-row-multi">

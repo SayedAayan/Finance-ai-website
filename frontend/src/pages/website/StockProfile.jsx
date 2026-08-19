@@ -5,6 +5,8 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'rec
 import SearchBar from '../../components/ui/SearchBar';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useAuth } from '../../context/AuthContext';
+import { useMarket } from '../../context/MarketContext';
+
 const DEFAULT_DATA = {
   price: '...', change: '...', up: true,
   name: 'Loading...', ticker: '...', sector: 'Company',
@@ -25,7 +27,9 @@ export default function StockProfile() {
   const id = routeId || 'RELIANCE';
   const { formatPrice } = useCurrency();
   const { userPlan } = useAuth();
+  const { formatMarketPrice, currencyMode, toggleCurrencyMode, fxRates } = useMarket();
   const [quote, setQuote] = useState(null);
+  const [companyMeta, setCompanyMeta] = useState(null);
   
   const [range, setRange] = useState('1Y');
   const [history, setHistory] = useState([]);
@@ -46,6 +50,16 @@ export default function StockProfile() {
         }
       })
       .catch(console.error);
+
+    // Fetch company metadata (settlement cycle, ADR, trading hours)
+    fetch(`/api/company/${fetchId}`)
+      .then(r => r.json())
+      .then(data => {
+        if (!cancelled && data.company) {
+          setCompanyMeta(data.company);
+        }
+      })
+      .catch(() => {});
 
     // Fetch history
     fetch(`/api/history?symbol=${fetchId}&range=${range}`)
@@ -69,18 +83,25 @@ export default function StockProfile() {
     return `${sign}${numC.toFixed(2)} (${sign}${cp}%)`;
   };
 
+  const isUS = quote?.currency === 'USD' || id.endsWith('.US') || companyMeta?.marketCode === 'US';
+  const isUK = quote?.currency === 'GBP' || id.endsWith('.L') || companyMeta?.marketCode === 'UK';
+  const exchangeCountry = isUS ? '🇺🇸' : isUK ? '🇬🇧' : '🇮🇳';
+  const exchangeName = isUS ? 'NASDAQ / NYSE' : isUK ? 'LSE' : 'NSE';
+  const currencySign = isUS ? '$' : isUK ? '£' : '₹';
+  const sourceCurrency = isUS ? 'USD' : isUK ? 'GBP' : 'INR';
+
   const d = {
     ...DEFAULT_DATA,
     ticker: id,
     name: quote ? quote.name : id,
-    price: quote ? formatPrice(quote.currentPrice, {}, quote.currency === 'USD' ? 'USD' : 'INR') : '...',
+    price: quote ? formatMarketPrice(quote.currentPrice, sourceCurrency) : '...',
     change: quote ? formatChange(quote.change, quote.changePercent) : '...',
     up: quote ? quote.change >= 0 : true,
     metrics: JSON.parse(JSON.stringify(DEFAULT_DATA.metrics))
   };
   if (quote) {
-    d.metrics[6].val = quote.fiftyTwoWeekHigh ? formatPrice(quote.fiftyTwoWeekHigh, {}, quote.currency === 'USD' ? 'USD' : 'INR') : '-';
-    d.metrics[7].val = quote.fiftyTwoWeekLow ? formatPrice(quote.fiftyTwoWeekLow, {}, quote.currency === 'USD' ? 'USD' : 'INR') : '-';
+    d.metrics[6].val = quote.fiftyTwoWeekHigh ? formatMarketPrice(quote.fiftyTwoWeekHigh, sourceCurrency) : '-';
+    d.metrics[7].val = quote.fiftyTwoWeekLow ? formatMarketPrice(quote.fiftyTwoWeekLow, sourceCurrency) : '-';
     if (quote.volume) {
       d.metrics[0].label = 'Volume';
       d.metrics[0].val = quote.volume.toLocaleString('en-IN');
@@ -94,7 +115,7 @@ export default function StockProfile() {
         <div className="container">
           <div className="profile-breadcrumb" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
             <div>
-              <Link to="/"><Home size={13} style={{ display: 'inline' }} /></Link> / <Link to="/">Stocks</Link> / <span>{id}</span>
+              <Link to="/"><Home size={13} style={{ display: 'inline' }} /></Link> / <Link to="/markets">Markets</Link> / <span>{id}</span>
             </div>
             <div className="w-full sm:w-[200px]">
               <SearchBar placeholder="Search stocks..." />
@@ -103,13 +124,32 @@ export default function StockProfile() {
           
           <div className="profile-name-row">
             <div>
-              <h2 style={{ marginBottom: '2px' }}>{d.name}</h2>
-              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                <span className="badge badge-grey">{d.ticker} • NSE</span>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-3)', fontWeight: 500 }}>{d.sector}</span>
+              <h2 style={{ marginBottom: '4px' }}>{d.name}</h2>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <span className="badge badge-grey">{exchangeCountry} {exchangeName} · {currencySign}</span>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-3)', fontWeight: 500 }}>
+                  Settlement: {companyMeta?.settlementCycle || (isUK ? 'T+2' : 'T+1')}
+                </span>
+                {companyMeta?.adrLink && (
+                  <Link
+                    to={`/stock/${encodeURIComponent(companyMeta.adrLink.symbol)}`}
+                    className="badge badge-blue"
+                    style={{ textDecoration: 'none', cursor: 'pointer' }}
+                  >
+                    Cross-Listing ADR: {companyMeta.adrLink.name} ({companyMeta.adrLink.exchange}) →
+                  </Link>
+                )}
               </div>
             </div>
-            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+              <button
+                onClick={toggleCurrencyMode}
+                className="btn btn-outline btn-sm"
+                title={`FX Rate USD/INR: ₹${fxRates.pairs['USD/INR'] || 86.2}`}
+                style={{ fontSize: '0.78rem', padding: '6px 12px' }}
+              >
+                💱 {currencyMode === 'NATIVE' ? 'Convert to INR' : 'Show Native Currency'}
+              </button>
               <div className="trust-mark">
                 <div className="live-dot"></div> Live Data
               </div>
@@ -124,7 +164,7 @@ export default function StockProfile() {
           </div>
 
           <div className="profile-price-row">
-            <div className="profile-price num">{d.price}</div>
+            <div className="profile-price num" style={{ transition: 'all 150ms ease' }}>{d.price}</div>
             <div className={`profile-change ${d.up ? 'text-green' : 'text-red'}`}>
               <span className={`badge ${d.up ? 'badge-green' : 'badge-red'}`} style={{ fontSize: '0.9rem', padding: '6px 12px' }}>
                 {d.up ? <TrendingUp size={14} /> : <TrendingDown size={14} />}

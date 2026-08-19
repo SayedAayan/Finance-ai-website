@@ -1,0 +1,89 @@
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --junior-buzz-blue: #2F6FED;
+  --junior-coin-gold: #FFB020;
+  --junior-grow-green: #12B76A;
+  --junior-dip-coral: #FF6B6B;
+  --junior-paper-cream: #FFFDF9;
+  --junior-paper-card: #FFFFFF;
+  --junior-ink-navy: #1A2340;
+  --junior-ink-muted: #53627C;
+  --junior-border: #E8EEF8;
+  --junior-radius: 20px;
+  --junior-radius-sm: 14px;
+}
+
+.junior-body {
+  font-family: 'Baloo 2', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  color: var(--junior-ink-navy);
+  background-color: #F4F8FD;
+  min-height: 100vh;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.junior-font-heading {
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.junior-card {
+  background: var(--junior-paper-card);
+  border-radius: var(--junior-radius);
+  border: 2px solid var(--junior-border);
+  box-shadow: 0 8px 24px -4px rgba(26, 35, 64, 0.06), 0 2px 6px -1px rgba(26, 35, 64, 0.04);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.junior-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px -4px rgba(47, 111, 237, 0.12);
+}
+
+.junior-btn-primary {
+  background: linear-gradient(135deg, #2F6FED 0%, #1D55C4 100%);
+  color: #FFFFFF;
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 700;
+  font-size: 1.05rem;
+  border-radius: var(--junior-radius-sm);
+  padding: 12px 24px;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(47, 111, 237, 0.35);
+  transition: all 0.15s ease;
+}
+
+.junior-btn-primary:active {
+  transform: scale(0.97);
+}
+
+.junior-btn-gold {
+  background: linear-gradient(135deg, #FFB020 0%, #F59E0B 100%);
+  color: #1A2340;
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 800;
+  font-size: 1.05rem;
+  border-radius: var(--junior-radius-sm);
+  padding: 12px 24px;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(255, 176, 32, 0.35);
+}
+
+.junior-pill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
