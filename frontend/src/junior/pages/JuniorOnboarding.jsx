@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, ShieldCheck, ArrowRight, CheckCircle2, User, ChevronLeft } from 'lucide-react';
+import { Sparkles, ShieldCheck, ArrowRight, CheckCircle2, User, ChevronLeft, Scale } from 'lucide-react';
 import JuniorAvatar, { JUNIOR_AVATARS } from '../components/JuniorAvatar';
+import { JuniorSEBIBanner } from '../components/JuniorSEBIDisclosure';
 
 export default function JuniorOnboarding({ onFinish }) {
   const navigate = useNavigate();
@@ -330,6 +331,11 @@ export default function JuniorOnboarding({ onFinish }) {
             </div>
           </motion.div>
         )}
+
+        {/* Mandatory SEBI 2026 Educational Notice */}
+        <div className="mt-6 pt-4 border-t border-slate-100">
+          <JuniorSEBIBanner compact={true} />
+        </div>
       </div>
     </div>
   );

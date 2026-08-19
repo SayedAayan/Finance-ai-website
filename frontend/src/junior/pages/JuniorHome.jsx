@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Flame, BookOpen, TrendingUp, Trophy, ArrowRight, Shield, Zap, CheckCircle2, Award, PieChart, Coins, HelpCircle, Gift, Star, Target, ChevronRight, Activity, Compass, ShieldCheck, X, Palette } from 'lucide-react';
+import { Sparkles, Flame, BookOpen, TrendingUp, Trophy, ArrowRight, Shield, Zap, CheckCircle2, Award, PieChart, Coins, HelpCircle, Gift, Star, Target, ChevronRight, Activity, Compass, ShieldCheck, X, Palette, Scale } from 'lucide-react';
 import { BullMascot, BearMascot } from '../components/BuzzyMascot';
 import JuniorCompanyLogo from '../components/JuniorCompanyLogo';
 import JuniorAvatar, { JUNIOR_AVATARS } from '../components/JuniorAvatar';
+import { JuniorSEBIBanner } from '../components/JuniorSEBIDisclosure';
 
 const FINANCIAL_WISDOM_TIPS = [
   "Cosmic Tip: When buyers are excited, market prices climb higher! 🚀 📈",
@@ -186,6 +187,9 @@ export default function JuniorHome({ account, onUpdateAccount }) {
           </div>
         </div>
       </motion.div>
+
+      {/* SEBI 2026 Educational Paper-Trading Compliance Banner */}
+      <JuniorSEBIBanner />
 
       {/* 3D Smart Portfolio Vault Card with Visual Savings Goal */}
       <div className="jr-card-3d p-6 md:p-8 bg-white">

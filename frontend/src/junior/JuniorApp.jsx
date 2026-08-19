@@ -11,6 +11,7 @@ import JuniorMissions from './pages/JuniorMissions';
 import JuniorParent from './pages/JuniorParent';
 import { BullMascot, BearMascot } from './components/BuzzyMascot';
 import JuniorAvatar from './components/JuniorAvatar';
+import { JuniorSEBIFooter } from './components/JuniorSEBIDisclosure';
 
 export const DEFAULT_JUNIOR_ACCOUNT = {
   id: 'demo_jr_1',
@@ -219,6 +220,9 @@ export default function JuniorApp() {
           <Route path="/junior/parent" element={<JuniorParent account={currentAcc} onUpdateAccount={setAccount} />} />
           <Route path="*" element={<JuniorHome account={currentAcc} onUpdateAccount={setAccount} />} />
         </Routes>
+
+        {/* Mandatory SEBI 2026 Educational Charter & Policies Footer */}
+        <JuniorSEBIFooter />
       </main>
 
       {/* Modern Floating Bottom Dock */}

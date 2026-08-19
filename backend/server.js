@@ -1188,7 +1188,7 @@ app.post('/api/junior/accounts', async (req, res) => {
   try {
     const { nickname, age, mode, market, parentEmail, avatar } = req.body || {};
     const db = await readDB();
-    const account = createDefaultJuniorAccount(nickname || 'Junior Explorer', age || 10, mode, market, avatar || 'rocket');
+    const account = createDefaultJuniorAccount(nickname || 'Junior Explorer', age || 10, mode, market, avatar || 'alex');
     if (parentEmail) account.parentEmail = parentEmail;
     db.juniorAccounts[account.id] = account;
     await writeDB(db);
@@ -1219,7 +1219,7 @@ app.get('/api/junior/accounts/:id', async (req, res) => {
     let account = db.juniorAccounts?.[req.params.id];
     if (!account) {
       // If default demo account requested, auto-initialize
-      account = createDefaultJuniorAccount('Junior Champ', 11, 'explorer', 'IN', 'rocket');
+      account = createDefaultJuniorAccount('Junior Champ', 11, 'explorer', 'IN', 'alex');
       account.id = req.params.id;
       db.juniorAccounts[account.id] = account;
       await writeDB(db);

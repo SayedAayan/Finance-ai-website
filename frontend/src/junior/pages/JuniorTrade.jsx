@@ -4,6 +4,7 @@ import { ShoppingBag, TrendingUp, AlertCircle, CheckCircle2, ShieldAlert, Sparkl
 import { BullMascot, BearMascot } from '../components/BuzzyMascot';
 import JuniorCompanyLogo from '../components/JuniorCompanyLogo';
 import { useMarket } from '../../context/MarketContext';
+import { JuniorSEBIBanner } from '../components/JuniorSEBIDisclosure';
 
 const FEATURED_COMPANIES = [
   { symbol: 'TCS.NS', name: 'Tata Consultancy Services', ticker: 'TCS', exchange: 'NSE', market: 'IN', currency: '₹', category: 'Tech & Code', price: 3950, change: '+1.4%', description: 'Builds super smart computer software and mobile apps used by millions.' },
@@ -210,17 +211,20 @@ export default function JuniorTrade({ account, onUpdateAccount }) {
 
   return (
     <div className="space-y-6">
+      {/* SEBI 2026 Educational Simulator Banner */}
+      <JuniorSEBIBanner compact={true} />
+
       {/* Top Header Card */}
       <div className="bg-white rounded-3xl p-6 border-2 border-slate-100 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <span className="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
-            Real Market Quotes & Paper Portfolio
+            Educational Paper Portfolio • Simulated Data
           </span>
           <h1 className="text-2xl font-extrabold text-slate-900 junior-font-heading mt-2">
-            Practice Trading with Real World Stocks 🎮
+            Practice Paper Trading Simulator 🎮
           </h1>
           <p className="text-xs md:text-sm text-slate-600">
-            Search any Indian or Global company, trade with virtual coins, and explain your investment reasoning!
+            Explore companies, practice with ₹0 real-money virtual coins, and explain your investment reasoning!
           </p>
         </div>
 
