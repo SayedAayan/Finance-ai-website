@@ -12,6 +12,7 @@ import JuniorParent from './pages/JuniorParent';
 import { BullMascot, BearMascot } from './components/BuzzyMascot';
 import JuniorAvatar from './components/JuniorAvatar';
 import { JuniorSEBIFooter } from './components/JuniorSEBIDisclosure';
+import JuniorProBook from './pages/JuniorProBook';
 
 export const DEFAULT_JUNIOR_ACCOUNT = {
   id: 'demo_jr_1',
@@ -115,6 +116,7 @@ export default function JuniorApp() {
     { path: '/junior/home', label: 'Dashboard', icon: Home },
     { path: '/junior/learn', label: 'Academy', icon: BookOpen },
     { path: '/junior/trade', label: 'Paper Market', icon: TrendingUp },
+    { path: '/junior/pro-book', label: 'Pro Book', icon: Award },
     { path: '/junior/missions', label: 'Trophy Room', icon: Trophy },
     { path: '/junior/parent', label: 'Parent Hub', icon: Shield }
   ];
@@ -210,12 +212,14 @@ export default function JuniorApp() {
           <Route path="/home" element={<JuniorHome account={currentAcc} onUpdateAccount={setAccount} />} />
           <Route path="/learn" element={<JuniorLearn account={currentAcc} onUpdateAccount={setAccount} />} />
           <Route path="/trade" element={<JuniorTrade account={currentAcc} onUpdateAccount={setAccount} />} />
+          <Route path="/pro-book" element={<JuniorProBook />} />
           <Route path="/missions" element={<JuniorMissions account={currentAcc} />} />
           <Route path="/parent" element={<JuniorParent account={currentAcc} onUpdateAccount={setAccount} />} />
           <Route path="/junior" element={<JuniorHome account={currentAcc} onUpdateAccount={setAccount} />} />
           <Route path="/junior/home" element={<JuniorHome account={currentAcc} onUpdateAccount={setAccount} />} />
           <Route path="/junior/learn" element={<JuniorLearn account={currentAcc} onUpdateAccount={setAccount} />} />
           <Route path="/junior/trade" element={<JuniorTrade account={currentAcc} onUpdateAccount={setAccount} />} />
+          <Route path="/junior/pro-book" element={<JuniorProBook />} />
           <Route path="/junior/missions" element={<JuniorMissions account={currentAcc} />} />
           <Route path="/junior/parent" element={<JuniorParent account={currentAcc} onUpdateAccount={setAccount} />} />
           <Route path="*" element={<JuniorHome account={currentAcc} onUpdateAccount={setAccount} />} />

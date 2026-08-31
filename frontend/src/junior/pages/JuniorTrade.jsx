@@ -20,7 +20,10 @@ const FEATURED_COMPANIES = [
   { symbol: 'AMZN', name: 'Amazon.com', ticker: 'AMZN', exchange: 'NASDAQ', market: 'US', currency: '$', category: 'Online Shopping', price: 186, change: '+0.7%', description: 'Delivers packages to doorsteps worldwide and powers the global cloud.' },
   { symbol: 'ZOMATO.NS', name: 'Zomato Limited', ticker: 'ZOMATO', exchange: 'NSE', market: 'IN', currency: '₹', category: 'Food Delivery', price: 260, change: '+2.8%', description: 'Connects hungry families with top neighborhood restaurants and Blinkit.' },
   { symbol: 'SBIN.NS', name: 'State Bank of India', ticker: 'SBIN', exchange: 'NSE', market: 'IN', currency: '₹', category: 'National Banking', price: 820, change: '+0.4%', description: 'India’s largest public bank serving hundreds of millions of citizens.' },
-  { symbol: 'ITC.NS', name: 'ITC Limited', ticker: 'ITC', exchange: 'NSE', market: 'IN', currency: '₹', category: 'Snacks & Hotels', price: 495, change: '+0.3%', description: 'Makers of Sunfeast biscuits, Aashirvaad flour, Classmate notebooks, and hotels.' }
+  { symbol: 'ITC.NS', name: 'ITC Limited', ticker: 'ITC', exchange: 'NSE', market: 'IN', currency: '₹', category: 'Snacks & Hotels', price: 495, change: '+0.3%', description: 'Makers of Sunfeast biscuits, Aashirvaad flour, Classmate notebooks, and hotels.' },
+  { symbol: 'BTC-USD', name: 'Bitcoin', ticker: 'BTC', exchange: 'CRYPTO', market: 'US', currency: '$', category: 'Crypto', price: 62000, change: '+5.2%', description: 'The original digital money powered by computers all over the world.' },
+  { symbol: 'GLD', name: 'SPDR Gold Trust', ticker: 'GLD', exchange: 'NYSE', market: 'US', currency: '$', category: 'Commodity', price: 215, change: '+0.4%', description: 'Invest in real physical gold without needing a heavy safe.' },
+  { symbol: 'SLV', name: 'iShares Silver Trust', ticker: 'SLV', exchange: 'NYSE', market: 'US', currency: '$', category: 'Commodity', price: 25, change: '-0.2%', description: 'Invest in physical silver, used in jewelry, electronics, and solar panels.' }
 ];
 
 const CATEGORY_CHIPS = [
@@ -30,7 +33,9 @@ const CATEGORY_CHIPS = [
   { id: 'tech', label: '💻 Tech & AI' },
   { id: 'auto', label: '🚗 Cars & EV' },
   { id: 'food', label: '🍔 Food & Goods' },
-  { id: 'bank', label: '🏦 Banks & Finance' }
+  { id: 'bank', label: '🏦 Banks & Finance' },
+  { id: 'commodity', label: '🛢️ Commodities' },
+  { id: 'crypto', label: '₿ Crypto' }
 ];
 
 export default function JuniorTrade({ account, onUpdateAccount }) {
@@ -204,6 +209,8 @@ export default function JuniorTrade({ account, onUpdateAccount }) {
     if (activeCategory === 'auto') return c.category.toLowerCase().includes('car') || c.category.toLowerCase().includes('ev') || c.category.toLowerCase().includes('auto');
     if (activeCategory === 'food') return c.category.toLowerCase().includes('food') || c.category.toLowerCase().includes('snack') || c.category.toLowerCase().includes('movie') || c.category.toLowerCase().includes('park');
     if (activeCategory === 'bank') return c.category.toLowerCase().includes('bank') || c.category.toLowerCase().includes('saving') || c.category.toLowerCase().includes('finance');
+    if (activeCategory === 'commodity') return c.category.toLowerCase().includes('commodity') || c.category.toLowerCase().includes('gold') || c.category.toLowerCase().includes('silver');
+    if (activeCategory === 'crypto') return c.category.toLowerCase().includes('crypto') || c.category.toLowerCase().includes('bitcoin');
     return true;
   });
 

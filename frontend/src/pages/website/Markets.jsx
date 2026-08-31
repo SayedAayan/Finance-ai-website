@@ -232,6 +232,37 @@ export default function Markets() {
           </div>
         </div>
 
+        {/* Commodities & Crypto Section */}
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm mb-12">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-base font-extrabold text-gray-900 dark:text-gray-100">
+                Commodities & Crypto 🛢️₿
+              </h2>
+              <p className="text-xs text-gray-400">Live prices for major commodities and digital assets.</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { name: 'Bitcoin', symbol: 'BTC-USD', price: 62000, change: '+5.2%', isCrypto: true },
+              { name: 'Ethereum', symbol: 'ETH-USD', price: 3400, change: '+2.1%', isCrypto: true },
+              { name: 'Gold', symbol: 'GC=F', price: 2350, change: '+0.4%', isCrypto: false },
+              { name: 'Silver', symbol: 'SI=F', price: 28.5, change: '-0.2%', isCrypto: false },
+            ].map((asset, i) => (
+              <div key={i} className="p-4 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/30 flex flex-col justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" onClick={() => navigate(`/stock/${encodeURIComponent(asset.symbol)}`)}>
+                <div>
+                  <div className="text-sm font-bold text-gray-800 dark:text-gray-200">{asset.name}</div>
+                  <div className="text-[11px] text-gray-400">{asset.symbol}</div>
+                </div>
+                <div className="mt-3">
+                  <div className="font-extrabold text-lg text-gray-900 dark:text-gray-100">${asset.price.toLocaleString()}</div>
+                  <div className={`text-xs font-bold ${asset.change.startsWith('+') ? 'text-emerald-600' : 'text-rose-600'}`}>{asset.change}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Cross-Market ADR / GDR Cross Links */}
         <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm mb-12">
           <div className="flex items-center justify-between mb-4">

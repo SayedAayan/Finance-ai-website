@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from 'recharts';
-import { TrendingUp, PieChart as PieChartIcon, Activity, CreditCard, ArrowUpRight, Download, BarChart, Banknote, Search, X, Loader2, ArrowLeft, ArrowRight, Info, ChevronDown } from 'lucide-react';
+import { TrendingUp, PieChart as PieChartIcon, Activity, CreditCard, ArrowUpRight, Download, BarChart, Banknote, Search, X, Loader2, ArrowLeft, ArrowRight, Info, ChevronDown, Target } from 'lucide-react';
 import { useCurrency } from '../../context/CurrencyContext';
 
 const TABS = [
@@ -14,6 +14,7 @@ const TABS = [
   { id: 'emi', label: 'EMI Calculator', fullLabel: 'Loan EMI Calculator', icon: CreditCard, desc: 'Equated monthly installment for a loan', accent: 'rose', category: 'loans', explainer: 'Calculates the fixed monthly payment needed to repay a loan, plus total interest paid over the tenure.', formula: 'EMI = [P × r × (1 + r)ⁿ] / [(1 + r)ⁿ − 1], where P = loan amount, r = monthly rate, n = months' },
   { id: 'cagr', label: 'CAGR Calculator', fullLabel: 'Compound Annual Growth Rate', icon: BarChart, desc: 'Annualized growth rate between two values', accent: 'indigo', category: 'analyze', explainer: 'Works backwards from a starting and ending value to find the single annual growth rate that explains the change.', formula: 'CAGR = [(Final Value / Initial Value)^(1/years) − 1] × 100' },
   { id: 'inflation', label: 'Inflation Calculator', fullLabel: 'Inflation Impact Calculator', icon: Banknote, desc: 'Future cost of money adjusted for inflation', accent: 'red', category: 'analyze', explainer: 'Shows what an amount today will cost in the future once a chosen annual inflation rate erodes its value.', formula: 'Future Cost = Current Cost × (1 + inflation rate)ⁿ, where n = years' },
+  { id: 'goal', label: 'Goal Calculator', fullLabel: 'Financial Goal Calculator', icon: Target, desc: 'Calculate SIP needed to reach a target', accent: 'emerald', category: 'grow', explainer: 'Calculates the monthly SIP investment required to reach a specific financial goal in a given timeframe.', formula: 'SIP = Goal / [(((1+r)^n)-1)/r * (1+r)], where r = monthly rate, n = total months' },
 ];
 
 const CATEGORIES = [
@@ -108,6 +109,11 @@ export default function Calculators() {
   const [infRate, setInfRate] = useState(6);
   const [infYears, setInfYears] = useState(10);
 
+  // --- Goal State ---
+  const [goalTargetAmount, setGoalTargetAmount] = useState(1000000);
+  const [goalRate, setGoalRate] = useState(12);
+  const [goalYears, setGoalYears] = useState(5);
+
   const [showFormula, setShowFormula] = useState(false);
 
   // --- Fund/Stock Search State ---
@@ -136,6 +142,7 @@ export default function Calculators() {
     lumpsum: setLumpRate,
     swp: setSwpRate,
     compound: setCompoundRate,
+    goal: setGoalRate,
   };
 
   const assetScope = activeTab ? ASSET_SCOPE[activeTab] : null;
@@ -353,6 +360,19 @@ export default function Calculators() {
     const maturity = principal * Math.pow(1 + (compoundRate / 100) / frequency, frequency * compoundYears);
     return { invested, maturity, wealthGained: maturity - invested };
   }, [principal, compoundRate, compoundYears, frequency]);
+
+  const goalResult = useMemo(() => {
+    const months = goalYears * 12;
+    const monthlyRate = goalRate / 12 / 100;
+    let requiredSip = 0;
+    if (monthlyRate === 0) {
+      requiredSip = goalTargetAmount / months;
+    } else {
+      requiredSip = goalTargetAmount / (((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate) * (1 + monthlyRate));
+    }
+    const totalInvested = requiredSip * months;
+    return { requiredSip, totalInvested, wealthGained: goalTargetAmount - totalInvested, target: goalTargetAmount };
+  }, [goalTargetAmount, goalRate, goalYears]);
 
   // UI Helpers
   const formatNum = (val) => {
@@ -927,6 +947,45 @@ export default function Calculators() {
                       ], accent.chart)}
                       {renderTakeaway(
                         `Something that costs ${symbol}${formatNum(infCurrentCost)} today could cost ${symbol}${formatNum(infResult.futureCost)} in ${infYears} years at ${infRate}% inflation — plan for ${symbol}${formatNum(infResult.diff)} more just to keep up.`,
+                        accent.text
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Goal Calculator */}
+                {activeTab === 'goal' && (
+                  <div className="grid md:grid-cols-2 gap-10 items-start">
+                    <div>
+                      {renderSliderInput('Target Goal Amount', goalTargetAmount, setGoalTargetAmount, 10000, 50000000, 10000, 'currency', accent.text, accent.hex)}
+                      {renderSliderInput('Expected Return Rate (p.a)', goalRate, setGoalRate, 1, 50, 0.5, '%', accent.text, accent.hex)}
+                      {renderSliderInput('Time Period to Reach Goal', goalYears, setGoalYears, 1, 40, 1, 'Yr', accent.text, accent.hex)}
+                    </div>
+                    <div className={`bg-gradient-to-b ${accent.panelGrad} rounded-2xl p-6 border ${accent.border} shadow-sm lg:sticky lg:top-24`}>
+                      <div className="space-y-4 mb-6">
+                        <div className="flex justify-between items-center pb-4 border-b border-gray-200 dark:border-gray-700">
+                          <span className="text-textMain dark:text-white font-bold">Required Monthly SIP</span>
+                          <span className={`text-2xl font-bold ${accent.text}`}>{symbol}{formatNum(goalResult.requiredSip)}</span>
+                        </div>
+                        <div className="flex justify-between items-center pb-4 border-b border-gray-200 dark:border-gray-700">
+                          <span className="text-textMuted dark:text-gray-400 font-medium">Total Invested</span>
+                          <span className="text-lg font-bold text-textMain dark:text-white">{symbol}{formatNum(goalResult.totalInvested)}</span>
+                        </div>
+                        <div className="flex justify-between items-center pb-4 border-b border-gray-200 dark:border-gray-700">
+                          <span className="text-textMuted dark:text-gray-400 font-medium">Est. Returns</span>
+                          <span className="text-lg font-bold text-green-600 dark:text-green-400">{symbol}{formatNum(goalResult.wealthGained)}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-textMain dark:text-white font-bold">Goal Target</span>
+                          <span className="text-xl font-bold text-textMain dark:text-white">{symbol}{formatNum(goalResult.target)}</span>
+                        </div>
+                      </div>
+                      {renderChart([
+                        { name: 'Total Invested', value: goalResult.totalInvested },
+                        { name: 'Est. Returns', value: goalResult.wealthGained }
+                      ], accent.chart)}
+                      {renderTakeaway(
+                        `To reach ${symbol}${formatNum(goalTargetAmount)} in ${goalYears} years at ${goalRate}%, you need to invest ${symbol}${formatNum(goalResult.requiredSip)} every month.`,
                         accent.text
                       )}
                     </div>
