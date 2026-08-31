@@ -5,7 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { getVisiblePageContext } from '../../utils/pageContext';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '/api/chat';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || (import.meta.env.PROD ? 'https://finance-ai-website.onrender.com/api/chat' : '/api/chat');
 
 export default function AIChatSidebar({ isOpen, onClose, onOpenVisualSearch }) {
   const loc = useLocation();

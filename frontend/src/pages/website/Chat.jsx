@@ -6,7 +6,7 @@ import remarkGfm from 'remark-gfm';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '/api/chat';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || (import.meta.env.PROD ? 'https://finance-ai-website.onrender.com/api/chat' : '/api/chat');
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 export default function Chat() {

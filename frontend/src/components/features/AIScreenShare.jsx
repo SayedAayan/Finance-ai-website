@@ -33,7 +33,7 @@ const markdownComponents = {
   code: ({ children }) => <code className="bg-slate-800 text-violet-300 px-1.5 py-0.5 rounded text-xs font-mono">{children}</code>
 };
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '/api/chat';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || (import.meta.env.PROD ? 'https://finance-ai-website.onrender.com/api/chat' : '/api/chat');
 
 export default function AIScreenShare({ isOpen, onClose }) {
   const [selection, setSelection] = useState(null); // { x, y, w, h } in viewport client coordinates

@@ -8,7 +8,7 @@ import { useCurrency } from '../../context/CurrencyContext';
 import { useCms } from '../../context/CmsContext';
 import CountingNumber from '../../components/ui/CountingNumber';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '/api/chat';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || (import.meta.env.PROD ? 'https://finance-ai-website.onrender.com/api/chat' : '/api/chat');
 
 const generateSparklineData = (start, trend) => Array.from({ length: 15 }, (_, i) => ({ value: start + (Math.random() * 20 - 10) + (trend === 'up' ? i * 5 : -i * 2) }));
 
