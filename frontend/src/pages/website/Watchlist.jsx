@@ -70,11 +70,15 @@ export default function Watchlist() {
   }, [items.length]);
 
   // Demat Connection State
-  const [brokerConnected, setBrokerConnected] = useState(false);
+  const [brokerConnected, setBrokerConnected] = useState(() => {
+    const saved = localStorage.getItem('brokerConnected');
+    return saved ? JSON.parse(saved) : false;
+  });
   const [showSmallcaseModal, setShowSmallcaseModal] = useState(false);
 
   const handleBrokerConnect = (broker) => {
     setBrokerConnected(broker);
+    localStorage.setItem('brokerConnected', JSON.stringify(broker));
     
     // Simulate fetching and adding holdings from broker
     setTimeout(() => {
@@ -88,6 +92,11 @@ export default function Watchlist() {
         if (!hasAsset) addAsset(asset);
       });
     }, 1500);
+  };
+
+  const handleDisconnect = () => {
+    setBrokerConnected(false);
+    localStorage.removeItem('brokerConnected');
   };
 
   const remove = (id) => {
@@ -224,6 +233,7 @@ export default function Watchlist() {
             <p style={{ color: 'var(--text-2)' }}>Track your favourite stocks and funds in one place.</p>
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>
+            <button className="btn btn-outline btn-sm" onClick={handleDisconnect} style={{ color: 'var(--text-2)' }}>Disconnect Demat</button>
             <button className="btn btn-outline btn-sm" onClick={() => setShowManageAlerts(true)}><Bell size={14} /> Manage Alerts</button>
             <button className="btn btn-primary btn-sm" onClick={() => setShowAddAsset(true)}><Star size={14} /> Add Asset</button>
           </div>
