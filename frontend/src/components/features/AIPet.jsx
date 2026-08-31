@@ -1,34 +1,18 @@
 import { useState, useRef, useEffect } from 'react';
-import { motion, useMotionValue, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Scan, MessageSquare, X } from 'lucide-react';
 
-const STORAGE_KEY = 'stockbuzz-ai-pet-pos';
 const SIZE = 56;
 const MARGIN = 20;
 
-function clampToViewport(x, y) {
-  const maxX = window.innerWidth - SIZE - MARGIN;
-  const maxY = window.innerHeight - SIZE - MARGIN;
-  return {
-    x: Math.min(Math.max(x, MARGIN), Math.max(maxX, MARGIN)),
-    y: Math.min(Math.max(y, MARGIN), Math.max(maxY, MARGIN)),
-  };
-}
-
-function defaultPosition() {
-  return { x: MARGIN, y: window.innerHeight - SIZE - 110 };
-}
-
 export default function AIPet({ onOpenChat, onOpenVisualSearch, hidden }) {
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const [ready, setReady] = useState(false);
+  const [ready, setReady] = useState(true);
   const [blinking, setBlinking] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const draggedRef = useRef(false);
   const constraintsRef = useRef(null);
 
-  // Periodic eye blink for a bit of life without moving the whole body
+  // Periodic eye blink for a bit of life
   useEffect(() => {
     const interval = setInterval(() => {
       setBlinking(true);
@@ -36,39 +20,6 @@ export default function AIPet({ onOpenChat, onOpenVisualSearch, hidden }) {
     }, 3000 + Math.random() * 2000);
     return () => clearInterval(interval);
   }, []);
-
-  // Restore saved position (or default to bottom-left) once, after mount, so
-  // window dimensions are available.
-  useEffect(() => {
-    let pos;
-    try {
-      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-      pos = saved ? clampToViewport(saved.x, saved.y) : defaultPosition();
-    } catch {
-      pos = defaultPosition();
-    }
-    x.set(pos.x);
-    y.set(pos.y);
-    setReady(true);
-
-    const handleResize = () => {
-      const clamped = clampToViewport(x.get(), y.get());
-      x.set(clamped.x);
-      y.set(clamped.y);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const handleDragEnd = () => {
-    const clamped = clampToViewport(x.get(), y.get());
-    x.set(clamped.x);
-    y.set(clamped.y);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(clamped));
-    // Prevent the click that fires right after a drag from opening the chat
-    setTimeout(() => { draggedRef.current = false; }, 0);
-  };
 
   if (!ready || hidden) return null;
 
@@ -81,9 +32,8 @@ export default function AIPet({ onOpenChat, onOpenVisualSearch, hidden }) {
         dragElastic={0}
         dragConstraints={constraintsRef}
         onDragStart={() => { draggedRef.current = true; setIsMenuOpen(false); }}
-        onDragEnd={handleDragEnd}
-        style={{ x, y, width: SIZE, height: SIZE + 8 }}
-        className="fixed top-0 left-0 z-[999] cursor-grab active:cursor-grabbing touch-none"
+        onDragEnd={() => { setTimeout(() => { draggedRef.current = false; }, 0); }}
+        className="fixed bottom-5 left-5 z-[999] cursor-grab active:cursor-grabbing touch-none"
       >
         <div className="relative w-[56px] h-[56px]">
           <AnimatePresence>
@@ -93,7 +43,7 @@ export default function AIPet({ onOpenChat, onOpenVisualSearch, hidden }) {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 10 }}
                 onPointerDown={(e) => e.stopPropagation()}
-                className="absolute bottom-[calc(100%+12px)] -right-2 w-72 bg-slate-900 border border-violet-500/30 rounded-2xl shadow-2xl overflow-hidden flex flex-col pointer-events-auto touch-auto"
+                className="absolute left-[calc(100%+16px)] bottom-0 w-72 bg-slate-900 border border-violet-500/30 rounded-2xl shadow-2xl overflow-hidden flex flex-col pointer-events-auto touch-auto"
                 style={{ cursor: 'default' }}
               >
                 <div className="flex justify-between items-center px-4 py-3 border-b border-white/10 bg-black/20">
