@@ -2342,3 +2342,11 @@ html.dark .apple-glass-card:hover {
     padding: 32px;
   }
 }
+
+@layer base {
+  input:focus, textarea:focus, select:focus, button:focus {
+    outline: none !important;
+    box-shadow: none !important;
+    --tw-ring-shadow: 0 0 #0000 !important;
+  }
+}
