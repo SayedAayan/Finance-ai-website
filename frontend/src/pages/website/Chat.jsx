@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || (import.meta.env.PROD ? 'https://finance-ai-website.onrender.com/api/chat' : '/api/chat');
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://finance-ai-website.onrender.com/api' : '/api');
 
 export default function Chat() {
   const loc = useLocation();
@@ -62,7 +62,7 @@ export default function Chat() {
   const [cmsConfig, setCmsConfig] = useState(defaultCms);
 
   useEffect(() => {
-    fetch('/api/cms')
+    fetch(`${API_URL}/cms`)
       .then(res => res.json())
       .then(data => {
         if (data && data.pages) setCmsConfig(data);
