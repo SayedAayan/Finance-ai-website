@@ -35,8 +35,10 @@ function Layout() {
   const [isScreenShareOpen, setIsScreenShareOpen] = useState(false);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [loc.pathname]);
+    // Scroll both window and document element to ensure it works across all browsers/containers
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.documentElement.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [loc.pathname, loc.search]);
 
   useEffect(() => {
     const handleOpenAIChat = () => setIsAIChatOpen(true);
