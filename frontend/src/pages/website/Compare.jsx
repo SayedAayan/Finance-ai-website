@@ -6,7 +6,7 @@ import { useCurrency } from '../../context/CurrencyContext';
 import { useAuth } from '../../context/AuthContext';
 import { useMarket } from '../../context/MarketContext';
 
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://finance-ai-website.onrender.com/api' : '/api');
 
 const COLORS = ['var(--violet)', 'var(--blue)', 'var(--green)', 'var(--orange)', 'var(--red)', 'var(--text-1)'];
 
@@ -97,7 +97,6 @@ function AssetPicker({ mode, value, onSelect, placeholder }) {
   const [options, setOptions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
-  const [menuStyle, setMenuStyle] = useState({});
   const boxRef = useRef(null);
 
   useEffect(() => {
@@ -107,30 +106,6 @@ function AssetPicker({ mode, value, onSelect, placeholder }) {
     document.addEventListener('mousedown', onClickOutside);
     return () => document.removeEventListener('mousedown', onClickOutside);
   }, []);
-
-  const updateMenuPosition = () => {
-    const rect = boxRef.current?.getBoundingClientRect();
-    if (rect) {
-      setMenuStyle({
-        position: 'fixed',
-        top: rect.bottom + 4,
-        left: rect.left,
-        width: rect.width,
-        zIndex: 1000
-      });
-    }
-  };
-
-  useEffect(() => {
-    if (!open) return;
-    updateMenuPosition();
-    window.addEventListener('scroll', updateMenuPosition, true);
-    window.addEventListener('resize', updateMenuPosition);
-    return () => {
-      window.removeEventListener('scroll', updateMenuPosition, true);
-      window.removeEventListener('resize', updateMenuPosition);
-    };
-  }, [open]);
 
   useEffect(() => {
     let active = true;
@@ -168,7 +143,7 @@ function AssetPicker({ mode, value, onSelect, placeholder }) {
       </div>
       {open && (
         <div style={{
-          ...menuStyle,
+          position: 'absolute', top: 'calc(100% + 4px)', left: 0, width: '100%', zIndex: 1000,
           background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '10px',
           boxShadow: 'var(--shadow-md, 0 8px 24px rgba(0,0,0,0.25))', maxHeight: '360px',
           display: 'flex', flexDirection: 'column'
