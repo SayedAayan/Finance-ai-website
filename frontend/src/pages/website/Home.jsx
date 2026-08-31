@@ -648,14 +648,11 @@ export default function Home({ onOpenAIChat }) {
         alignItems: 'center',
         gap: '8px',
         padding: '8px',
-        background: 'rgba(244, 244, 246, 0.65)',
         backdropFilter: 'blur(32px) saturate(180%)',
         WebkitBackdropFilter: 'blur(32px) saturate(180%)',
         borderRadius: '100px',
-        border: '1px solid rgba(0, 0, 0, 0.08)',
-        boxShadow: '0 10px 40px rgba(0, 0, 0, 0.08), 0 2px 10px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255,255,255,0.6)',
         transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
-      }} className="dark:bg-[#1a1a1a]/60 dark:border-white/10 dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+      }} className="bg-[rgba(244,244,246,0.65)] dark:bg-[#1a1a1a]/60 border border-[rgba(0,0,0,0.08)] dark:border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.08),0_2px_10px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.6)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
         {[
           { label: 'Equity', icon: <TrendingUp size={16} /> },
           { label: 'Debt', icon: <Landmark size={16} /> },
