@@ -119,6 +119,13 @@ export default function Home({ onOpenAIChat }) {
 
   const [featuredNews, setFeaturedNews] = useState(null);
   const [trending, setTrending] = useState([]);
+  const [showDock, setShowDock] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setShowDock(window.scrollY > 240);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     return () => { recognitionRef.current?.stop(); };
@@ -627,6 +634,44 @@ export default function Home({ onOpenAIChat }) {
           </div>
         </div>
       </div>
+
+      {/* Floating Apple Liquid Glass Category Dock */}
+      <div style={{
+        position: 'fixed',
+        bottom: '30px',
+        left: '50%',
+        transform: `translateX(-50%) translateY(${showDock ? '0' : '20px'})`,
+        opacity: showDock ? 1 : 0,
+        pointerEvents: showDock ? 'auto' : 'none',
+        zIndex: 100,
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        padding: '8px',
+        background: 'rgba(244, 244, 246, 0.65)',
+        backdropFilter: 'blur(32px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(32px) saturate(180%)',
+        borderRadius: '100px',
+        border: '1px solid rgba(0, 0, 0, 0.08)',
+        boxShadow: '0 10px 40px rgba(0, 0, 0, 0.08), 0 2px 10px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255,255,255,0.6)',
+        transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+      }} className="dark:bg-[#1a1a1a]/60 dark:border-white/10 dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+        {[
+          { label: 'Equity', icon: <TrendingUp size={16} /> },
+          { label: 'Debt', icon: <Landmark size={16} /> },
+          { label: 'Mutual Funds', icon: <BarChart2 size={16} /> },
+          { label: 'Commodities', icon: <Activity size={16} /> }
+        ].map(cat => (
+          <button key={cat.label} onClick={() => navigate(`/markets?category=${cat.label.toLowerCase()}`)} 
+            className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold text-gray-800 dark:text-gray-200 hover:bg-black/5 dark:hover:bg-white/10 transition-all duration-300"
+            style={{ border: 'none', outline: 'none' }}
+          >
+            <span className="text-violet-600 dark:text-violet-400">{cat.icon}</span>
+            {cat.label}
+          </button>
+        ))}
+      </div>
+
     </div>
   );
 }
