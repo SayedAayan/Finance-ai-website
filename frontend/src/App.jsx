@@ -102,8 +102,12 @@ function Layout() {
       {/* "Circle to Search"-style visual assistant — screenshots the page so the user can point at anything and ask */}
       <AIScreenShare isOpen={isScreenShareOpen} onClose={() => setIsScreenShareOpen(false)} />
 
-      {/* Floating draggable AI pet — visible on every page, opens the Visual Screen Search assistant */}
-      <AIPet onOpen={() => setIsScreenShareOpen(true)} hidden={isAIChatOpen || isScreenShareOpen || isChat} />
+      {/* Floating draggable AI pet — visible on every page, opens the AI menu */}
+      <AIPet 
+        onOpenChat={() => setIsAIChatOpen(true)} 
+        onOpenVisualSearch={() => setIsScreenShareOpen(true)} 
+        hidden={isAIChatOpen || isScreenShareOpen || isChat} 
+      />
 
       <BackToTop />
     </div>

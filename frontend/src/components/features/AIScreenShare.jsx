@@ -39,6 +39,7 @@ export default function AIScreenShare({ isOpen, onClose }) {
   const [selection, setSelection] = useState(null); // { x, y, w, h } in viewport client coordinates
   const [dragStart, setDragStart] = useState(null);
   const [question, setQuestion] = useState('');
+  const [currentQuery, setCurrentQuery] = useState('');
   const [answer, setAnswer] = useState(null);
   const [asking, setAsking] = useState(false);
   const [error, setError] = useState('');
@@ -49,6 +50,7 @@ export default function AIScreenShare({ isOpen, onClose }) {
       setSelection(null);
       setAnswer(null);
       setQuestion('');
+      setCurrentQuery('');
       setError('');
       setViewMode('photo');
     }
@@ -122,14 +124,18 @@ export default function AIScreenShare({ isOpen, onClose }) {
   };
 
   const askAboutSelection = async () => {
+    if (asking) return;
+    const q = question.trim() || 'Analyze what is in this highlighted screen area.';
+    setCurrentQuery(q);
+    setQuestion('');
     setAsking(true);
     setError('');
     setAnswer(null);
+    setViewMode('analysis');
 
     try {
       const pageCtx = getVisiblePageContext();
       const selectedContent = extractSelectedRegionText();
-      const q = question.trim() || 'Analyze what is in this highlighted screen area.';
 
       const res = await fetch(BACKEND_URL, {
         method: 'POST',
@@ -153,7 +159,6 @@ export default function AIScreenShare({ isOpen, onClose }) {
       console.error('Vision ask error:', err);
       const pageCtx = getVisiblePageContext();
       const selectedContent = extractSelectedRegionText();
-      const q = question.trim() || 'Analyze what is on screen';
       
       const fallbackReply = `### 👁️ Stockbuzz Guardian Visual Analysis\n\nI have scanned your selected screen area for: **"${q}"**.\n\n` +
         (selectedContent ? `**Highlighted Area Content:**\n${selectedContent}\n\n` : '') +
@@ -244,25 +249,43 @@ export default function AIScreenShare({ isOpen, onClose }) {
       </div>
 
       {/* Mode 2: Dedicated Full Analysis View (Hides the background screen so user can read comfortably) */}
-      {viewMode === 'analysis' && answer && (
+      {viewMode === 'analysis' && (
         <div className="absolute inset-0 pt-16 pb-24 px-4 overflow-y-auto bg-slate-950/95 backdrop-blur-xl flex flex-col items-center z-20">
-          <div className="max-w-3xl w-full my-auto bg-slate-900 border border-violet-500/30 rounded-2xl shadow-2xl p-6 md:p-8 text-slate-100">
-            <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-800">
-              <div className="flex items-center gap-2 text-violet-300 text-xs font-bold uppercase tracking-wider">
-                <Sparkles size={16} className="text-violet-400" /> Stockbuzz AI Guardian · Analysis Report
+          <div className="max-w-3xl w-full my-auto flex flex-col gap-4">
+            
+            {/* User Question Bubble */}
+            {currentQuery && (
+              <div className="self-end bg-violet-600 text-white px-5 py-3 rounded-2xl rounded-tr-sm max-w-[85%] shadow-md">
+                <p className="text-sm">{currentQuery}</p>
               </div>
-              <button
-                onClick={() => setViewMode('photo')}
-                className="flex items-center gap-1.5 text-xs text-violet-300 bg-violet-950/70 hover:bg-violet-900 px-3 py-1.5 rounded-full border border-violet-500/30 font-semibold transition-all"
-              >
-                <Eye size={13} /> View Live Screen
-              </button>
-            </div>
+            )}
 
-            <div className="text-slate-100 text-sm leading-relaxed">
-              <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
-                {answer}
-              </ReactMarkdown>
+            {/* AI Answer Bubble */}
+            <div className="w-full bg-slate-900 border border-violet-500/30 rounded-2xl shadow-2xl p-6 md:p-8 text-slate-100">
+              <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-800">
+                <div className="flex items-center gap-2 text-violet-300 text-xs font-bold uppercase tracking-wider">
+                  <Sparkles size={16} className="text-violet-400" /> Stockbuzz AI Guardian · Analysis Report
+                </div>
+                <button
+                  onClick={() => setViewMode('photo')}
+                  className="flex items-center gap-1.5 text-xs text-violet-300 bg-violet-950/70 hover:bg-violet-900 px-3 py-1.5 rounded-full border border-violet-500/30 font-semibold transition-all"
+                >
+                  <Eye size={13} /> View Live Screen
+                </button>
+              </div>
+
+              {asking ? (
+                <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                  <Loader2 size={36} className="animate-spin text-violet-500" />
+                  <p className="text-slate-400 text-sm animate-pulse">Analyzing screen data...</p>
+                </div>
+              ) : answer ? (
+                <div className="text-slate-100 text-sm leading-relaxed">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+                    {answer}
+                  </ReactMarkdown>
+                </div>
+              ) : null}
             </div>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { motion, useMotionValue } from 'framer-motion';
+import { motion, useMotionValue, AnimatePresence } from 'framer-motion';
+import { Scan, MessageSquare, X } from 'lucide-react';
 
 const STORAGE_KEY = 'stockbuzz-ai-pet-pos';
 const SIZE = 56;
@@ -18,11 +19,12 @@ function defaultPosition() {
   return { x: MARGIN, y: window.innerHeight - SIZE - 110 };
 }
 
-export default function AIPet({ onOpen, hidden }) {
+export default function AIPet({ onOpenChat, onOpenVisualSearch, hidden }) {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const [ready, setReady] = useState(false);
   const [blinking, setBlinking] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const draggedRef = useRef(false);
   const constraintsRef = useRef(null);
 
@@ -78,18 +80,69 @@ export default function AIPet({ onOpen, hidden }) {
         dragMomentum={false}
         dragElastic={0}
         dragConstraints={constraintsRef}
-        onDragStart={() => { draggedRef.current = true; }}
+        onDragStart={() => { draggedRef.current = true; setIsMenuOpen(false); }}
         onDragEnd={handleDragEnd}
         style={{ x, y, width: SIZE, height: SIZE + 8 }}
         className="fixed top-0 left-0 z-[999] cursor-grab active:cursor-grabbing touch-none"
       >
-        <motion.div
-          animate={{ y: [0, -7, 0] }}
-          transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-          className="w-[56px] h-[56px]"
-        >
+        <div className="relative w-[56px] h-[56px]">
+          <AnimatePresence>
+            {isMenuOpen && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                onPointerDown={(e) => e.stopPropagation()}
+                className="absolute bottom-[calc(100%+12px)] -right-2 w-72 bg-slate-900 border border-violet-500/30 rounded-2xl shadow-2xl overflow-hidden flex flex-col pointer-events-auto touch-auto"
+                style={{ cursor: 'default' }}
+              >
+                <div className="flex justify-between items-center px-4 py-3 border-b border-white/10 bg-black/20">
+                  <span className="text-white font-bold text-sm flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" /> AI Assistant
+                  </span>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setIsMenuOpen(false); }}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+                <div className="p-2 flex flex-col gap-1">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setIsMenuOpen(false); onOpenVisualSearch(); }}
+                    className="flex items-start gap-3 p-3 hover:bg-violet-900/40 rounded-xl transition-colors text-left group"
+                  >
+                    <div className="bg-violet-500/20 p-2 rounded-lg group-hover:bg-violet-500/40 text-violet-300">
+                      <Scan size={18} />
+                    </div>
+                    <div>
+                      <div className="text-white text-sm font-semibold mb-0.5">Visual Search</div>
+                      <div className="text-xs text-gray-400">Take screenshot & ask about live data</div>
+                    </div>
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setIsMenuOpen(false); onOpenChat(); }}
+                    className="flex items-start gap-3 p-3 hover:bg-violet-900/40 rounded-xl transition-colors text-left group"
+                  >
+                    <div className="bg-violet-500/20 p-2 rounded-lg group-hover:bg-violet-500/40 text-violet-300">
+                      <MessageSquare size={18} />
+                    </div>
+                    <div>
+                      <div className="text-white text-sm font-semibold mb-0.5">AI Chat</div>
+                      <div className="text-xs text-gray-400">Ask about features, news, queries</div>
+                    </div>
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <motion.button
-            onClick={() => { if (!draggedRef.current) onOpen(); }}
+            onClick={() => { 
+              if (!draggedRef.current) {
+                setIsMenuOpen(!isMenuOpen);
+              }
+            }}
             whileHover={{ scale: 1.06 }}
             whileTap={{ scale: 0.94 }}
             aria-label="Open Stockbuzz AI Guardian"
@@ -120,7 +173,7 @@ export default function AIPet({ onOpen, hidden }) {
               />
             </div>
           </motion.button>
-        </motion.div>
+        </div>
       </motion.div>
     </>
   );

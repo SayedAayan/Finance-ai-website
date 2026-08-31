@@ -83,9 +83,11 @@ export default function JuniorApp() {
 
   const accountId = localStorage.getItem('stockbuzz_junior_account_id') || 'demo_jr_1';
 
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || (import.meta.env.PROD ? 'https://finance-ai-website.onrender.com' : '');
+
   const fetchAccount = async () => {
     try {
-      const res = await fetch(`/api/junior/accounts/${accountId}`);
+      const res = await fetch(`${BACKEND_URL}/api/junior/accounts/${accountId}`);
       if (res.ok) {
         const data = await res.json();
         if (data.account) {
@@ -241,7 +243,7 @@ export default function JuniorApp() {
               className={`relative flex flex-col items-center gap-1 py-1.5 px-3.5 rounded-full transition-all ${
                 isActive
                   ? 'text-white font-extrabold'
-                  : 'text-slate-400 font-bold hover:text-slate-700'
+                  : 'text-slate-600 font-bold hover:text-slate-900'
               }`}
             >
               {isActive && (
@@ -251,7 +253,7 @@ export default function JuniorApp() {
                   transition={{ type: 'spring', stiffness: 450, damping: 35 }}
                 />
               )}
-              <Icon size={18} className={isActive ? 'text-white' : 'text-slate-400'} />
+              <Icon size={18} className={isActive ? 'text-white' : 'text-slate-600'} />
               <span className="text-[10px] junior-font-heading leading-tight">{tab.label}</span>
             </Link>
           );

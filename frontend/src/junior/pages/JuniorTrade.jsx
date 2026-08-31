@@ -57,6 +57,7 @@ export default function JuniorTrade({ account, onUpdateAccount }) {
   const [convertToInr, setConvertToInr] = useState(true); // Default show international in INR
 
   const usdRate = fxRates?.pairs?.['USD/INR'] || 83.5;
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || (import.meta.env.PROD ? 'https://finance-ai-website.onrender.com' : '');
 
   // Search through all 18,000+ real-world companies
   useEffect(() => {
@@ -69,7 +70,7 @@ export default function JuniorTrade({ account, onUpdateAccount }) {
 
     setIsSearching(true);
     const debounceTimer = setTimeout(() => {
-      fetch(`/api/search?q=${encodeURIComponent(q)}&limit=10`)
+      fetch(`${BACKEND_URL}/api/search?q=${encodeURIComponent(q)}&limit=10`)
         .then(res => res.json())
         .then(async data => {
           const stocks = data.stocks || [];
@@ -77,7 +78,7 @@ export default function JuniorTrade({ account, onUpdateAccount }) {
             // Fetch live quote prices for top search matches
             const symbols = stocks.map(s => s.ticker || `${s.symbol}.NS`).join(',');
             try {
-              const quotesRes = await fetch(`/api/quotes?symbols=${encodeURIComponent(symbols)}`);
+              const quotesRes = await fetch(`${BACKEND_URL}/api/quotes?symbols=${encodeURIComponent(symbols)}`);
               const quotesData = await quotesRes.json();
               const quotesMap = new Map((quotesData.quotes || []).map(q => [q.symbol, q]));
 
@@ -161,7 +162,7 @@ export default function JuniorTrade({ account, onUpdateAccount }) {
     setLoading(true);
 
     try {
-      const res = await fetch(`/api/junior/accounts/${account.id}/trades`, {
+      const res = await fetch(`${BACKEND_URL}/api/junior/accounts/${account.id}/trades`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
