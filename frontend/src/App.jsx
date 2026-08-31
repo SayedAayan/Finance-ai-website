@@ -104,6 +104,7 @@ function Layout() {
 
       {/* Floating draggable AI pet — visible on every page, opens the AI menu */}
       <AIPet 
+        key={loc.pathname}
         onOpenChat={() => setIsAIChatOpen(true)} 
         onOpenVisualSearch={() => setIsScreenShareOpen(true)} 
         hidden={isAIChatOpen || isScreenShareOpen || isChat} 
