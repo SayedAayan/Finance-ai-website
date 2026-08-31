@@ -5,6 +5,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useAuth } from '../../context/AuthContext';
 import { useMarket } from '../../context/MarketContext';
+import { useCms } from '../../context/CmsContext';
 import TradingViewWidget from '../../components/ui/TradingViewWidget';
 
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://finance-ai-website.onrender.com/api' : '/api');
