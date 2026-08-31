@@ -104,11 +104,20 @@
   "watchlist": [
     {
       "type": "stock",
-      "id": "RELIANCE",
-      "name": "Reliance Industries",
-      "ticker": "RELIANCE",
-      "pe": 28.5,
-      "mcap": "₹19.8T",
+      "id": "TCS",
+      "name": "Tata Consultancy Services",
+      "ticker": "TCS",
+      "pe": 29.8,
+      "mcap": "₹14.2T",
+      "alert": "CROSSES_ABOVE_50DMA_EMAIL_WHATSAPP"
+    },
+    {
+      "type": "stock",
+      "id": "HDFCBANK",
+      "name": "HDFC Bank",
+      "ticker": "HDFCBANK",
+      "pe": 16.5,
+      "mcap": "₹12.5T",
       "alert": null
     }
   ],
@@ -808,6 +817,116 @@
           ]
         }
       ]
+    }
+  ],
+  "juniorCompanies": [
+    {
+      "symbol": "TCS.NS",
+      "name": "Tata Consultancy (TCS)",
+      "ticker": "TCS",
+      "price": 3950,
+      "change": "+1.4%",
+      "market": "IN",
+      "currency": "₹",
+      "category": "Technology & Gaming",
+      "emoji": "💻",
+      "description": "Builds smart computer software for banks and companies around the world."
+    },
+    {
+      "symbol": "RELIANCE.NS",
+      "name": "Reliance Industries",
+      "ticker": "RELIANCE",
+      "price": 2780,
+      "change": "+0.8%",
+      "market": "IN",
+      "currency": "₹",
+      "category": "Energy & Telecom",
+      "emoji": "📱",
+      "description": "Connects millions of families with Jio mobile internet and stores."
+    },
+    {
+      "symbol": "HDFCBANK.NS",
+      "name": "HDFC Bank",
+      "ticker": "HDFCBANK",
+      "price": 1680,
+      "change": "-0.3%",
+      "market": "IN",
+      "currency": "₹",
+      "category": "Piggy Bank & Finance",
+      "emoji": "🏦",
+      "description": "Helps people save money, buy houses, and pay safely."
+    },
+    {
+      "symbol": "TATAMOTORS.NS",
+      "name": "Tata Motors",
+      "ticker": "TATAMOTORS",
+      "price": 920,
+      "change": "+2.1%",
+      "market": "IN",
+      "currency": "₹",
+      "category": "Electric Cars & Trucks",
+      "emoji": "🚗",
+      "description": "Creates cool electric cars and Jaguar Land Rover luxury vehicles."
+    },
+    {
+      "symbol": "INFY.NS",
+      "name": "Infosys",
+      "ticker": "INFY",
+      "price": 1820,
+      "change": "+1.1%",
+      "market": "IN",
+      "currency": "₹",
+      "category": "Tech & AI",
+      "emoji": "🤖",
+      "description": "Helps businesses with artificial intelligence and digital apps."
+    },
+    {
+      "symbol": "AAPL",
+      "name": "Apple Inc.",
+      "ticker": "AAPL",
+      "price": 228,
+      "change": "+1.2%",
+      "market": "US",
+      "currency": "$",
+      "category": "Gadgets & Phones",
+      "emoji": "🍎",
+      "description": "Makes iPhones, iPads, and MacBooks loved by millions globally."
+    },
+    {
+      "symbol": "MSFT",
+      "name": "Microsoft",
+      "ticker": "MSFT",
+      "price": 445,
+      "change": "+0.9%",
+      "market": "US",
+      "currency": "$",
+      "category": "Computers & Xbox",
+      "emoji": "🎮",
+      "description": "Creators of Windows, Minecraft, and Xbox gaming consoles."
+    },
+    {
+      "symbol": "GOOGL",
+      "name": "Google (Alphabet)",
+      "ticker": "GOOGL",
+      "price": 178,
+      "change": "+1.8%",
+      "market": "US",
+      "currency": "$",
+      "category": "Search & YouTube",
+      "emoji": "🔍",
+      "description": "Powers YouTube, Google Search, and Android smartphones."
+    },
+    {
+      "symbol": "DIS",
+      "name": "The Walt Disney Co.",
+      "ticker": "DIS",
+      "price": 112,
+      "change": "+0.5%",
+      "market": "US",
+      "currency": "$",
+      "category": "Movies & Theme Parks",
+      "emoji": "🏰",
+      "description": "Makes superhero movies, Mickey Mouse, and magical Disney theme parks."
     }
   ]
 }
