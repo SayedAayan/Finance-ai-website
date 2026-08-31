@@ -41,7 +41,14 @@ export function parseAmfiNav(text) {
     if (line.includes(';')) {
       const cols = line.split(';');
       if (cols.length < 6 || cols[0] === 'Scheme Code') continue;
-      const [schemeCode, isinGrowthPayout, isinReinvest, schemeName, nav, date] = cols;
+      
+      let schemeCode, isinGrowthPayout, isinReinvest, schemeName, nav, date, planCol, optionCol;
+      if (cols.length >= 8) {
+        [schemeCode, isinGrowthPayout, isinReinvest, schemeName, planCol, optionCol, nav, date] = cols;
+      } else {
+        [schemeCode, isinGrowthPayout, isinReinvest, schemeName, nav, date] = cols;
+      }
+      
       const navNum = parseFloat(nav);
       if (!currentAmc || !schemeName || Number.isNaN(navNum)) continue;
 
@@ -52,8 +59,8 @@ export function parseAmfiNav(text) {
         category: currentCategory.split(' - ')[0]?.trim() || currentCategory,
         subCategory: currentCategory,
         name: schemeName.trim(),
-        plan: detectPlan(schemeName),
-        option: detectOption(schemeName),
+        plan: planCol || detectPlan(schemeName),
+        option: optionCol || detectOption(schemeName),
         nav: navNum,
         date,
         isin: isinGrowthPayout && isinGrowthPayout !== '-' ? isinGrowthPayout : (isinReinvest !== '-' ? isinReinvest : null)
@@ -78,9 +85,28 @@ export function parseAmfiNav(text) {
   return { amcs, schemes };
 }
 
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 export async function loadAmfiData() {
-  const res = await fetch(AMFI_URL, { redirect: 'follow' });
-  if (!res.ok) throw new Error(`AMFI fetch failed: HTTP ${res.status}`);
-  const text = await res.text();
-  return parseAmfiNav(text);
+  try {
+    const res = await fetch(AMFI_URL, { redirect: 'follow' });
+    if (!res.ok) throw new Error(`AMFI fetch failed: HTTP ${res.status}`);
+    const text = await res.text();
+    return parseAmfiNav(text);
+  } catch (err) {
+    console.warn(`  ⚠ AMFI live fetch failed (${err.message}). Using local fallback file...`);
+    try {
+      const fallbackPath = path.join(__dirname, 'fallback_amfi.txt');
+      const text = await fs.readFile(fallbackPath, 'utf-8');
+      return parseAmfiNav(text);
+    } catch (fallbackErr) {
+      console.error(`  ⚠ AMFI fallback also failed: ${fallbackErr.message}`);
+      return { amcs: [], schemes: [] };
+    }
+  }
 }
