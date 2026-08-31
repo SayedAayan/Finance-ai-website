@@ -1165,6 +1165,19 @@ export default function Superadmin() {
           </div>
         </SectionAccordion>
 
+        <SectionAccordion id="features" title="Global Features" expandedSection={expandedSection} setExpandedSection={setExpandedSection}>
+          <div className="flex items-center justify-between p-4 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-xl">
+            <div>
+              <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100">Enable TradingView Charts</h4>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">If enabled, premium users can view advanced TradingView charts.</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" className="sr-only peer" checked={cmsConfig.global?.enableTradingView !== false} onChange={e => updateNestedConfig('global', ['enableTradingView'], e.target.checked)} />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-violet-600"></div>
+            </label>
+          </div>
+        </SectionAccordion>
+
         <SectionAccordion id="home" title="Hero Section" expandedSection={expandedSection} setExpandedSection={setExpandedSection}>
           {/* Live Preview Panel for Hero */}
           <div className="mb-8">

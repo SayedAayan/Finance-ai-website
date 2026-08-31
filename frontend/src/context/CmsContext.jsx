@@ -10,6 +10,7 @@ export const defaultCmsConfig = {
     favicon: '/favicon.png',
     primaryColor: '#7c3aed', // violet-600
     enableProSubscriptions: true,
+    enableTradingView: true,
     showBannerAds: false,
     adSlots: [] // { id, location, content }
   },

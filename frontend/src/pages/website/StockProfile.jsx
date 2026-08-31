@@ -3,9 +3,11 @@ import { useParams, Link } from 'react-router-dom';
 import { TrendingUp, TrendingDown, Info, Sparkles, AlertTriangle, ArrowRight, Home, LineChart as LineChartIcon, Calculator, Globe } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import SearchBar from '../../components/ui/SearchBar';
+import TradingViewWidget from '../../components/ui/TradingViewWidget';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useAuth } from '../../context/AuthContext';
 import { useMarket } from '../../context/MarketContext';
+import { useCms } from '../../context/CmsContext';
 
 const DEFAULT_DATA = {
   price: '...', change: '...', up: true,
@@ -41,6 +43,7 @@ export default function StockProfile() {
   const id = routeId || 'RELIANCE';
   const { formatPrice } = useCurrency();
   const { userPlan } = useAuth();
+  const { cmsConfig } = useCms();
   const { formatMarketPrice, currencyMode, toggleCurrencyMode, fxRates } = useMarket();
   const [quote, setQuote] = useState(null);
   const [companyMeta, setCompanyMeta] = useState(null);
@@ -139,6 +142,12 @@ export default function StockProfile() {
     ]
   };
 
+  let tvSymbol = id;
+  if (id.includes('BTC-USD') || id.includes('ETH-USD')) tvSymbol = `BINANCE:${id.replace('-USD', 'USDT')}`;
+  else if (isUS) tvSymbol = `NASDAQ:${id.replace('.US', '')}`;
+  else if (isUK) tvSymbol = `LSE:${id.replace('.L', '')}`;
+  else tvSymbol = `BSE:${id.replace('.NS', '')}`;
+
   const peers = isUS ? US_PEERS : IN_PEERS;
 
   return (
@@ -236,61 +245,28 @@ export default function StockProfile() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           
           {/* Main Chart */}
-          <div className="chart-wrap">
-            <div className="chart-header">
-              <h4 style={{ margin: 0 }}>Price Trend</h4>
-              <div className="chart-tabs">
-                {[
-                  { key: '1D', label: '1D' },
-                  { key: '1W', label: '1W' },
-                  { key: '1M', label: '1M' },
-                  { key: '1Y', label: '1Y' },
-                  { key: '5Y', label: '5Y' },
-                  { key: 'MAX', label: 'Since Inception' },
-                ].map((t) => (
-                  <button
-                    key={t.key}
-                    onClick={() => setRange(t.key)}
-                    className={`btn btn-sm ${t.key === range ? 'btn-outline' : 'btn-ghost'}`}
-                    style={{ padding: '4px 10px' }}
-                  >
-                    {t.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="chart-body" style={{ height: '300px', padding: '0', position: 'relative' }}>
-              {historyLoading ? (
-                <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-3)', fontSize: '0.85rem' }}>
-                  Loading chart…
-                </div>
-              ) : history.length < 2 ? (
-                <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-3)', fontSize: '0.85rem' }}>
-                  No price history available for this range.
+          {cmsConfig?.global?.enableTradingView !== false && (
+            <div className="chart-wrap" style={{ padding: '0', overflow: 'hidden', minHeight: '500px', position: 'relative' }}>
+              {userPlan === 'plan_free' ? (
+                <div style={{
+                  position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                  background: 'var(--bg-subtle)',
+                  zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: '12px'
+                }}>
+                  <div style={{ background: 'var(--bg-card)', padding: '32px', borderRadius: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', textAlign: 'center', maxWidth: '350px', border: '1px solid var(--border)' }}>
+                    <LineChartIcon size={40} color="var(--violet)" style={{ margin: '0 auto 16px auto' }} />
+                    <h4 style={{ margin: '0 0 8px 0', fontSize: '1.2rem', fontWeight: 800 }}>Advanced Technical Charts</h4>
+                    <p style={{ margin: '0 0 24px 0', fontSize: '0.9rem', color: 'var(--text-3)' }}>Unlock interactive TradingView charts, indicators, and advanced technical analysis with Stockbuzz Pro.</p>
+                    <Link to="/settings" className="btn btn-violet shadow-md" style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '12px', borderRadius: '12px', fontWeight: 700, gap: '8px', fontSize: '1rem' }}>
+                      <Sparkles size={18} /> Upgrade to Pro
+                    </Link>
+                  </div>
                 </div>
               ) : (
-                <div style={{ position: 'relative', height: '100%' }}>
-                  {userPlan === 'plan_free' && (
-                    <div style={{
-                      position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-                      backdropFilter: 'blur(5px)', background: 'rgba(255,255,255,0.2)',
-                      zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: '12px'
-                    }}>
-                      <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', textAlign: 'center', maxWidth: '300px', border: '1px solid var(--border)' }}>
-                        <LineChartIcon size={32} color="var(--violet)" style={{ margin: '0 auto 12px auto' }} />
-                        <h4 style={{ margin: '0 0 8px 0', fontSize: '1.1rem', fontWeight: 800 }}>Advanced Charting</h4>
-                        <p style={{ margin: '0 0 16px 0', fontSize: '0.85rem', color: 'var(--text-3)' }}>Unlock interactive price history charts with Stockbuzz Pro.</p>
-                        <Link to="/settings" className="btn btn-violet shadow-md" style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '10px', borderRadius: '10px', fontWeight: 700, gap: '6px' }}>
-                          <Sparkles size={16} /> Upgrade to Pro
-                        </Link>
-                      </div>
-                    </div>
-                  )}
-                  <PriceChart points={history} />
-                </div>
+                <TradingViewWidget symbol={tvSymbol} height={500} theme="light" />
               )}
             </div>
-          </div>
+          )}
 
           {/* Peer Comparison */}
           <div className="chart-wrap">

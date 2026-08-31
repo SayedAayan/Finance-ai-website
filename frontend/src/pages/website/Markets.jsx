@@ -245,7 +245,6 @@ export default function Markets() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               { name: 'Bitcoin', symbol: 'BTC-USD', price: 62000, change: '+5.2%', isCrypto: true },
-              { name: 'Ethereum', symbol: 'ETH-USD', price: 3400, change: '+2.1%', isCrypto: true },
               { name: 'Gold', symbol: 'GC=F', price: 2350, change: '+0.4%', isCrypto: false },
               { name: 'Silver', symbol: 'SI=F', price: 28.5, change: '-0.2%', isCrypto: false },
             ].map((asset, i) => (

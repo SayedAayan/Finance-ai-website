@@ -5,6 +5,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useAuth } from '../../context/AuthContext';
 import { useMarket } from '../../context/MarketContext';
+import TradingViewWidget from '../../components/ui/TradingViewWidget';
 
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://finance-ai-website.onrender.com/api' : '/api');
 
@@ -318,6 +319,7 @@ export default function Compare() {
   const { formatPrice } = useCurrency();
   const { formatMarketPrice } = useMarket();
   const { userPlan } = useAuth();
+  const { cmsConfig } = useCms();
 
   // State arrays for N-asset comparison (default 3)
   const [assets, setAssets] = useState([null, null, null]);
@@ -735,6 +737,51 @@ export default function Compare() {
             ) : (
               <div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-3)', fontSize: '0.85rem' }}>
                 Not enough overlapping history for this range.
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TradingView Individual Charts */}
+        {cmsConfig?.global?.enableTradingView !== false && isComparable && validAssets.length > 0 && (
+          <div style={{ marginTop: '24px', position: 'relative' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+              <LineChartIcon size={18} color="var(--text-3)" />
+              <h3 style={{ fontSize: '1rem', fontWeight: 800, margin: 0, color: 'var(--text-1)' }}>Advanced Technical Charts</h3>
+            </div>
+            
+            {userPlan === 'plan_free' ? (
+              <div style={{
+                position: 'relative', width: '100%', height: '400px',
+                background: 'var(--bg-subtle)', borderRadius: '18px',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+              }}>
+                <div style={{ background: 'var(--bg-card)', padding: '32px', borderRadius: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', textAlign: 'center', maxWidth: '350px', border: '1px solid var(--border)' }}>
+                  <LineChartIcon size={40} color="var(--violet)" style={{ margin: '0 auto 16px auto' }} />
+                  <h4 style={{ margin: '0 0 8px 0', fontSize: '1.2rem', fontWeight: 800 }}>Advanced Technical Charts</h4>
+                  <p style={{ margin: '0 0 24px 0', fontSize: '0.9rem', color: 'var(--text-3)' }}>Unlock interactive TradingView charts, indicators, and advanced technical analysis with Stockbuzz Pro.</p>
+                  <Link to="/settings" className="btn btn-violet shadow-md" style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '12px', borderRadius: '12px', fontWeight: 700, gap: '8px', fontSize: '1rem' }}>
+                    <Sparkles size={18} /> Upgrade to Pro
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '20px' }}>
+                {validAssets.map(a => {
+                  let tvSymbol = a.ticker || a.id;
+                  if (tvSymbol.includes('BTC-USD') || tvSymbol.includes('ETH-USD')) tvSymbol = `BINANCE:${tvSymbol.replace('-USD', 'USDT')}`;
+                  else if (tvSymbol.includes('.US')) tvSymbol = `NASDAQ:${tvSymbol.replace('.US', '')}`;
+                  else if (tvSymbol.includes('.L')) tvSymbol = `LSE:${tvSymbol.replace('.L', '')}`;
+                  else if (tvSymbol.includes('.NS')) tvSymbol = `BSE:${tvSymbol.replace('.NS', '')}`;
+                  else if (mode === 'funds') tvSymbol = `BSE:${tvSymbol}`; // Try BSE for funds if applicable, or generic.
+                  
+                  return (
+                    <div key={a.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '18px', padding: '16px', boxShadow: '0 2px 8px rgba(0,0,0,.04)' }}>
+                      <div style={{ fontWeight: 600, marginBottom: '12px', fontSize: '0.9rem' }}>{a.name}</div>
+                      <TradingViewWidget symbol={tvSymbol} height={350} theme="light" />
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
